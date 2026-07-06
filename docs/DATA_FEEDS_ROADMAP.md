@@ -13,9 +13,11 @@ state DC-incentive matrix · OSM parcels.
 
 ## The biggest gaps (read this first)
 
-1. **Cooling / climate — no factor at all.** Cooling is 30–40% of DC energy and
-   the single largest PUE/opex swing. We have zero climate inputs. **Highest-ROI
-   new factor.**
+1. ~~**Cooling / climate — no factor at all.**~~ **SHIPPED (v1).** A
+   `coolingEfficiency` factor now scores every county from NOAA NCEI 1991-2020
+   CDD/HDD normals (`server/ingest/noaa_climate.ts`). Remaining v2 upgrade:
+   derive true airside/waterside free-cooling HOURS from hourly ISD-Lite
+   (feeds #2 below).
 2. **Natural gas access — behind-the-meter generation is unscored.** With grid
    interconnection backlogs >4 years, developers build on-site gas. We score
    "onsite generation" off EIA-860 nameplate only, with no gas-pipeline proximity
@@ -34,7 +36,7 @@ state DC-incentive matrix · OSM parcels.
 
 | # | Feed | Agency | Unlocks / improves | Key? | Effort | Priority |
 |---|------|--------|--------------------|------|--------|----------|
-| 1 | **NCEI Climate Normals (CDD/HDD)** | NOAA | **New cooling factor** (bulk CSV, no token) | no | Easy | ★★★ |
+| 1 | ~~NCEI Climate Normals (CDD/HDD)~~ **✅ SHIPPED** | NOAA | cooling factor (`noaa_climate.ts`) | no | Easy | done |
 | 2 | **NOAA ISD-Lite → free-cooling hours** | NOAA | Marquee "economizer hours/yr" metric (dry-bulb+dewpoint→wet-bulb) | no | Med | ★★★ |
 | 3 | **HIFLD gas pipelines + compressors** | HIFLD | **New `gas_access` factor** (reuses transmission tooling) | no | Easy | ★★★ |
 | 4 | **EIA API v2 natural gas** | EIA | Gas economics (state citygate price) for gas_access | free | Easy | ★★★ |
