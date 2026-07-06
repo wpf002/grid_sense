@@ -1,7 +1,7 @@
 // Common utilities for public-data ingestion pipelines.
 // Every pipeline records the exact URL fetched + timestamp so users can audit.
 
-import { writeFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+import { writeFileSync, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 export const USER_AGENT = "GridSense/1.1 (research; contact@gridsense.example)";
@@ -26,12 +26,16 @@ export const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
  */
 export async function fetchBuffer(
   url: string,
-  opts: { cacheKey?: string; forceRefresh?: boolean; timeoutMs?: number } = {},
+  opts: { cacheKey?: string; forceRefresh?: boolean; timeoutMs?: number; maxAgeMs?: number } = {},
 ): Promise<Buffer> {
   const cacheKey = opts.cacheKey ?? url.replace(/[^a-z0-9]+/gi, "_").slice(0, 120);
   const cachePath = join(RAW_DIR, cacheKey);
   if (!opts.forceRefresh && existsSync(cachePath)) {
-    return readFileSync(cachePath);
+    // Honor maxAgeMs: treat a cache file older than the threshold as stale.
+    const fresh =
+      opts.maxAgeMs == null ||
+      Date.now() - statSync(cachePath).mtimeMs < opts.maxAgeMs;
+    if (fresh) return readFileSync(cachePath);
   }
 
   const controller = new AbortController();

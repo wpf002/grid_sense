@@ -17,7 +17,8 @@ export function downloadCsv<T extends Record<string, unknown>>(
     // Still allow download of empty CSV with headers if columns given
     if (!columns?.length) return;
   }
-  const cols = columns ?? Object.keys(rows[0] ?? {}).map((k) => ({ key: k as keyof T }));
+  const cols: Array<{ key: keyof T; label?: string }> =
+    columns ?? Object.keys(rows[0] ?? {}).map((k) => ({ key: k as keyof T }));
   const header = cols.map((c) => escapeCell(c.label ?? String(c.key))).join(",");
   const body = rows
     .map((row) => cols.map((c) => escapeCell(row[c.key])).join(","))
