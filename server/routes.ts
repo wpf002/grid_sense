@@ -9,6 +9,31 @@ import { registerExportRoutes } from "./exports";
 import { registerAuth } from "./auth";
 import { computeCountyFactorsV5 } from "./scoring";
 import { buildOverlayFor, warmOverlayCaches } from "./ingest/overlay";
+import { attributeFiling, type OperatorDict } from "./edgar-attribution";
+
+// Load operator shell-LLC / codename dictionaries (JSON-text columns → arrays).
+// Cached for the process; operators change rarely (monthly ingest).
+let _operatorDicts: OperatorDict[] | null = null;
+function loadOperatorDicts(): OperatorDict[] {
+  if (_operatorDicts) return _operatorDicts;
+  const rows = sqlite
+    .prepare("SELECT name, shell_llcs, codenames FROM operators")
+    .all() as Array<{ name: string; shell_llcs: string | null; codenames: string | null }>;
+  const parse = (s: string | null): string[] => {
+    try {
+      const v = JSON.parse(s || "[]");
+      return Array.isArray(v) ? v.map(String) : [];
+    } catch {
+      return [];
+    }
+  };
+  _operatorDicts = rows.map((r) => ({
+    name: r.name,
+    shellLlcs: parse(r.shell_llcs),
+    codenames: parse(r.codenames),
+  }));
+  return _operatorDicts;
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -465,7 +490,57 @@ export async function registerRoutes(
       .orderBy(desc(rawEdgarFilings.filedDate))
       .limit(limit)
       .all();
-    res.json(rows);
+    const dicts = loadOperatorDicts();
+    // Attach operator attribution so the UI can flag hyperscaler-linked filings.
+    const enriched = rows.map((r: any) => ({
+      ...r,
+      attribution: attributeFiling(r.company ?? "", dicts),
+    }));
+    res.json(enriched);
+  });
+
+  // Hero feed: SEC filings attributed to a tracked hyperscaler/operator via its
+  // shell-LLC dictionary, project codenames, or parent name. No competitor
+  // productizes EDGAR full-text → operator attribution.
+  //
+  // Note: anonymous shell LLCs (e.g. "Siculus Inc.") rarely file with the SEC —
+  // they surface in county land records, not EDGAR. So in practice the strongest
+  // EDGAR signal is the public parent/REIT (Amazon, Microsoft, Equinix, Digital
+  // Realty) filing DC-related 8-Ks. We surface both and tag matchType so callers
+  // can distinguish shell/codename hits from parent-name hits.
+  app.get("/api/edgar/shell-hits", async (req, res) => {
+    const limit = req.query.limit ? Number(req.query.limit) : 100;
+    // Default includes parent-name matches (>=0.5, now high-precision after
+    // full-name matching). Pass ?min_confidence=0.75 for shell/codename only.
+    const minConfidence = req.query.min_confidence
+      ? Number(req.query.min_confidence)
+      : 0.5;
+    const dicts = loadOperatorDicts();
+    const rows = db.select().from(rawEdgarFilings)
+      .orderBy(desc(rawEdgarFilings.filedDate))
+      .limit(1000)
+      .all();
+    const hits = rows
+      .map((r: any) => {
+        const attribution = attributeFiling(r.company ?? "", dicts);
+        return attribution ? { ...r, attribution } : null;
+      })
+      .filter((r: any): r is any => r != null && r.attribution.confidence >= minConfidence)
+      // Shell/codename hits before parent-name hits, newest first.
+      .sort((a: any, b: any) =>
+        b.attribution.confidence - a.attribution.confidence ||
+        (b.filedDate ?? "").localeCompare(a.filedDate ?? ""))
+      .slice(0, limit);
+
+    // Rollup by operator for a scannable summary.
+    const byOperator: Record<string, number> = {};
+    for (const h of hits) byOperator[h.attribution.operator] = (byOperator[h.attribution.operator] ?? 0) + 1;
+
+    res.json({
+      count: hits.length,
+      byOperator,
+      hits,
+    });
   });
 
   app.get("/api/dc-news", async (req, res) => {

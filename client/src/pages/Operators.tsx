@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "wouter";
-import { Building2, ChevronDown, ChevronUp, Sparkles, ExternalLink, LandPlot, FileText, Flame, Newspaper } from "lucide-react";
+import { Building2, ChevronDown, ChevronUp, Sparkles, ExternalLink, LandPlot, FileText, Flame, Newspaper, Radar } from "lucide-react";
 import type { Operator } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -268,6 +268,107 @@ function OperatorPlaybook({ name }: { name: string }) {
   );
 }
 
+interface Attribution {
+  operator: string;
+  matchType: "shell" | "codename" | "parent";
+  matchedTerm: string;
+  confidence: number;
+}
+interface ShellHit {
+  id: number;
+  company: string;
+  formType: string;
+  filedDate: string;
+  filingUrl: string;
+  attribution: Attribution;
+}
+interface ShellHitsResp {
+  count: number;
+  byOperator: Record<string, number>;
+  hits: ShellHit[];
+}
+
+const MATCH_STYLES: Record<Attribution["matchType"], string> = {
+  shell: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/40",
+  codename: "bg-violet-500/15 text-violet-700 dark:text-violet-400 border-violet-500/40",
+  parent: "bg-sky-500/15 text-sky-700 dark:text-sky-400 border-sky-500/40",
+};
+
+// Hero feed: SEC EDGAR filings attributed to a tracked operator via its
+// shell-LLC dictionary, project codenames, or parent name. Nothing else on the
+// market productizes EDGAR full-text → operator attribution.
+function AttributedFilings() {
+  const { data, isLoading } = useQuery<ShellHitsResp>({
+    queryKey: ["/api/edgar/shell-hits"],
+  });
+  return (
+    <Card data-testid="card-attributed-filings" className="border-primary/30">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Radar className="h-4 w-4 text-primary" />
+            Attributed SEC filings
+          </CardTitle>
+          {data && (
+            <Badge variant="outline" className="text-[10px] font-mono">
+              {data.count} filings
+            </Badge>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Recent SEC EDGAR filings resolved to a tracked operator by shell-LLC,
+          codename, or parent name — a forward signal no competitor productizes.
+        </p>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <Skeleton className="h-40" />
+        ) : !data || data.count === 0 ? (
+          <div className="text-xs text-muted-foreground py-4 text-center">
+            No attributed filings yet. Run the EDGAR ingest to populate.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-1">
+              {Object.entries(data.byOperator)
+                .sort((a, b) => b[1] - a[1])
+                .map(([op, n]) => (
+                  <Badge key={op} variant="secondary" className="text-[10px] font-mono" data-testid={`chip-attr-op-${op}`}>
+                    {op} · {n}
+                  </Badge>
+                ))}
+            </div>
+            <div className="space-y-1.5 max-h-72 overflow-y-auto">
+              {data.hits.slice(0, 25).map((h) => (
+                <div key={h.id} className="text-[11px] rounded border border-border p-2" data-testid={`attr-filing-${h.id}`}>
+                  <div className="flex items-start justify-between gap-2 mb-0.5">
+                    <span className="font-medium truncate">{h.attribution.operator}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Badge className={`text-[9px] uppercase ${MATCH_STYLES[h.attribution.matchType]}`}>
+                        {h.attribution.matchType}
+                      </Badge>
+                      <span className="text-[10px] text-muted-foreground font-mono">{h.filedDate}</span>
+                    </div>
+                  </div>
+                  <div className="text-muted-foreground truncate">{h.company}</div>
+                  <div className="flex items-center justify-between gap-2 mt-0.5">
+                    <span className="text-[10px] font-mono text-muted-foreground">
+                      matched “{h.attribution.matchedTerm}” · {h.formType}
+                    </span>
+                    <a href={h.filingUrl} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary shrink-0">
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Operators() {
   const { data: operators, isLoading } = useQuery<Operator[]>({ queryKey: ["/api/operators"] });
   const [openPlaybook, setOpenPlaybook] = useState<Record<string, boolean>>({});
@@ -283,6 +384,8 @@ export default function Operators() {
           Known hyperscaler entities and the shell LLC/codename patterns they use to acquire land discreetly.
         </p>
       </div>
+
+      <AttributedFilings />
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
