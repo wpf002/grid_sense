@@ -4,10 +4,14 @@
  * pipeline; unscored counties default to "cold" tier.
  */
 import { readFileSync } from "fs";
+import path from "path";
 import Database from "better-sqlite3";
+// Importing storage runs its CREATE TABLE IF NOT EXISTS bootstrap against data.db,
+// so this script can run against a fresh database.
+import "../server/storage";
 
-const GAZ = "/home/user/workspace/gridsense/data/ref/2023_Gaz_counties_national.txt";
-const db = new Database("/home/user/workspace/gridsense/data.db");
+const GAZ = path.join(process.cwd(), "data/ref/2023_Gaz_counties_national.txt");
+const db = new Database(path.join(process.cwd(), "data.db"));
 db.pragma("journal_mode = WAL");
 
 const EXCLUDE_STATES = new Set(["AK", "HI", "PR", "GU", "VI", "AS", "MP"]);
@@ -56,5 +60,6 @@ const txn = db.transaction(() => {
 });
 
 txn();
+const total = db.prepare("SELECT COUNT(*) as n FROM counties").all();
 db.close();
-console.log(JSON.stringify({ added, skipped, total: db.prepare("SELECT COUNT(*) as n FROM counties").all() }));
+console.log(JSON.stringify({ added, skipped, total }));

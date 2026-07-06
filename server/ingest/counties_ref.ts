@@ -2,8 +2,9 @@
 // https://www2.census.gov/geo/docs/reference/codes2020/national_county2020.txt
 
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
-const REF_PATH = "/home/user/workspace/gridsense/data/ref/us_counties_2020.psv";
+const REF_PATH = join(process.cwd(), "data/ref/us_counties_2020.psv");
 export const CENSUS_SOURCE_URL =
   "https://www2.census.gov/geo/docs/reference/codes2020/national_county2020.txt";
 

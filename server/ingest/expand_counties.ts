@@ -4,10 +4,11 @@
 // data-center-scale grid demand.
 
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { sqlite } from "../storage.js";
 import { beginRun, FIPS_TO_STATE } from "./util.js";
 
-const GAZ_PATH = "/home/user/workspace/gridsense/data/ref/2023_Gaz_counties_national.txt";
+const GAZ_PATH = join(process.cwd(), "data/ref/2023_Gaz_counties_national.txt");
 
 interface Centroid {
   fips: string;

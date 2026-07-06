@@ -7,7 +7,7 @@ import { join } from "node:path";
 export const USER_AGENT = "GridSense/1.1 (research; contact@gridsense.example)";
 export const BROWSER_UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
-export const RAW_DIR = "/home/user/workspace/gridsense/data/raw";
+export const RAW_DIR = join(process.cwd(), "data/raw");
 
 if (!existsSync(RAW_DIR)) {
   mkdirSync(RAW_DIR, { recursive: true });

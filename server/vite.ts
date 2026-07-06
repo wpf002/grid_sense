@@ -4,7 +4,11 @@ import type { Server } from 'node:http';
 import viteConfig from "../vite.config";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { nanoid } from "nanoid";
+
+// import.meta.dirname is only available on Node 20.11+; derive it for Node 18.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const viteLogger = createLogger();
 
@@ -36,7 +40,7 @@ export async function setupVite(server: Server, app: Express) {
 
     try {
       const clientTemplate = path.resolve(
-        import.meta.dirname,
+        __dirname,
         "..",
         "client",
         "index.html",
