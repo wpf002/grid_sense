@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <rect width="180" height="180" rx="36" fill="#0f172a"/>
+  <path d="M45 124 L45 56 L90 56 L112 78 L112 124 Z" fill="none" stroke="#22d3c0" stroke-width="10" stroke-linejoin="round"/>
+  <circle cx="78" cy="88" r="7" fill="#22d3c0"/>
+  <circle cx="78" cy="106" r="7" fill="#22d3c0"/>
+  <text x="90" y="158" font-family="ui-sans-serif, system-ui" font-size="18" font-weight="700" fill="#e2e8f0" text-anchor="middle" letter-spacing="1">GRIDSENSE</text>
+</svg>

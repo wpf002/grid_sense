@@ -1,0 +1,213 @@
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
+import { LandPlot, MapPin, Building2, DollarSign, Cable, Zap, Download } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { downloadCsv } from "@/lib/csv";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+type Parcel = {
+  id: number;
+  county_fips: string;
+  county_name: string;
+  state: string;
+  county_score: number;
+  iso: string | null;
+  apn: string;
+  acres: number;
+  owner_name: string;
+  owner_is_shell_llc: number;
+  resolved_operator: string | null;
+  substation_distance_mi: number;
+  fiber_distance_mi: number;
+  zoning: string;
+  land_price: number | null;
+  last_transfer_date: string;
+  parcel_score: number;
+  status: string;
+};
+
+function fmt$(n: number | null | undefined): string {
+  if (!n) return "—";
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1000) return `$${(n / 1000).toFixed(0)}k`;
+  return `$${n.toFixed(0)}`;
+}
+
+const STATUS_STYLE: Record<string, string> = {
+  watch: "bg-muted text-muted-foreground",
+  rezoning: "bg-amber-500/20 text-amber-700 dark:text-amber-400",
+  announced: "bg-primary/20 text-primary",
+  under_contract: "bg-green-500/20 text-green-700 dark:text-green-400",
+};
+
+export default function Parcels() {
+  const [minAcres, setMinAcres] = useState("0");
+  const [shellOnly, setShellOnly] = useState(false);
+  const [query, setQuery] = useState("");
+  const { data, isLoading } = useQuery<Parcel[]>({
+    queryKey: ["/api/parcels/top", 200],
+    queryFn: async () => {
+      const r = await fetch("/api/parcels/top?limit=200");
+      return r.json();
+    },
+  });
+
+  const rows = useMemo(() => {
+    const all = data ?? [];
+    const q = query.trim().toLowerCase();
+    const minA = parseFloat(minAcres);
+    return all.filter((r) => {
+      if (minA > 0 && r.acres < minA) return false;
+      if (shellOnly && !r.owner_is_shell_llc) return false;
+      if (q && !`${r.county_name} ${r.state} ${r.owner_name} ${r.apn} ${r.resolved_operator ?? ""}`.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [data, minAcres, shellOnly, query]);
+
+  return (
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1600px] mx-auto">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight inline-flex items-center gap-2">
+            <LandPlot className="h-5 w-5 text-primary" /> Site-level parcels
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {rows.length} of {data?.length ?? 0} candidate parcels ranked by our composite parcel score (acres, shell-LLC ownership, substation/fiber proximity). Filter for shell-owned to surface likely hyperscaler assemblages.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={rows.length === 0}
+          onClick={() => downloadCsv(rows, "gridsense_parcels", [
+            { key: "county_name", label: "County" },
+            { key: "state", label: "State" },
+            { key: "apn", label: "APN" },
+            { key: "acres", label: "Acres" },
+            { key: "owner_name", label: "Owner" },
+            { key: "resolved_operator", label: "Operator" },
+            { key: "substation_distance_mi", label: "Substation (mi)" },
+            { key: "fiber_distance_mi", label: "Fiber (mi)" },
+            { key: "land_price", label: "Land price" },
+            { key: "parcel_score", label: "Parcel score" },
+            { key: "status", label: "Status" },
+          ])}
+          data-testid="button-export-parcels"
+        >
+          <Download className="h-3.5 w-3.5 mr-1.5" /> Export CSV
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-4">
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="relative flex-1 min-w-[240px]">
+              <Input
+                placeholder="Search county, owner, APN, operator"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                data-testid="input-parcels-search"
+              />
+            </div>
+            <Select value={minAcres} onValueChange={setMinAcres}>
+              <SelectTrigger className="w-[160px]" data-testid="select-min-acres">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">Any size</SelectItem>
+                <SelectItem value="200">≥ 200 acres</SelectItem>
+                <SelectItem value="500">≥ 500 acres</SelectItem>
+                <SelectItem value="1000">≥ 1,000 acres</SelectItem>
+                <SelectItem value="1500">≥ 1,500 acres</SelectItem>
+              </SelectContent>
+            </Select>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={shellOnly}
+                onChange={(e) => setShellOnly(e.target.checked)}
+                data-testid="checkbox-shell-only"
+              />
+              Shell-LLC owned only
+            </label>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Top parcels</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <Skeleton className="h-96 w-full" />
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[80px]">Score</TableHead>
+                    <TableHead>County</TableHead>
+                    <TableHead>APN</TableHead>
+                    <TableHead className="text-right">Acres</TableHead>
+                    <TableHead>Owner</TableHead>
+                    <TableHead>Operator</TableHead>
+                    <TableHead>Zoning</TableHead>
+                    <TableHead className="text-right">Substation</TableHead>
+                    <TableHead className="text-right">Fiber</TableHead>
+                    <TableHead className="text-right">Est. price</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rows.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={11} className="text-center py-10 text-sm text-muted-foreground" data-testid="empty-parcels">
+                        No parcels match your filters. Try loosening the acreage range or clearing the shell-owned filter.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {rows.map((r) => (
+                    <TableRow key={r.id} data-testid={`row-parcel-${r.id}`}>
+                      <TableCell>
+                        <div className="text-lg font-bold font-mono text-primary">{r.parcel_score.toFixed(0)}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Link href={`/counties/${r.county_fips}`}>
+                          <button className="text-primary hover:underline text-left">
+                            <div className="text-sm font-medium">{r.county_name}, {r.state}</div>
+                            <div className="text-[10px] text-muted-foreground font-mono">score {Math.round(r.county_score)} · {r.iso ?? "—"}</div>
+                          </button>
+                        </Link>
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">{r.apn}</TableCell>
+                      <TableCell className="text-right font-mono">{r.acres.toFixed(0)}</TableCell>
+                      <TableCell>
+                        <div className="text-sm">{r.owner_name}</div>
+                        {r.owner_is_shell_llc ? <Badge variant="outline" className="text-[9px] mt-0.5 border-amber-500/40 text-amber-500">SHELL LLC</Badge> : null}
+                      </TableCell>
+                      <TableCell>{r.resolved_operator ?? <span className="text-muted-foreground text-xs">—</span>}</TableCell>
+                      <TableCell className="text-xs">{r.zoning}</TableCell>
+                      <TableCell className="text-right font-mono text-xs">{r.substation_distance_mi.toFixed(1)}mi</TableCell>
+                      <TableCell className="text-right font-mono text-xs">{r.fiber_distance_mi.toFixed(1)}mi</TableCell>
+                      <TableCell className="text-right font-mono">{fmt$(r.land_price)}</TableCell>
+                      <TableCell>
+                        <Badge className={`text-[10px] uppercase ${STATUS_STYLE[r.status] ?? STATUS_STYLE.watch}`}>{r.status.replace("_", " ")}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

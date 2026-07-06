@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://gridsense.pplx.app/</loc><priority>1.0</priority></url>
+  <url><loc>https://gridsense.pplx.app/#/landing</loc><priority>0.9</priority></url>
+  <url><loc>https://gridsense.pplx.app/#/map</loc><priority>0.9</priority></url>
+  <url><loc>https://gridsense.pplx.app/#/counties</loc><priority>0.9</priority></url>
+  <url><loc>https://gridsense.pplx.app/#/parcels</loc><priority>0.8</priority></url>
+  <url><loc>https://gridsense.pplx.app/#/permits</loc><priority>0.8</priority></url>
+  <url><loc>https://gridsense.pplx.app/#/competitive</loc><priority>0.8</priority></url>
+  <url><loc>https://gridsense.pplx.app/#/operators</loc><priority>0.7</priority></url>
+  <url><loc>https://gridsense.pplx.app/#/pricing</loc><priority>0.9</priority></url>
+  <url><loc>https://gridsense.pplx.app/#/api-docs</loc><priority>0.9</priority></url>
+  <url><loc>https://gridsense.pplx.app/#/methodology</loc><priority>0.7</priority></url>
+  <url><loc>https://gridsense.pplx.app/#/digest</loc><priority>0.6</priority></url>
+</urlset>

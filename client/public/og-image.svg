@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1220"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#grid)" opacity="0.6"/>
+  <circle cx="900" cy="330" r="280" fill="url(#glow)"/>
+
+  <!-- Dots representing counties -->
+  <g fill="#22d3ee" opacity="0.75">
+    <circle cx="850" cy="280" r="6"/>
+    <circle cx="920" cy="310" r="9"/>
+    <circle cx="880" cy="360" r="5"/>
+    <circle cx="960" cy="350" r="7"/>
+    <circle cx="820" cy="330" r="4"/>
+    <circle cx="940" cy="260" r="5"/>
+    <circle cx="990" cy="300" r="6"/>
+    <circle cx="870" cy="410" r="4"/>
+  </g>
+  <g fill="#f97316">
+    <circle cx="900" cy="330" r="12"/>
+    <circle cx="900" cy="330" r="20" fill="none" stroke="#f97316" stroke-width="2" opacity="0.5"/>
+  </g>
+
+  <!-- Brand mark -->
+  <g transform="translate(80, 80)">
+    <rect x="0" y="0" width="40" height="40" rx="8" fill="#22d3ee"/>
+    <path d="M8 20 L18 28 L32 12" stroke="#0b1220" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="140" y="108" font-family="Inter, system-ui, sans-serif" font-size="30" font-weight="600" fill="#f8fafc">GridSense</text>
+
+  <!-- Headline -->
+  <text x="80" y="290" font-family="Inter, system-ui, sans-serif" font-size="72" font-weight="700" fill="#f8fafc">
+    <tspan>AI data center</tspan>
+  </text>
+  <text x="80" y="370" font-family="Inter, system-ui, sans-serif" font-size="72" font-weight="700" fill="#22d3ee">
+    <tspan>land radar.</tspan>
+  </text>
+  <text x="80" y="435" font-family="Inter, system-ui, sans-serif" font-size="26" font-weight="400" fill="#94a3b8">
+    <tspan>3,109 counties · 1,700 parcels · 1,600 permits · 45 operators</tspan>
+  </text>
+
+  <!-- Bottom bar -->
+  <g transform="translate(80, 530)">
+    <rect x="0" y="0" width="220" height="44" rx="10" fill="#22d3ee"/>
+    <text x="110" y="29" font-family="Inter, system-ui, sans-serif" font-size="16" font-weight="600" fill="#0b1220" text-anchor="middle">Try instant demo →</text>
+  </g>
+  <text x="320" y="559" font-family="Inter, system-ui, sans-serif" font-size="16" font-weight="500" fill="#64748b">gridsense.pplx.app</text>
+</svg>
