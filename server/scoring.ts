@@ -15,17 +15,32 @@
 import type { County, Signal, ScoreFactor } from "@shared/schema";
 
 export const FACTOR_WEIGHTS = {
-  gridDemandIntent: 0.2,
+  gridDemandIntent: 0.18,
   timeToPower: 0.15,
   onsiteGeneration: 0.1,
-  landAvailability: 0.15,
+  landAvailability: 0.13,
   landAffordability: 0.05,
-  fiberConnectivity: 0.1,
+  fiberConnectivity: 0.09,
   fiscalIncentives: 0.1,
   clusterAdjacency: 0.08,
   waterAvailability: 0.03,
   hazardSafety: 0.04,
+  coolingEfficiency: 0.05,
 } as const;
+
+// Cooling climate score (0-100, higher = better DC cooling climate) from NOAA
+// 1991-2020 annual Cooling/Heating Degree Days. High CDD = high cooling load
+// (bad); high HDD = cold climate with more free-cooling/economizer hours (good).
+// Exported so the ingest and the model use one formula.
+export function coolingScoreFromDegreeDays(
+  cdd: number | null | undefined,
+  hdd: number | null | undefined,
+): number | null {
+  if (cdd == null && hdd == null) return null;
+  const coolingLoad = clamp((cdd ?? 0) / 40, 0, 115);
+  const freeCoolingBonus = Math.min((hdd ?? 0) / 600, 12);
+  return clamp(100 - coolingLoad + freeCoolingBonus);
+}
 
 export interface RealDataOverlay {
   // EIA-860 aggregate for this county
@@ -178,6 +193,12 @@ export function computeCountyFactorsV5(
     hazardSafety = clamp(100 - (c.hazardScore ?? 25));
   }
 
+  // ---- 11. Cooling efficiency ---- REAL from NOAA NCEI 1991-2020 normals ----
+  // noaa_climate pipeline sets cooling_degree_days + heating_degree_days.
+  const coolingReal = coolingScoreFromDegreeDays(c.coolingDegreeDays, c.heatingDegreeDays);
+  const coolingEfficiency = coolingReal ?? 50; // neutral fallback pre-ingest
+  const coolQuality: DataQuality = coolingReal != null ? "real" : "synthetic";
+
   const factors: ScoreFactorV5[] = [
     {
       key: "gridDemandIntent",
@@ -277,6 +298,18 @@ export function computeCountyFactorsV5(
       contribution: 0,
       dataQuality: hzQuality,
       sourceHint: overlay.nri?.riskScore != null ? `FEMA NRI: ${overlay.nri.riskScore.toFixed(1)}` : undefined,
+    },
+    {
+      key: "coolingEfficiency",
+      label: "Cooling climate",
+      weight: FACTOR_WEIGHTS.coolingEfficiency,
+      value: coolingEfficiency,
+      contribution: 0,
+      dataQuality: coolQuality,
+      sourceHint:
+        coolQuality === "real"
+          ? `NOAA normals: ${Math.round(c.coolingDegreeDays ?? 0)} CDD / ${Math.round(c.heatingDegreeDays ?? 0)} HDD`
+          : undefined,
     },
   ];
 

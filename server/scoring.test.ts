@@ -7,6 +7,7 @@ import {
   computeSignalBoost,
   computeLandingProbability,
   scoreTierFor,
+  coolingScoreFromDegreeDays,
   type RealDataOverlay,
 } from "./scoring";
 
@@ -51,6 +52,7 @@ const KEYS = [
   "clusterAdjacency",
   "waterAvailability",
   "hazardSafety",
+  "coolingEfficiency",
 ];
 
 describe("FACTOR_WEIGHTS", () => {
@@ -61,7 +63,7 @@ describe("FACTOR_WEIGHTS", () => {
 });
 
 describe("computeCountyFactorsV5", () => {
-  it("returns all ten factors with weight*value contributions", () => {
+  it("returns all factors with weight*value contributions", () => {
     const factors = computeCountyFactorsV5(county());
     expect(factors.map((f) => f.key).sort()).toEqual([...KEYS].sort());
     for (const f of factors) {
@@ -134,6 +136,38 @@ describe("computeCountyFactorsV5", () => {
       county({ taxIncentiveScore: 80, moratoriumStatus: "active" }),
     ).find((x) => x.key === "fiscalIncentives")!;
     expect(f.value).toBe(0);
+  });
+
+  it("scores a cool climate above a hot one, tagged real", () => {
+    const phoenix = computeCountyFactorsV5(
+      county({ coolingDegreeDays: 3729, heatingDegreeDays: 1248 }),
+    ).find((f) => f.key === "coolingEfficiency")!;
+    const seattle = computeCountyFactorsV5(
+      county({ coolingDegreeDays: 771, heatingDegreeDays: 5968 }),
+    ).find((f) => f.key === "coolingEfficiency")!;
+    expect(seattle.value).toBeGreaterThan(phoenix.value);
+    expect(phoenix.dataQuality).toBe("real");
+    expect(phoenix.value).toBeLessThan(30);
+    expect(seattle.value).toBeGreaterThan(80);
+  });
+
+  it("falls back to a neutral synthetic cooling value with no normals", () => {
+    const f = computeCountyFactorsV5(county()).find((x) => x.key === "coolingEfficiency")!;
+    expect(f.value).toBe(50);
+    expect(f.dataQuality).toBe("synthetic");
+  });
+});
+
+describe("coolingScoreFromDegreeDays", () => {
+  it("returns null when both inputs are missing", () => {
+    expect(coolingScoreFromDegreeDays(null, null)).toBeNull();
+  });
+  it("penalizes cooling load and rewards free-cooling potential", () => {
+    const hot = coolingScoreFromDegreeDays(4000, 200)!;
+    const cold = coolingScoreFromDegreeDays(500, 7000)!;
+    expect(hot).toBeLessThan(cold);
+    expect(hot).toBeGreaterThanOrEqual(0);
+    expect(cold).toBeLessThanOrEqual(100);
   });
 });
 

@@ -37,6 +37,9 @@ sqlite.exec(`
     floodplain_pct_block REAL DEFAULT 0,
     hazard_score REAL DEFAULT 0,
     water_stress_score REAL DEFAULT 0,
+    cooling_degree_days REAL,
+    heating_degree_days REAL,
+    cooling_score REAL,
     tax_incentive_score REAL DEFAULT 0,
     moratorium_status TEXT DEFAULT 'none',
     right_to_build_zoning INTEGER DEFAULT 0,
@@ -241,6 +244,10 @@ sqlite.exec(`
 
 // Add priority column if watchlist existed without it (dev-only migration)
 try { sqlite.exec("ALTER TABLE watchlist ADD COLUMN priority TEXT DEFAULT 'normal';"); } catch {}
+// Climate/cooling columns (added after v1 — ALTER for existing DBs).
+try { sqlite.exec("ALTER TABLE counties ADD COLUMN cooling_degree_days REAL;"); } catch {}
+try { sqlite.exec("ALTER TABLE counties ADD COLUMN heating_degree_days REAL;"); } catch {}
+try { sqlite.exec("ALTER TABLE counties ADD COLUMN cooling_score REAL;"); } catch {}
 
 // ---- Seed on empty DB ----
 function seedIfEmpty() {

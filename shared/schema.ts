@@ -36,6 +36,11 @@ export const counties = sqliteTable("counties", {
   // Water
   waterStressScore: real("water_stress_score").default(0),         // 0-100 (higher = more stressed)
 
+  // Climate / cooling (NOAA NCEI 1991-2020 Climate Normals)
+  coolingDegreeDays: real("cooling_degree_days"),                  // annual CDD (base 65F); higher = more cooling load
+  heatingDegreeDays: real("heating_degree_days"),                  // annual HDD; higher = colder = more free-cooling potential
+  coolingScore: real("cooling_score"),                            // 0-100 (higher = better DC cooling climate)
+
   // Fiscal / policy
   taxIncentiveScore: real("tax_incentive_score").default(0),       // 0-100
   moratoriumStatus: text("moratorium_status").default("none"),     // none | proposed | active
