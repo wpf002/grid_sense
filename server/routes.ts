@@ -10,6 +10,7 @@ import { registerAuth } from "./auth";
 import { computeCountyFactorsV5 } from "./scoring";
 import { buildOverlayFor, warmOverlayCaches } from "./ingest/overlay";
 import { attributeFiling, type OperatorDict } from "./edgar-attribution";
+import { computePowerHeadroom } from "./headroom";
 
 // Load operator shell-LLC / codename dictionaries (JSON-text columns → arrays).
 // Cached for the process; operators change rarely (monthly ingest).
@@ -158,6 +159,31 @@ export async function registerRoutes(
   });
 
   // ---- Transmission aggregate for a county (HIFLD via NETL DOE) ----
+  // Synthesized deliverable-power / time-to-power headroom for a county.
+  app.get("/api/counties/:fips/power-headroom", async (req, res) => {
+    const fips = req.params.fips;
+    const c = sqlite.prepare(
+      `SELECT substation_headroom_mva, time_to_power_months, queued_load_mw
+       FROM counties WHERE fips = ?`,
+    ).get(fips) as any;
+    if (!c) return res.status(404).json({ error: "county not found" });
+    const overlay = buildOverlayFor(fips);
+    const headroom = computePowerHeadroom({
+      substationHeadroomMva: c.substation_headroom_mva,
+      timeToPowerMonths: c.time_to_power_months,
+      queuedMw: overlay.queue?.queuedMw ?? c.queued_load_mw ?? 0,
+      withdrawnMw: overlay.queue?.withdrawnMw ?? 0,
+      maxVoltageKv: overlay.hifld?.maxVoltage ?? null,
+      ehvKm: overlay.hifld?.ehvLinesCount ?? null,
+      hvKm: overlay.hifld?.hvLinesCount ?? null,
+      existingGenMw: overlay.eia?.totalMw ?? null,
+      hasRealSubstation: c.substation_headroom_mva != null,
+      hasRealTransmission: !!overlay.hifld,
+      hasRealQueue: !!overlay.queue,
+    });
+    res.json({ fips, ...headroom });
+  });
+
   app.get("/api/counties/:fips/transmission", async (req, res) => {
     try {
       const row = sqlite.prepare(

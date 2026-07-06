@@ -84,6 +84,20 @@ export default function CountyDetail() {
     enabled: !!fips,
   });
 
+  const { data: headroom } = useQuery<{
+    score: number;
+    tier: "abundant" | "strong" | "moderate" | "constrained" | "limited";
+    deliverableMwLow: number;
+    deliverableMwHigh: number;
+    timeToPowerMonths: number;
+    withdrawalRatio: number | null;
+    drivers: { label: string; detail: string; impact: number }[];
+    confidence: "real" | "partial" | "synthetic";
+  }>({
+    queryKey: ["/api/counties", fips, "power-headroom"],
+    enabled: !!fips,
+  });
+
   const { data: powerPrice } = useQuery<{
     fips: string;
     state?: string;
@@ -310,6 +324,73 @@ export default function CountyDetail() {
 
       {/* Why this score? — plain-English explainability */}
       <WhyThisScore fips={fips} />
+
+      {/* Power headroom — synthesized "how many MW, and when" answer */}
+      {headroom && (
+        <Card data-testid="card-power-headroom" className="border-primary/30">
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between gap-2">
+              <CardTitle className="text-base inline-flex items-center gap-2">
+                <Zap className="h-4 w-4 text-primary" />
+                Power headroom
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Badge
+                  className={`text-[10px] uppercase ${
+                    headroom.tier === "abundant" || headroom.tier === "strong"
+                      ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/40"
+                      : headroom.tier === "moderate"
+                        ? "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/40"
+                        : "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/40"
+                  }`}
+                >
+                  {headroom.tier}
+                </Badge>
+                <Badge variant="outline" className="text-[10px] uppercase">{headroom.confidence}</Badge>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Deliverable-capacity estimate synthesized from substation headroom, ISO queue depth,
+              transmission voltage, and nearby generation — the "how many MW, and when" question.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="rounded-md border p-2">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Headroom score</div>
+                <div className="text-lg font-semibold tabular-nums">{Math.round(headroom.score)}</div>
+              </div>
+              <div className="rounded-md border p-2">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Deliverable MW</div>
+                <div className="text-lg font-semibold tabular-nums">
+                  {headroom.deliverableMwHigh > 0
+                    ? `${headroom.deliverableMwLow}–${headroom.deliverableMwHigh}`
+                    : "—"}
+                </div>
+              </div>
+              <div className="rounded-md border p-2">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Time to power</div>
+                <div className="text-lg font-semibold tabular-nums">~{headroom.timeToPowerMonths}mo</div>
+              </div>
+            </div>
+            {headroom.drivers.length > 0 && (
+              <div className="space-y-1.5">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Drivers</div>
+                {headroom.drivers.map((d) => (
+                  <div key={d.label} className="flex items-center justify-between gap-2 text-xs" data-testid={`headroom-driver-${d.label}`}>
+                    <span className="text-muted-foreground">
+                      <span className="font-medium text-foreground">{d.label}</span> · {d.detail}
+                    </span>
+                    <span className={`font-mono tabular-nums shrink-0 ${d.impact < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                      {d.impact > 0 ? "+" : ""}{d.impact}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Site-level activity: parcels + permits + bids for this county */}
       <CountyExtras fips={fips} />
