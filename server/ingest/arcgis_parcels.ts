@@ -85,6 +85,9 @@ const SOURCES: ParcelSource[] = [
   { key: "coweta", fips: "13077", base: "https://coweta-gis-web.coweta.ga.us/arcgis/rest/services/Hosted/ParcelPropertyValues/FeatureServer/0", idField: "parcel_id", acresField: "acres", ownerField: "ownername", pageSize: 2000 },
   { key: "walton_ga", fips: "13297", base: "https://services1.arcgis.com/TaXHPwWfIMuzJ7Ov/arcgis/rest/services/WaltonCountyPropeties/FeatureServer/3", idField: "PARCELNO", acresField: "GIS_ACRES", ownerField: "OWNER_NAME", pageSize: 2000 },
   { key: "bartow", fips: "13015", base: "https://www.bartowgis.org/arcgis/rest/services/AGOServices/BartowLand/FeatureServer/2", idField: "PARCELID", acresField: "TOTALACRES", ownerField: "Owner1", pageSize: 2000 },
+  // TN + MS
+  { key: "montgomery_tn", fips: "47125", base: "https://apnsgis4.apsu.edu/arcgis/rest/services/CMCGIS/Parcels/MapServer/0", idField: "parcelid", acresField: "calcacreage", ownerField: "owner", zoningField: "zoning", pageSize: 2000 },
+  { key: "madison_ms", fips: "28089", base: "https://services7.arcgis.com/deoj2Y8l1tBr7P5X/arcgis/rest/services/Madison_Service/FeatureServer/5", idField: "PARCEL_ID", acresField: "TOTAL_AC", ownerField: "OWNERNAME", pageSize: 2000 },
 ];
 
 function parcelScore(acres: number): number {
