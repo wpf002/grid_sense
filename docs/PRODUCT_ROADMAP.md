@@ -143,19 +143,20 @@ fixed; real ingests lit up; EDGAR attribution, power headroom, cooling factor sh
 4. **Operator attribution density:** live SEC/news matching to fill
    `suspectedOperator` on signals (today ~95% null).
 
-### Phase 2 — Productionize the platform *(4–6 wks)*
-1. **Postgres migration** (SQLite → `pg`/`drizzle-orm/node-postgres`): async calls,
-   JSON-text → `jsonb`, indexes on `counties.state`, `signals.county_id`,
-   `score_history_daily(county_id, snapshot_date)`, versioned `drizzle-kit migrate`.
-2. **Real auth & billing:** multi-user, Stripe (`/api/webhooks/stripe`), plan tiers
-   (free/pro/enterprise), SSO (Clerk or `@auth/express`), API keys + per-plan rate
-   limiting on `/api/exports/*` and the public API.
-3. **Observability:** Sentry, structured `pino` logging, `/api/metrics` (Prometheus).
-4. **Scheduled ingestion:** GitHub Actions nightly running `run_all.ts` (the cron is
-   still just a doc); alert on pipeline failure (ISO-NE already fails intermittently).
-5. **Deploy:** Fly.io / Railway with a managed Postgres; staging + prod.
-6. **Test coverage:** Supertest on route contracts, ingest smoke tests, Playwright on
-   the 5 most-visited pages. (Today: 40 unit tests on 3 pure modules only.)
+### Phase 2 — Productionize the platform *(partly done)*
+1. ✅ **API keys + non-spoofable rate limiting** — `server/apikeys.ts`; plan now
+   comes from a hashed key, not a spoofable header. Admin-gated key CRUD.
+2. ✅ **Observability** — `/api/metrics` (Prometheus), structured logging (no body
+   dumps), Sentry-ready `captureError` hook (`server/observability.ts`).
+3. ✅ **Route tests** — 11 Supertest contract tests incl. regression guards (53 total).
+4. **Postgres migration** *(needs dedicated effort — biggest item)*: SQLite →
+   `pg`/`drizzle-orm/node-postgres`, async calls, JSON-text → `jsonb`, indexes,
+   versioned `drizzle-kit migrate`. Deferred to avoid half-breaking the app.
+5. **Stripe billing + SSO** *(needs your credentials)*: `/api/webhooks/stripe`,
+   plan tiers wired to the API-key `plan`, Clerk/`@auth/express`.
+6. **Deploy + scheduled ingestion** *(needs your accounts)*: Fly/Railway + managed
+   Postgres; GitHub Actions nightly `run_all.ts`; alert on pipeline failure.
+7. Playwright on the 5 most-visited pages.
 
 ### Phase 3 — Finish the thin pages *(3–4 wks)*
 1. **Alerts:** actually evaluate subscriptions on score/tier changes and dispatch
