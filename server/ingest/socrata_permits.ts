@@ -87,6 +87,42 @@ export const JURISDICTIONS: SocrataSource[] = [
       };
     },
   },
+  {
+    key: "kansas_city",
+    label: "Kansas City, MO (Jackson County)",
+    countyFips: "29095",
+    url:
+      "https://data.kcmo.org/resource/ntw8-aacc.json?" +
+      `$where=${encodeURIComponent("permitclassmapped='Commercial' AND applieddate > '2024-01-01'")}` +
+      "&$order=applieddate%20DESC&$limit=1000",
+    map: (r) => ({
+      permit_type: (r.permittypedesc || r.permittype || "permit").slice(0, 60),
+      applicant: clip(r.contractorcompanyname, 200),
+      filed_date: date10(r.issueddate || r.applieddate),
+      status: (r.statuscurrent || "unknown").slice(0, 40),
+      description: clip([r.permittypedesc, r.description, r.originaladdress1].filter(Boolean).join(" · "), 500),
+      source_url: r.link?.url ?? "https://data.kcmo.org/resource/ntw8-aacc",
+      attributionText: `${r.contractorcompanyname ?? ""} ${r.description ?? ""}`,
+    }),
+  },
+  {
+    key: "mesa",
+    label: "Mesa, AZ (Maricopa County)",
+    countyFips: "04013",
+    url:
+      "https://data.mesaaz.gov/resource/dzpk-hxfb.json?" +
+      `$where=${encodeURIComponent("issued_date > '2024-01-01'")}` +
+      "&$order=issued_date%20DESC&$limit=1000",
+    map: (r) => ({
+      permit_type: (r.permit_type || "permit").slice(0, 60),
+      applicant: null,
+      filed_date: date10(r.issued_date || r.opened_date),
+      status: (r.status || "unknown").slice(0, 40),
+      description: clip([r.description_of_work, r.property_address].filter(Boolean).join(" · "), 500),
+      source_url: "https://data.mesaaz.gov/resource/dzpk-hxfb",
+      attributionText: `${r.description_of_work ?? ""}`,
+    }),
+  },
 ];
 
 function loadOperatorDicts(): OperatorDict[] {

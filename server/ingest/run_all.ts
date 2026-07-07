@@ -28,6 +28,7 @@ import { ingestNoaaClimate } from "./noaa_climate.js";
 import { ingestStateEnergyFactors } from "./state_energy_factors.js";
 import { ingestSocrataPermits } from "./socrata_permits.js";
 import { ingestArcgisParcels } from "./arcgis_parcels.js";
+import { ingestArcgisPermits } from "./arcgis_permits.js";
 import { ingestRealAnnouncements } from "./dc_announcements_real.js";
 import { ingestCompetitiveFromAnnouncements } from "./competitive_from_announcements.js";
 import { ingestDcBacktest } from "./dc_backtest.js";
@@ -112,6 +113,7 @@ export async function runAll(pipes?: PipeName[]): Promise<Record<string, any>> {
   if (shouldRun("noaa_climate")) results.noaa_climate = await safe("NOAA climate normals (cooling)", () => ingestNoaaClimate());
   if (shouldRun("noaa_climate")) results.state_energy = await safe("Carbon + gas factors (eGRID/EIA)", () => ingestStateEnergyFactors());
   if (shouldRun("socrata_permits")) results.socrata_permits = await safe("Real permits (Austin + Chicago)", () => ingestSocrataPermits());
+  if (shouldRun("socrata_permits")) results.arcgis_permits = await safe("Real permits (ArcGIS + Fairfax DC layer)", () => ingestArcgisPermits());
   if (shouldRun("arcgis_parcels")) results.arcgis_parcels = await safe("Real parcels (Loudoun + Maricopa)", () => ingestArcgisParcels());
   if (shouldRun("dc_backtest")) results.dc_backtest = await safe("DC announcements backtest", () => ingestDcBacktest());
   // Overwrite the seed with the FIPS-verified real announcement set.
