@@ -120,24 +120,6 @@ export default function CountyDetail() {
     enabled: !!fips,
   });
 
-  const { data: parcels } = useQuery<{
-    fips: string;
-    industrial_polygons: number;
-    industrial_acres: number;
-    commercial_polygons: number;
-    commercial_acres: number;
-    brownfield_polygons: number;
-    brownfield_acres: number;
-    substations: number;
-    large_industrial_buildings: number;
-    features: Array<{ id: string; type: string; acres: number | null; lat: number; lng: number; name: string | null; tags: Record<string, string> }>;
-    fetched_at: string;
-  }>({
-    queryKey: ["/api/counties", fips, "parcels"],
-    enabled: !!fips,
-    staleTime: 24 * 60 * 60 * 1000,
-  });
-
   const { data: waterStress } = useQuery<{
     fips: string;
     state?: string;
@@ -750,74 +732,6 @@ export default function CountyDetail() {
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* OSM parcel/zoning inspector (Gap 6 + 8, scaffolds Gap 15) */}
-      {parcels && (parcels.industrial_polygons + parcels.commercial_polygons + parcels.brownfield_polygons + parcels.substations > 0) && (
-        <Card data-testid="card-parcels">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base inline-flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-primary" />
-              Ready-to-develop inventory (OSM proxy)
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">
-              OpenStreetMap features within 15km of the county centroid. Free proxy for the paid Regrid parcel dataset. Industrial/commercial landuse polygons are candidate site parcels; brownfields are re-developable industrial sites; substations mark viable interconnect points. Fetched {new Date(parcels.fetched_at).toLocaleDateString()}.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              <div className="p-3 rounded-md bg-muted/40">
-                <div className="text-xs text-muted-foreground mb-1">Industrial</div>
-                <div className="text-lg font-semibold">{parcels.industrial_polygons}</div>
-                <div className="text-xs text-muted-foreground">{parcels.industrial_acres.toLocaleString()} ac</div>
-              </div>
-              <div className="p-3 rounded-md bg-muted/40">
-                <div className="text-xs text-muted-foreground mb-1">Commercial</div>
-                <div className="text-lg font-semibold">{parcels.commercial_polygons}</div>
-                <div className="text-xs text-muted-foreground">{parcels.commercial_acres.toLocaleString()} ac</div>
-              </div>
-              <div className="p-3 rounded-md bg-muted/40">
-                <div className="text-xs text-muted-foreground mb-1">Brownfield</div>
-                <div className="text-lg font-semibold">{parcels.brownfield_polygons}</div>
-                <div className="text-xs text-muted-foreground">{parcels.brownfield_acres.toLocaleString()} ac</div>
-              </div>
-              <div className="p-3 rounded-md bg-muted/40">
-                <div className="text-xs text-muted-foreground mb-1">Substations</div>
-                <div className="text-lg font-semibold">{parcels.substations}</div>
-                <div className="text-xs text-muted-foreground">interconnect nodes</div>
-              </div>
-              <div className="p-3 rounded-md bg-muted/40">
-                <div className="text-xs text-muted-foreground mb-1">Large ind. bldgs</div>
-                <div className="text-lg font-semibold">{parcels.large_industrial_buildings}</div>
-                <div className="text-xs text-muted-foreground">2+ ac footprint</div>
-              </div>
-            </div>
-            {parcels.features.length > 0 && (
-              <div>
-                <div className="text-xs font-medium text-foreground mb-1">Top features by size</div>
-                <div className="space-y-1 max-h-64 overflow-y-auto">
-                  {parcels.features
-                    .filter((f) => f.acres != null)
-                    .sort((a, b) => (b.acres ?? 0) - (a.acres ?? 0))
-                    .slice(0, 20)
-                    .map((f) => (
-                      <div key={f.id} className="flex items-center justify-between text-xs gap-2" data-testid={`row-parcel-${f.id.replace(/\//g, "-")}`}>
-                        <Badge variant="outline" className="text-[10px] capitalize">{f.type.replace(/_/g, " ")}</Badge>
-                        <span className="flex-1 truncate">{f.name ?? "(unnamed)"}</span>
-                        <span className="font-mono text-muted-foreground">{f.acres!.toLocaleString(undefined, { maximumFractionDigits: 0 })} ac</span>
-                        <a href={`https://www.openstreetmap.org/${f.id}`} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
-                          OSM <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            )}
-            <p className="text-[11px] text-muted-foreground">
-              This is a free proxy for Regrid parcel data. It misses ownership records, tax IDs, and out-of-map polygons — use it for triage only. For the shortlist you always fall back to a Regrid pull, county assessor site, or a title company.
-            </p>
           </CardContent>
         </Card>
       )}

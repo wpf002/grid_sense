@@ -176,26 +176,26 @@ export default function Parcels() {
                   {rows.map((r) => (
                     <TableRow key={r.id} data-testid={`row-parcel-${r.id}`}>
                       <TableCell>
-                        <div className="text-lg font-bold font-mono text-primary">{r.parcel_score.toFixed(0)}</div>
+                        <div className="text-lg font-bold font-mono text-primary">{(r.parcel_score ?? 0).toFixed(0)}</div>
                       </TableCell>
                       <TableCell>
                         <Link href={`/counties/${r.county_fips}`}>
                           <button className="text-primary hover:underline text-left">
                             <div className="text-sm font-medium">{r.county_name}, {r.state}</div>
-                            <div className="text-[10px] text-muted-foreground font-mono">score {Math.round(r.county_score)} · {r.iso ?? "—"}</div>
+                            <div className="text-[10px] text-muted-foreground font-mono">score {Math.round(r.county_score ?? 0)} · {r.iso ?? "—"}</div>
                           </button>
                         </Link>
                       </TableCell>
                       <TableCell className="font-mono text-xs">{r.apn}</TableCell>
-                      <TableCell className="text-right font-mono">{r.acres.toFixed(0)}</TableCell>
+                      <TableCell className="text-right font-mono">{(r.acres ?? 0).toFixed(0)}</TableCell>
                       <TableCell>
-                        <div className="text-sm">{r.owner_name}</div>
+                        <div className="text-sm">{r.owner_name ?? <span className="text-muted-foreground">—</span>}</div>
                         {r.owner_is_shell_llc ? <Badge variant="outline" className="text-[9px] mt-0.5 border-amber-500/40 text-amber-500">SHELL LLC</Badge> : null}
                       </TableCell>
                       <TableCell>{r.resolved_operator ?? <span className="text-muted-foreground text-xs">—</span>}</TableCell>
-                      <TableCell className="text-xs">{r.zoning}</TableCell>
-                      <TableCell className="text-right font-mono text-xs">{r.substation_distance_mi.toFixed(1)}mi</TableCell>
-                      <TableCell className="text-right font-mono text-xs">{r.fiber_distance_mi.toFixed(1)}mi</TableCell>
+                      <TableCell className="text-xs">{r.zoning ?? "—"}</TableCell>
+                      <TableCell className="text-right font-mono text-xs">{r.substation_distance_mi != null ? `${r.substation_distance_mi.toFixed(1)}mi` : "—"}</TableCell>
+                      <TableCell className="text-right font-mono text-xs">{r.fiber_distance_mi != null ? `${r.fiber_distance_mi.toFixed(1)}mi` : "—"}</TableCell>
                       <TableCell className="text-right font-mono">{fmt$(r.land_price)}</TableCell>
                       <TableCell>
                         <Badge className={`text-[10px] uppercase ${STATUS_STYLE[r.status] ?? STATUS_STYLE.watch}`}>{r.status.replace("_", " ")}</Badge>

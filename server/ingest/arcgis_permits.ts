@@ -92,7 +92,10 @@ export async function ingestArcgisPermits(): Promise<Record<string, number>> {
             const a = f.attributes ?? {};
             const applicant = s.applicantField ? (a[s.applicantField] ?? null) : null;
             const type = String(a[s.typeField] ?? "permit").slice(0, 80);
-            const desc = String(a[s.descField ?? s.typeField] ?? "").slice(0, 500) || null;
+            let desc = String(a[s.descField ?? s.typeField] ?? "").slice(0, 500) || null;
+            // Some ArcGIS views return the field NAME as the value for
+            // unpopulated fields — don't store that placeholder.
+            if (desc === s.descField || desc === s.typeField) desc = null;
             const attr = attributeFiling(`${applicant ?? ""} ${desc ?? ""} ${type}`, dicts, { multiWordOnly: true });
             if (attr) attributed++;
             ins.run({
