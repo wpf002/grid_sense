@@ -149,9 +149,15 @@ fixed; real ingests lit up; EDGAR attribution, power headroom, cooling factor sh
 2. ✅ **Observability** — `/api/metrics` (Prometheus), structured logging (no body
    dumps), Sentry-ready `captureError` hook (`server/observability.ts`).
 3. ✅ **Route tests** — 11 Supertest contract tests incl. regression guards (53 total).
-4. **Postgres migration** *(needs dedicated effort — biggest item)*: SQLite →
-   `pg`/`drizzle-orm/node-postgres`, async calls, JSON-text → `jsonb`, indexes,
-   versioned `drizzle-kit migrate`. Deferred to avoid half-breaking the app.
+4. **Postgres migration** — *foundation ready on branch `postgres-migration`,
+   deliberately deferred.* Schema + all 116,069 rows migrated & verified; async
+   `server/pg.ts` layer built & tested. **Decision: stay on SQLite for now** —
+   for a single-node, read-heavy, ~116k-row app, synchronous better-sqlite3 is
+   faster and simpler; Postgres adds risk + ops overhead with no functional gain
+   yet. **Flip when any of these becomes true:** multiple app instances /
+   horizontal scale, concurrent writers, a managed cloud deploy, or data growth
+   into millions of rows. Remaining work = the ~222 sync→async call-site
+   conversion (see `docs/POSTGRES_MIGRATION.md` on the branch).
 5. **Stripe billing + SSO** *(needs your credentials)*: `/api/webhooks/stripe`,
    plan tiers wired to the API-key `plan`, Clerk/`@auth/express`.
 6. **Deploy + scheduled ingestion** *(needs your accounts)*: Fly/Railway + managed
