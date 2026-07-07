@@ -1404,7 +1404,7 @@ export async function registerRoutes(
                SUM(CASE WHEN b.stage IN ('loi','option','under_contract','closed') THEN 1 ELSE 0 END) AS active_count
         FROM competitive_bids b
         JOIN counties c ON c.fips = b.county_fips
-        WHERE date(b.observed_date) >= date('now', '-180 days')
+        WHERE date(b.observed_date) >= date('now', '-1095 days')
         GROUP BY b.county_fips
         ORDER BY active_count DESC, bid_count DESC
         LIMIT 50

@@ -29,6 +29,7 @@ import { ingestStateEnergyFactors } from "./state_energy_factors.js";
 import { ingestSocrataPermits } from "./socrata_permits.js";
 import { ingestArcgisParcels } from "./arcgis_parcels.js";
 import { ingestRealAnnouncements } from "./dc_announcements_real.js";
+import { ingestCompetitiveFromAnnouncements } from "./competitive_from_announcements.js";
 import { ingestDcBacktest } from "./dc_backtest.js";
 import { ingestComps } from "./comps.js";
 import { ingestScoreHistory } from "./score_history.js";
@@ -115,6 +116,7 @@ export async function runAll(pipes?: PipeName[]): Promise<Record<string, any>> {
   if (shouldRun("dc_backtest")) results.dc_backtest = await safe("DC announcements backtest", () => ingestDcBacktest());
   // Overwrite the seed with the FIPS-verified real announcement set.
   if (shouldRun("dc_announcements_real")) results.dc_announcements_real = await safe("Real DC announcements (FIPS-verified)", () => ingestRealAnnouncements());
+  if (shouldRun("dc_announcements_real")) results.competitive_real = await safe("Competitive bids from real announcements", () => ingestCompetitiveFromAnnouncements());
   if (shouldRun("comps")) results.comps = await safe("DC land comps database", () => ingestComps());
   if (shouldRun("edgar")) results.edgar = await safe("SEC EDGAR", () => ingestEdgar());
   if (shouldRun("dc_news")) results.dc_news = await safe("Data Center Dynamics RSS", () => ingestDcNews());
