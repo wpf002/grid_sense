@@ -40,6 +40,8 @@ sqlite.exec(`
     cooling_degree_days REAL,
     heating_degree_days REAL,
     cooling_score REAL,
+    carbon_intensity_score REAL,
+    gas_access_score REAL,
     tax_incentive_score REAL DEFAULT 0,
     moratorium_status TEXT DEFAULT 'none',
     right_to_build_zoning INTEGER DEFAULT 0,
@@ -248,6 +250,8 @@ try { sqlite.exec("ALTER TABLE watchlist ADD COLUMN priority TEXT DEFAULT 'norma
 try { sqlite.exec("ALTER TABLE counties ADD COLUMN cooling_degree_days REAL;"); } catch {}
 try { sqlite.exec("ALTER TABLE counties ADD COLUMN heating_degree_days REAL;"); } catch {}
 try { sqlite.exec("ALTER TABLE counties ADD COLUMN cooling_score REAL;"); } catch {}
+try { sqlite.exec("ALTER TABLE counties ADD COLUMN carbon_intensity_score REAL;"); } catch {}
+try { sqlite.exec("ALTER TABLE counties ADD COLUMN gas_access_score REAL;"); } catch {}
 
 // ---- Seed on empty DB ----
 function seedIfEmpty() {

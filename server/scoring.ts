@@ -22,15 +22,17 @@ import type { County, Signal, ScoreFactor } from "@shared/schema";
 export const FACTOR_WEIGHTS = {
   gridDemandIntent: 0.105,
   timeToPower: 0.111,
-  onsiteGeneration: 0.15,
+  onsiteGeneration: 0.12,
   landAvailability: 0.08,
   landAffordability: 0.071,
-  fiberConnectivity: 0.145,
+  fiberConnectivity: 0.125,
   fiscalIncentives: 0.065,
-  clusterAdjacency: 0.14,
+  clusterAdjacency: 0.12,
   waterAvailability: 0.03,
   hazardSafety: 0.035,
   coolingEfficiency: 0.068,
+  gasAccess: 0.04,
+  carbonIntensity: 0.03,
 } as const;
 
 // Cooling climate score (0-100, higher = better DC cooling climate) from NOAA
@@ -204,6 +206,14 @@ export function computeCountyFactorsV5(
   const coolingEfficiency = coolingReal ?? 50; // neutral fallback pre-ingest
   const coolQuality: DataQuality = coolingReal != null ? "real" : "synthetic";
 
+  // ---- 12. Gas access ---- state pipeline/production index (EIA) ----
+  const gasAccess = c.gasAccessScore ?? 50;
+  const gasQuality: DataQuality = c.gasAccessScore != null ? "real" : "synthetic";
+
+  // ---- 13. Carbon intensity ---- EPA eGRID state grid CO2 rate ----
+  const carbonIntensity = c.carbonIntensityScore ?? 50;
+  const carbonQuality: DataQuality = c.carbonIntensityScore != null ? "real" : "synthetic";
+
   const factors: ScoreFactorV5[] = [
     {
       key: "gridDemandIntent",
@@ -315,6 +325,24 @@ export function computeCountyFactorsV5(
         coolQuality === "real"
           ? `NOAA normals: ${Math.round(c.coolingDegreeDays ?? 0)} CDD / ${Math.round(c.heatingDegreeDays ?? 0)} HDD`
           : undefined,
+    },
+    {
+      key: "gasAccess",
+      label: "Gas access",
+      weight: FACTOR_WEIGHTS.gasAccess,
+      value: gasAccess,
+      contribution: 0,
+      dataQuality: gasQuality,
+      sourceHint: gasQuality === "real" ? `EIA pipeline/citygate: ${Math.round(gasAccess)}/100` : undefined,
+    },
+    {
+      key: "carbonIntensity",
+      label: "Grid carbon",
+      weight: FACTOR_WEIGHTS.carbonIntensity,
+      value: carbonIntensity,
+      contribution: 0,
+      dataQuality: carbonQuality,
+      sourceHint: carbonQuality === "real" ? `EPA eGRID: ${Math.round(carbonIntensity)}/100 (cleaner=higher)` : undefined,
     },
   ];
 

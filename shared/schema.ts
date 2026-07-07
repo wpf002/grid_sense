@@ -40,6 +40,8 @@ export const counties = sqliteTable("counties", {
   coolingDegreeDays: real("cooling_degree_days"),                  // annual CDD (base 65F); higher = more cooling load
   heatingDegreeDays: real("heating_degree_days"),                  // annual HDD; higher = colder = more free-cooling potential
   coolingScore: real("cooling_score"),                            // 0-100 (higher = better DC cooling climate)
+  carbonIntensityScore: real("carbon_intensity_score"),           // 0-100 (higher = cleaner grid; EPA eGRID)
+  gasAccessScore: real("gas_access_score"),                       // 0-100 (higher = better gas access; EIA)
 
   // Fiscal / policy
   taxIncentiveScore: real("tax_incentive_score").default(0),       // 0-100

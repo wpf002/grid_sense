@@ -53,6 +53,8 @@ const KEYS = [
   "waterAvailability",
   "hazardSafety",
   "coolingEfficiency",
+  "gasAccess",
+  "carbonIntensity",
 ];
 
 describe("FACTOR_WEIGHTS", () => {
