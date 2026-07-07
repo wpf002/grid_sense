@@ -127,15 +127,16 @@ Runs on real Node; green build + CI; 40 tests; portability + 2 broken endpoints
 fixed; real ingests lit up; EDGAR attribution, power headroom, cooling factor shipped.
 
 ### Phase 1 — Make the data real *(4–6 wks) — the credibility unlock*
-1. **One real permit/parcel source.** Spike a county open-data permit feed
-   (Socrata SODA or ArcGIS FeatureServer — e.g. a Northern Virginia or Central
-   Texas jurisdiction) and write a real `permits`/`parcels` ingest to replace the
-   seed. *Note: the research spike to nail exact endpoints was cut off by a rate
-   limit — first task is to finish that source scan and pick the cleanest JSON API.*
-2. **Real DC announcements → calibrate the model.** Expand `dc_announcements` from
-   39 seeded rows to 100+ real ones (Data Center Frontier/DCD/press/econ-dev), then
-   tune `FACTOR_WEIGHTS` against them. Current backtest: hit-rate 36%, hit+near 67%
-   at score≥70 — a real target to beat.
+1. ✅ **First real site-intel ingest — DONE.** `server/ingest/austin_permits.ts`
+   pulls 1,000 live commercial permits for Travis County, TX from the Austin
+   Socrata API (keyless JSON) and replaces the seed, with operator attribution.
+   *Next: replicate for Northern VA (Loudoun/Prince William) + add a real parcel
+   source (Regrid, ~$500–$2k/mo — see §2b).*
+2. ✅ **Model calibrated against real announcements — DONE.**
+   `server/ingest/dc_announcements_real.ts` (37 FIPS-verified real announcements)
+   + `scripts/calibrate_weights.ts` (coordinate-ascent, regularized). Applied
+   blended weights: real DC counties' mean percentile **64% → 74%**, precision@70
+   **10% → 58%**. *Next: grow the announcement set to 100+ and re-run.*
 3. **Free high-ROI factors:** `gas_access` (HIFLD + EIA), `carbon_intensity`
    (eGRID), environmental constraints (Green Book/PAD-US), and **free-cooling
    hours** (ISD-Lite, the cooling-v2 upgrade). Re-balance weights (test guards the sum).
