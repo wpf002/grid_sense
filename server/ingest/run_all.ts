@@ -26,6 +26,7 @@ import { ingestIsoQueueHistory } from "./iso_queue_history.js";
 import { ingestWaterStress } from "./water_stress.js";
 import { ingestNoaaClimate } from "./noaa_climate.js";
 import { ingestAustinPermits } from "./austin_permits.js";
+import { ingestRealAnnouncements } from "./dc_announcements_real.js";
 import { ingestDcBacktest } from "./dc_backtest.js";
 import { ingestComps } from "./comps.js";
 import { ingestScoreHistory } from "./score_history.js";
@@ -60,6 +61,7 @@ type PipeName =
   | "noaa_climate"
   | "austin_permits"
   | "dc_backtest"
+  | "dc_announcements_real"
   | "comps"
   | "score_history"
   | "expand_counties"
@@ -105,6 +107,8 @@ export async function runAll(pipes?: PipeName[]): Promise<Record<string, any>> {
   if (shouldRun("noaa_climate")) results.noaa_climate = await safe("NOAA climate normals (cooling)", () => ingestNoaaClimate());
   if (shouldRun("austin_permits")) results.austin_permits = await safe("Austin permits (real, Travis County)", () => ingestAustinPermits());
   if (shouldRun("dc_backtest")) results.dc_backtest = await safe("DC announcements backtest", () => ingestDcBacktest());
+  // Overwrite the seed with the FIPS-verified real announcement set.
+  if (shouldRun("dc_announcements_real")) results.dc_announcements_real = await safe("Real DC announcements (FIPS-verified)", () => ingestRealAnnouncements());
   if (shouldRun("comps")) results.comps = await safe("DC land comps database", () => ingestComps());
   if (shouldRun("edgar")) results.edgar = await safe("SEC EDGAR", () => ingestEdgar());
   if (shouldRun("dc_news")) results.dc_news = await safe("Data Center Dynamics RSS", () => ingestDcNews());
