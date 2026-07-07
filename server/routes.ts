@@ -1,6 +1,8 @@
 import type { Express } from "express";
 import { createServer } from 'node:http';
 import type { Server } from 'node:http';
+import path from "node:path";
+import fs from "node:fs";
 import { storage, db, sqlite } from "./storage";
 import { insertWatchlistSchema, insertAlertSubscriptionSchema, dataProvenance, rawEiaGenerators, rawHifldTransmission, rawEdgarFilings, rawDcNews, rawIsoQueue } from "@shared/schema";
 import { eq, sql, desc } from "drizzle-orm";
@@ -292,7 +294,7 @@ export async function registerRoutes(
   app.get("/api/backtest/announcements", async (_req, res) => {
     try {
       const rows = sqlite.prepare(`
-        SELECT a.*, c.score, c.tier, c.name AS current_name
+        SELECT a.*, c.landing_probability AS score, c.score_tier AS tier, c.name AS current_name
         FROM dc_announcements a
         LEFT JOIN counties c ON c.fips = a.fips
         ORDER BY a.announced_date DESC
@@ -1507,8 +1509,6 @@ export async function registerRoutes(
         }
       }).sort((a, b) => b.row_count - a.row_count);
 
-      const path = require("path");
-      const fs = require("fs");
       let dbSize = 0;
       try {
         const dbPath = path.join(process.cwd(), "data.db");
