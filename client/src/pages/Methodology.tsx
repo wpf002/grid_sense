@@ -197,7 +197,7 @@ export default function Methodology() {
               Plus EIA-860 generators (2024 vintage; 2,167 counties with existing gen),
               HIFLD transmission lines, FEMA National Risk Index (3,232 counties),
               FCC Broadband Data Collection Dec 2024 (fiber technology across 3,186
-              counties nationally, 624 of our 626 tracked), SEC EDGAR full-text search,
+              counties nationally, most of our 3,109 tracked), SEC EDGAR full-text search,
               Data Center Dynamics RSS. Every row is disk-cached with fetch timestamp
               for audit.
             </p>
@@ -287,7 +287,7 @@ export default function Methodology() {
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
           <p>
-            This build tracks <strong className="text-foreground">626 US counties</strong>, seeded from a curated list and
+            This build tracks <strong className="text-foreground">3,109 US counties</strong>, seeded from a curated list and
             auto-expanded to include every county with material queue-MW activity across <strong className="text-foreground">
             all seven US ISO/RTO interconnection queues</strong> — PJM, MISO, ERCOT, ISO-NE, SPP, CAISO, and NYISO.
             <strong className="text-foreground"> All ten scoring factors are now backed by real public data</strong>:
@@ -331,7 +331,7 @@ export default function Methodology() {
             based on 2020 Census + 2020 OMB metro delineations. Rural counties (RUCC 6–9) get peak parcel-supply
             scores; metros (RUCC 1) get parcel-scarcity scores. State DC tax-incentive matrix compiled from
             primary statutes and Tax Foundation’s 2024 state DC survey — sales-tax exemption on IT/electricity,
-            property abatement/MRO, capex/jobs thresholds — mapped to all 626 tracked counties. Plus PeeringDB
+            property abatement/MRO, capex/jobs thresholds — mapped to all 3,109 tracked counties. Plus PeeringDB
             /api/fac (1,357 geolocated US carrier hotels + IX facilities) blended into the fiber factor at
             70% FCC BDC / 30% peering density within a 40-mile radius. Together these lift the real-data
             factor count from 9 to 10 of 10.
@@ -344,7 +344,7 @@ export default function Methodology() {
           </p>
           <p>
             <strong className="text-foreground">v0.7 baseline:</strong> All seven US ISO/RTO queues (17,905
-            queued projects) plus FCC Broadband Data Collection Dec 2024 (19,589 fiber records, 624 of 626
+            queued projects) plus FCC Broadband Data Collection Dec 2024 (19,589 fiber records, most of 3,109
             tracked counties covered).
           </p>
           <p>

@@ -78,6 +78,8 @@ export function AppSidebar() {
     refetchInterval: 30_000,
   });
   const unread = alertCount?.count ?? 0;
+  const { data: health } = useQuery<{ counties: number }>({ queryKey: ["/api/health"] });
+  const countyCount = health?.counties;
 
   return (
     <Sidebar>
@@ -120,7 +122,7 @@ export function AppSidebar() {
             <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
             <span>Live public data · v2.0</span>
           </div>
-          <div>US-only · 626 counties tracked</div>
+          <div>US-only · {countyCount ? countyCount.toLocaleString() : "3,109"} counties tracked</div>
         </div>
       </SidebarFooter>
     </Sidebar>

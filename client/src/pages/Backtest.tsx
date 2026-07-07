@@ -129,7 +129,7 @@ export default function Backtest() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold text-muted-foreground">{summary.not_tracked}</div>
-            <div className="text-xs text-muted-foreground">County outside 626-county universe</div>
+            <div className="text-xs text-muted-foreground">County outside tracked-county universe</div>
           </CardContent>
         </Card>
         <Card data-testid="tile-total">

@@ -127,7 +127,7 @@ export default function Portfolio() {
           Portfolio scoring
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Paste or upload a CSV of parcels, sites, or counties. GridSense scores each one against the 626-county model and returns the tier, queued load, time-to-power, and hazard profile. Accepts either a <code className="text-xs bg-muted px-1 rounded">fips</code> column (5-digit county FIPS) or <code className="text-xs bg-muted px-1 rounded">lat,lng</code> columns (nearest-county fallback). Optional <code className="text-xs bg-muted px-1 rounded">label</code> column preserves your row names.
+          Paste or upload a CSV of parcels, sites, or counties. GridSense scores each one against the 3,109-county model and returns the tier, queued load, time-to-power, and hazard profile. Accepts either a <code className="text-xs bg-muted px-1 rounded">fips</code> column (5-digit county FIPS) or <code className="text-xs bg-muted px-1 rounded">lat,lng</code> columns (nearest-county fallback). Optional <code className="text-xs bg-muted px-1 rounded">label</code> column preserves your row names.
         </p>
       </div>
 
@@ -304,7 +304,7 @@ export default function Portfolio() {
                   Unmatched rows ({resp.not_found.length})
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
-                  These rows didn't match any county in the 626-county universe. Check the FIPS code (should be 5 digits, zero-padded) or add lat/lng columns for a nearest-neighbor fallback.
+                  These rows didn't match any county in the 3,109-county universe. Check the FIPS code (should be 5 digits, zero-padded) or add lat/lng columns for a nearest-neighbor fallback.
                 </p>
               </CardHeader>
               <CardContent className="p-0">

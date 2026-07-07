@@ -195,7 +195,7 @@ export default function Dashboard() {
         ) : (
           <>
             <StatCard label="Counties" value={stats.totalCounties} icon={MapPin} testId="stat-counties" />
-            <StatCard label="Hot" value={stats.hot} hint="Score ≥ 75" icon={Flame} accent="primary" testId="stat-hot" />
+            <StatCard label="Hot" value={stats.hot} hint="Score ≥ 75" icon={Flame} accent="red" testId="stat-hot" />
             <StatCard label="Warm" value={stats.warm} hint="Score 60-74" icon={Thermometer} accent="orange" testId="stat-warm" />
             <StatCard label="Emerging" value={stats.emerging} hint="Score 45-59" icon={Sprout} accent="blue" testId="stat-emerging" />
             <StatCard label="Cold" value={stats.cold} hint="Score < 45" icon={Snowflake} testId="stat-cold" />
