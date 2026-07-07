@@ -93,8 +93,8 @@ export const JURISDICTIONS: SocrataSource[] = [
     countyFips: "29095",
     url:
       "https://data.kcmo.org/resource/ntw8-aacc.json?" +
-      `$where=${encodeURIComponent("permitclassmapped='Commercial' AND applieddate > '2024-01-01'")}` +
-      "&$order=applieddate%20DESC&$limit=1000",
+      `$where=${encodeURIComponent("permitclassmapped='NON-RESIDENTIAL' AND issueddate > '2024-01-01T00:00:00'")}` +
+      "&$order=issueddate%20DESC&$limit=1000",
     map: (r) => ({
       permit_type: (r.permittypedesc || r.permittype || "permit").slice(0, 60),
       applicant: clip(r.contractorcompanyname, 200),
