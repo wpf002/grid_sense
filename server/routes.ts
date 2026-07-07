@@ -13,6 +13,8 @@ import { computeCountyFactorsV5 } from "./scoring";
 import { buildOverlayFor, warmOverlayCaches } from "./ingest/overlay";
 import { attributeFiling, type OperatorDict } from "./edgar-attribution";
 import { computePowerHeadroom } from "./headroom";
+import { requireAuth } from "./auth";
+import { createApiKey, listApiKeys, revokeApiKey, type Plan } from "./apikeys";
 
 // Load operator shell-LLC / codename dictionaries (JSON-text columns → arrays).
 // Cached for the process; operators change rarely (monthly ingest).
@@ -1564,6 +1566,26 @@ export async function registerRoutes(
     { id: "wh_demo_1", url: "https://hooks.slack.com/services/T00/B00/xxx", events: ["tier_upgrade","score_cross"], created_at: "2026-06-15T14:22:00Z", last_ping_at: "2026-07-05T04:12:00Z", last_status: 200 },
     { id: "wh_demo_2", url: "https://api.example.com/gridsense-hook", events: ["new_permit","new_bid"], created_at: "2026-06-28T09:15:00Z", last_ping_at: "2026-07-05T11:03:00Z", last_status: 200 },
   ];
+
+  // ---- API key management (admin only; admin = session userId 0) ----
+  const requireAdmin = (req: any, res: any, next: any) => {
+    if (req.session?.userId === 0) return next();
+    return res.status(403).json({ message: "admin only" });
+  };
+  app.get("/api/keys", requireAuth, requireAdmin, (_req, res) => {
+    res.json(listApiKeys());
+  });
+  app.post("/api/keys", requireAuth, requireAdmin, (req, res) => {
+    const plan = (["free", "pro", "enterprise"].includes(req.body?.plan) ? req.body.plan : "pro") as Plan;
+    const label = typeof req.body?.label === "string" ? req.body.label.slice(0, 100) : undefined;
+    const { key, record } = createApiKey(plan, label);
+    // The raw key is returned exactly once.
+    res.status(201).json({ key, record, note: "Store this key now — it will not be shown again." });
+  });
+  app.delete("/api/keys/:id", requireAuth, requireAdmin, (req, res) => {
+    const ok = revokeApiKey(Number(req.params.id));
+    res.status(ok ? 200 : 404).json({ revoked: ok });
+  });
 
   app.get("/api/webhooks", (_req, res) => res.json(WEBHOOKS));
   app.post("/api/webhooks", (req, res) => {

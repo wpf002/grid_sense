@@ -5,6 +5,7 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "node:http";
 import { recordRequest, renderPrometheus, logRequest, captureError } from "./observability";
+import { verifyApiKey, extractKey } from "./apikeys";
 
 const app = express();
 const httpServer = createServer(app);
@@ -52,9 +53,23 @@ app.use((req, res, next) => {
   if (req.path.startsWith("/api/auth")) return next();
   if (req.path === "/api/heartbeat" || req.path === "/api/metrics") return next();
 
-  const plan = String(req.headers["x-gridsense-plan"] ?? req.query.tier ?? "free").toLowerCase();
-  const ip = req.ip || req.socket.remoteAddress || "unknown";
-  const key = `${ip}:${plan}`;
+  // Plan comes from a validated API key when present (non-spoofable). An
+  // invalid key is rejected; no key falls back to the anonymous free tier by IP.
+  const rawKey = extractKey(req.headers as Record<string, unknown>);
+  let plan = "free";
+  let rateKey: string;
+  if (rawKey) {
+    const verified = verifyApiKey(rawKey);
+    if (!verified) {
+      return res.status(401).json({ message: "Invalid or revoked API key." });
+    }
+    plan = verified.plan;
+    rateKey = `key:${verified.id}`;
+  } else {
+    const ip = req.ip || req.socket.remoteAddress || "unknown";
+    rateKey = `ip:${ip}`;
+  }
+  const key = rateKey;
   const now = Date.now();
   const limit = planLimit(plan);
 
