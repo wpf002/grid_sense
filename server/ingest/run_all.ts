@@ -25,6 +25,7 @@ import { ingestEiaPowerPrice } from "./eia_power_price.js";
 import { ingestIsoQueueHistory } from "./iso_queue_history.js";
 import { ingestWaterStress } from "./water_stress.js";
 import { ingestNoaaClimate } from "./noaa_climate.js";
+import { ingestAustinPermits } from "./austin_permits.js";
 import { ingestDcBacktest } from "./dc_backtest.js";
 import { ingestComps } from "./comps.js";
 import { ingestScoreHistory } from "./score_history.js";
@@ -57,6 +58,7 @@ type PipeName =
   | "iso_queue_history"
   | "water_stress"
   | "noaa_climate"
+  | "austin_permits"
   | "dc_backtest"
   | "comps"
   | "score_history"
@@ -101,6 +103,7 @@ export async function runAll(pipes?: PipeName[]): Promise<Record<string, any>> {
   if (shouldRun("iso_queue_history")) results.iso_queue_history = await safe("ISO queue history snapshot", () => ingestIsoQueueHistory());
   if (shouldRun("water_stress")) results.water_stress = await safe("State water stress overlay", () => ingestWaterStress());
   if (shouldRun("noaa_climate")) results.noaa_climate = await safe("NOAA climate normals (cooling)", () => ingestNoaaClimate());
+  if (shouldRun("austin_permits")) results.austin_permits = await safe("Austin permits (real, Travis County)", () => ingestAustinPermits());
   if (shouldRun("dc_backtest")) results.dc_backtest = await safe("DC announcements backtest", () => ingestDcBacktest());
   if (shouldRun("comps")) results.comps = await safe("DC land comps database", () => ingestComps());
   if (shouldRun("edgar")) results.edgar = await safe("SEC EDGAR", () => ingestEdgar());

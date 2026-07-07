@@ -59,6 +59,32 @@ describe("attributeFiling", () => {
     expect(attributeFiling("", OPERATORS)).toBeNull();
   });
 
+  it("does not match a word-prefix (design vs designery)", () => {
+    const ops: OperatorDict[] = [
+      { name: "Google (Alphabet)", shellLlcs: ["Design LLC", "Gable Corp"], codenames: [] },
+    ];
+    // "designery" and "north gable contractors" must NOT attribute to Google.
+    expect(attributeFiling("The Designery illuminated channel letters", ops)).toBeNull();
+    // "Gable" is a whole word here, so single-token still matches by default...
+    expect(attributeFiling("North Gable Contractors", ops)?.operator).toBe("Google (Alphabet)");
+    // ...but multiWordOnly (used for noisy permit text) rejects the single word.
+    expect(
+      attributeFiling("North Gable Contractors", ops, { multiWordOnly: true }),
+    ).toBeNull();
+  });
+
+  it("multiWordOnly still matches distinctive multi-word shells", () => {
+    const ops: OperatorDict[] = [
+      { name: "Meta", shellLlcs: ["Raven Northbrook LLC"], codenames: [] },
+    ];
+    const a = attributeFiling(
+      "Raven Northbrook LLC data center site work",
+      ops,
+      { multiWordOnly: true },
+    );
+    expect(a?.operator).toBe("Meta");
+  });
+
   it("prefers a shell match over a parent match", () => {
     const ops: OperatorDict[] = [
       { name: "Meta", shellLlcs: ["Meta Special LLC"], codenames: [] },

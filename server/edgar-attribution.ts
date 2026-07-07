@@ -49,28 +49,43 @@ function containsTerm(haystack: string, term: string): boolean {
   const h = ` ${norm(haystack)} `;
   const t = norm(term);
   if (!t) return false;
-  return h.includes(` ${t} `) || h.includes(` ${t}`) || h.includes(`${t} `);
+  // Whole-word/phrase match only — the padded haystack means a term matches
+  // only when bounded by spaces on both sides. Prevents "design" matching
+  // "designery" or "gable" matching a word-prefix.
+  return h.includes(` ${t} `);
+}
+
+function wordCount(term: string): number {
+  const n = norm(term);
+  return n ? n.split(" ").length : 0;
 }
 
 /**
  * Attribute a filing's company string to a known operator. Returns the
  * strongest match (shell > codename > parent), or null if none is distinctive.
+ *
+ * opts.multiWordOnly: require the matched term to be a multi-word phrase. Use
+ * for noisy free-text sources (permit descriptions, contractor names) where a
+ * single common word like "gable" or "agate" would over-match. EDGAR company
+ * names are clean, so the default (single tokens allowed) is fine there.
  */
 export function attributeFiling(
   company: string,
   operators: OperatorDict[],
+  opts: { multiWordOnly?: boolean } = {},
 ): Attribution | null {
   if (!company) return null;
   const candidates: Attribution[] = [];
+  const okWords = (term: string) => !opts.multiWordOnly || wordCount(term) >= 2;
 
   for (const op of operators) {
     for (const shell of op.shellLlcs ?? []) {
-      if (isDistinctive(shell) && containsTerm(company, shell)) {
+      if (isDistinctive(shell) && okWords(shell) && containsTerm(company, shell)) {
         candidates.push({ operator: op.name, matchType: "shell", matchedTerm: shell, confidence: 0.9 });
       }
     }
     for (const code of op.codenames ?? []) {
-      if (isDistinctive(code) && containsTerm(company, code)) {
+      if (isDistinctive(code) && okWords(code) && containsTerm(company, code)) {
         candidates.push({ operator: op.name, matchType: "codename", matchedTerm: code, confidence: 0.75 });
       }
     }
@@ -80,7 +95,7 @@ export function attributeFiling(
     // positive; requiring the whole distinctive name ("core scientific",
     // "digital realty") avoids that. Single short generic names are skipped.
     const brand = op.name.replace(/\s*\(.*\)\s*/g, "").trim();
-    if (isDistinctive(brand) && containsTerm(company, brand)) {
+    if (isDistinctive(brand) && okWords(brand) && containsTerm(company, brand)) {
       candidates.push({ operator: op.name, matchType: "parent", matchedTerm: brand, confidence: 0.5 });
     }
   }
