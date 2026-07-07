@@ -25,7 +25,7 @@ import { ingestEiaPowerPrice } from "./eia_power_price.js";
 import { ingestIsoQueueHistory } from "./iso_queue_history.js";
 import { ingestWaterStress } from "./water_stress.js";
 import { ingestNoaaClimate } from "./noaa_climate.js";
-import { ingestAustinPermits } from "./austin_permits.js";
+import { ingestSocrataPermits } from "./socrata_permits.js";
 import { ingestRealAnnouncements } from "./dc_announcements_real.js";
 import { ingestDcBacktest } from "./dc_backtest.js";
 import { ingestComps } from "./comps.js";
@@ -59,7 +59,7 @@ type PipeName =
   | "iso_queue_history"
   | "water_stress"
   | "noaa_climate"
-  | "austin_permits"
+  | "socrata_permits"
   | "dc_backtest"
   | "dc_announcements_real"
   | "comps"
@@ -105,7 +105,7 @@ export async function runAll(pipes?: PipeName[]): Promise<Record<string, any>> {
   if (shouldRun("iso_queue_history")) results.iso_queue_history = await safe("ISO queue history snapshot", () => ingestIsoQueueHistory());
   if (shouldRun("water_stress")) results.water_stress = await safe("State water stress overlay", () => ingestWaterStress());
   if (shouldRun("noaa_climate")) results.noaa_climate = await safe("NOAA climate normals (cooling)", () => ingestNoaaClimate());
-  if (shouldRun("austin_permits")) results.austin_permits = await safe("Austin permits (real, Travis County)", () => ingestAustinPermits());
+  if (shouldRun("socrata_permits")) results.socrata_permits = await safe("Real permits (Austin + Chicago)", () => ingestSocrataPermits());
   if (shouldRun("dc_backtest")) results.dc_backtest = await safe("DC announcements backtest", () => ingestDcBacktest());
   // Overwrite the seed with the FIPS-verified real announcement set.
   if (shouldRun("dc_announcements_real")) results.dc_announcements_real = await safe("Real DC announcements (FIPS-verified)", () => ingestRealAnnouncements());
