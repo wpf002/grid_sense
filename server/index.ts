@@ -4,6 +4,7 @@ import type { Request } from 'express';
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "node:http";
+import { recordRequest, renderPrometheus, logRequest, captureError } from "./observability";
 
 const app = express();
 const httpServer = createServer(app);
@@ -38,11 +39,18 @@ function planLimit(plan: string): number {
   return 60;
 }
 
+// Prometheus metrics — exposed before rate limiting so a scraper is never
+// throttled, and cheap to serve.
+app.get("/api/metrics", (_req, res) => {
+  res.setHeader("Content-Type", "text/plain; version=0.0.4");
+  res.send(renderPrometheus());
+});
+
 app.use((req, res, next) => {
-  // Only rate-limit public API surface. Skip auth, static, and health.
+  // Only rate-limit public API surface. Skip auth, static, health, and metrics.
   if (!req.path.startsWith("/api/")) return next();
   if (req.path.startsWith("/api/auth")) return next();
-  if (req.path === "/api/heartbeat") return next();
+  if (req.path === "/api/heartbeat" || req.path === "/api/metrics") return next();
 
   const plan = String(req.headers["x-gridsense-plan"] ?? req.query.tier ?? "free").toLowerCase();
   const ip = req.ip || req.socket.remoteAddress || "unknown";
@@ -92,40 +100,28 @@ export function log(message: string, source = "express") {
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
+// Per-request metrics + structured log line. Does NOT dump response bodies
+// (avoids leaking data into logs and keeps them small).
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
   res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      log(logLine);
-    }
+    if (!path.startsWith("/api")) return;
+    const ms = Date.now() - start;
+    recordRequest(req.method, path, res.statusCode, ms);
+    logRequest({ method: req.method, path, status: res.statusCode, ms });
   });
-
   next();
 });
 
 (async () => {
   await registerRoutes(httpServer, app);
 
-  app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    console.error("Internal Server Error:", err);
+    captureError(err, { path: req.path, method: req.method, status });
 
     if (res.headersSent) {
       return next(err);
