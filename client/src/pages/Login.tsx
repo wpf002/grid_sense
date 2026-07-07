@@ -19,6 +19,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
 
   const { data: me } = useQuery<Me>({ queryKey: ["/api/auth/me"] });
+  const { data: providers } = useQuery<{ google: boolean }>({ queryKey: ["/api/auth/providers"] });
 
   const authMutation = useMutation({
     mutationFn: async () => {
@@ -102,6 +103,14 @@ export default function Login() {
             <Sparkles className="h-3.5 w-3.5 mr-1.5" />
             Try instant demo (no signup)
           </Button>
+          {providers?.google && (
+            <Button asChild className="w-full" variant="outline" data-testid="button-google-sso">
+              <a href="/api/auth/google">
+                <Mail className="h-3.5 w-3.5 mr-1.5" />
+                Continue with Google
+              </a>
+            </Button>
+          )}
           <div className="relative py-1">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
             <div className="relative flex justify-center"><span className="bg-card px-2 text-[10px] uppercase tracking-wider text-muted-foreground">or</span></div>

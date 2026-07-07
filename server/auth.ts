@@ -8,6 +8,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import crypto from "node:crypto";
 import { sqlite } from "./storage.js";
 
 declare module "express-session" {
@@ -92,6 +93,64 @@ export function registerAuth(app: Express) {
       if (req.path.startsWith("/api/auth") || req.path === "/api/health") return next();
       if (req.session?.userId) return next();
       res.status(401).json({ error: "auth required", authGate: true });
+    });
+  }
+
+  // Which SSO providers are configured (for the login UI).
+  app.get("/api/auth/providers", (_req: Request, res: Response) => {
+    res.json({ google: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) });
+  });
+
+  // ---- Google SSO (optional). Set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET.
+  // Redirect URI defaults to localhost:5050; override with GOOGLE_REDIRECT_URI.
+  // Harmless no-op until the env vars are present.
+  const gClientId = process.env.GOOGLE_CLIENT_ID;
+  const gSecret = process.env.GOOGLE_CLIENT_SECRET;
+  if (gClientId && gSecret) {
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI || "http://localhost:5050/api/auth/google/callback";
+    app.get("/api/auth/google", (req: Request, res: Response) => {
+      const state = crypto.randomBytes(16).toString("hex");
+      (req.session as any).oauthState = state;
+      const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+      url.searchParams.set("client_id", gClientId);
+      url.searchParams.set("redirect_uri", redirectUri);
+      url.searchParams.set("response_type", "code");
+      url.searchParams.set("scope", "openid email profile");
+      url.searchParams.set("state", state);
+      res.redirect(url.toString());
+    });
+    app.get("/api/auth/google/callback", async (req: Request, res: Response) => {
+      try {
+        const { code, state } = req.query;
+        if (!code || state !== (req.session as any).oauthState) {
+          return res.status(400).send("invalid oauth state");
+        }
+        const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            code: String(code), client_id: gClientId, client_secret: gSecret,
+            redirect_uri: redirectUri, grant_type: "authorization_code",
+          }),
+        });
+        const token = (await tokenRes.json()) as { access_token?: string };
+        if (!token.access_token) return res.status(400).send("token exchange failed");
+        const uiRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+          headers: { Authorization: `Bearer ${token.access_token}` },
+        });
+        const ui = (await uiRes.json()) as { email?: string };
+        if (!ui.email) return res.status(400).send("no email from google");
+        let user = sqlite.prepare("SELECT id, email FROM users WHERE email = ?").get(ui.email) as { id: number; email: string } | undefined;
+        if (!user) {
+          const r = sqlite.prepare("INSERT INTO users (email, password_hash) VALUES (?, ?)").run(ui.email, "sso:google");
+          user = { id: Number(r.lastInsertRowid), email: ui.email };
+        }
+        req.session.userId = user.id;
+        req.session.email = user.email;
+        res.redirect("/#/");
+      } catch (e: any) {
+        res.status(500).send("sso failed: " + e.message);
+      }
     });
   }
 
