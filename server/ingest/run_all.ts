@@ -31,6 +31,7 @@ import { ingestRealAnnouncements } from "./dc_announcements_real.js";
 import { ingestDcBacktest } from "./dc_backtest.js";
 import { ingestComps } from "./comps.js";
 import { ingestScoreHistory } from "./score_history.js";
+import { generateAlerts } from "./generate_alerts.js";
 import { expandTrackedCounties } from "./expand_counties.js";
 import { enrichCounties } from "./enrich.js";
 import { clearOverlayCaches } from "./overlay.js";
@@ -119,6 +120,7 @@ export async function runAll(pipes?: PipeName[]): Promise<Record<string, any>> {
   clearOverlayCaches();
   if (shouldRun("enrich")) results.enrich = await safe("Rescore counties", () => enrichCounties());
   if (shouldRun("score_history")) results.score_history = await safe("Score history snapshot", () => ingestScoreHistory());
+  if (shouldRun("score_history")) results.generate_alerts = await safe("Generate alerts from score moves", () => generateAlerts());
   return results;
 }
 
