@@ -29,7 +29,7 @@ export default function Movers({ embedded = false }: { embedded?: boolean } = {}
   return (
     <div className={embedded ? "space-y-4 sm:space-y-6" : "p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1400px] mx-auto"}>
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Daily movers</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Daily Movers</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Counties whose landing-probability score changed most between the last
           two daily snapshots.
@@ -46,7 +46,7 @@ export default function Movers({ embedded = false }: { embedded?: boolean } = {}
           <CardHeader className="pb-3">
             <CardTitle className="text-base inline-flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-green-600" />
-              Top gainers
+              Top Gainers
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1.5">
@@ -63,7 +63,7 @@ export default function Movers({ embedded = false }: { embedded?: boolean } = {}
           <CardHeader className="pb-3">
             <CardTitle className="text-base inline-flex items-center gap-2">
               <TrendingDown className="h-4 w-4 text-red-600" />
-              Top losers
+              Top Losers
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1.5">

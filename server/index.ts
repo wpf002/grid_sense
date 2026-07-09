@@ -171,4 +171,22 @@ app.use((req, res, next) => {
   httpServer.listen(listenOpts, () => {
     log(`serving on port ${port}`);
   });
+
+  // Keep the live news feed current: pull the data-center RSS feeds into signals
+  // shortly after boot (non-blocking) and every 6 hours thereafter. This is the
+  // cheap news-only refresh — the full score re-run stays on its own schedule.
+  // Opt out with GRIDSENSE_DISABLE_NEWS_REFRESH=1 (e.g. offline dev).
+  if (process.env.GRIDSENSE_DISABLE_NEWS_REFRESH !== "1" && process.env.NODE_ENV !== "test") {
+    const runNewsRefresh = async () => {
+      try {
+        const { refreshNewsSignals } = await import("./ingest/refresh_news_signals");
+        const r = await refreshNewsSignals();
+        log(`news refresh: fetched ${r.fetched}, +${r.signalsAdded} signals`, "news");
+      } catch (e: any) {
+        log(`news refresh failed: ${e?.message ?? e}`, "news");
+      }
+    };
+    setTimeout(runNewsRefresh, 4000).unref?.();
+    setInterval(runNewsRefresh, 6 * 60 * 60_000).unref?.();
+  }
 })();

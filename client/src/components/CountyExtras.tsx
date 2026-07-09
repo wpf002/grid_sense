@@ -96,7 +96,7 @@ export function CountyExtras({ fips }: { fips: string }) {
       <CardHeader className="pb-3">
         <CardTitle className="text-base inline-flex items-center gap-2">
           <LandPlot className="h-4 w-4 text-primary" />
-          Site-level activity
+          Site-Level Activity
         </CardTitle>
         <p className="text-xs text-muted-foreground">
           Individual parcels, filed permits, and competitive-bid heat rolled up for this county.

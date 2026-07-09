@@ -26,7 +26,7 @@ export default function LeadGen() {
       <div>
         <h1 className="text-xl font-semibold tracking-tight inline-flex items-center gap-2">
           <Users className="h-5 w-5 text-primary" />
-          Lead-gen workflow
+          Lead-Gen Workflow
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Turn a scored county into a landowner-outreach list. Free-data path
@@ -37,7 +37,7 @@ export default function LeadGen() {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Step 1 · Pick a target county</CardTitle>
+          <CardTitle className="text-base">Step 1 · Pick a Target County</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex gap-2">
@@ -74,7 +74,7 @@ export default function LeadGen() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base inline-flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-primary" />
-                Step 2 · Find candidate parcels
+                Step 2 · Find Candidate Parcels
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
@@ -125,7 +125,7 @@ export default function LeadGen() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base inline-flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-primary" />
-                Step 3 · Skip-trace & contact
+                Step 3 · Skip-Trace & Contact
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
@@ -163,7 +163,7 @@ export default function LeadGen() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Step 4 · Outbound template</CardTitle>
+              <CardTitle className="text-base">Step 4 · Outbound Template</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <OutboundTemplate county={selected} />
@@ -172,7 +172,7 @@ export default function LeadGen() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Step 5 · Export & track</CardTitle>
+              <CardTitle className="text-base">Step 5 · Export & Track</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="flex flex-wrap gap-2">

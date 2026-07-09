@@ -55,7 +55,7 @@ export default function Methodology() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <LineChart className="h-4 w-4 text-primary" />
-            The formula
+            The Formula
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
@@ -92,7 +92,7 @@ export default function Methodology() {
       {/* Factor weights table — real numbers from scoring.ts */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">County-layer factor weights</CardTitle>
+          <CardTitle className="text-base">County-Layer Factor Weights</CardTitle>
           <p className="text-xs text-muted-foreground">
             10 factors, weights sum to 1.00. Weight × normalized value = contribution to countyBase.
           </p>
@@ -127,7 +127,7 @@ export default function Methodology() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Radio className="h-4 w-4 text-primary" />
-            Signal-layer weights
+            Signal-Layer Weights
           </CardTitle>
           <p className="text-xs text-muted-foreground">
             Each detected signal contributes weight × confidence × recency to the boost pool (capped at +15).
@@ -151,7 +151,7 @@ export default function Methodology() {
       {/* Worked example */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Worked example — a hot county</CardTitle>
+          <CardTitle className="text-base">Worked Example — a Hot County</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <p>
@@ -181,7 +181,7 @@ export default function Methodology() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Radio className="h-4 w-4 text-primary" />
-            Data sources
+            Data Sources
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm space-y-3">
@@ -283,7 +283,7 @@ export default function Methodology() {
       {/* Prototype scope */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Current scope · v2.0</CardTitle>
+          <CardTitle className="text-base">Current Scope · v2.0</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
           <p>

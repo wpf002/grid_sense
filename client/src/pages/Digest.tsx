@@ -43,7 +43,7 @@ export default function Digest() {
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1400px] mx-auto">
       <div>
         <h1 className="text-xl font-semibold tracking-tight inline-flex items-center gap-2">
-          <Inbox className="h-5 w-5 text-primary" /> Weekly digest
+          <Inbox className="h-5 w-5 text-primary" /> Weekly Digest
         </h1>
         <p className="text-sm text-muted-foreground">
           High-signal events since {data.since}. Same as the weekly email digest.
@@ -54,7 +54,7 @@ export default function Digest() {
       <Card>
         <CardHeader className="pb-3 border-b">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Subject</div>
-          <CardTitle className="text-base">GridSense weekly · {data.permits.length} permits, {data.bids.length} new bids, {data.movers.length} movers</CardTitle>
+          <CardTitle className="text-base">GridSense Weekly · {data.permits.length} permits, {data.bids.length} new bids, {data.movers.length} movers</CardTitle>
         </CardHeader>
         <CardContent className="pt-4 space-y-6">
           {/* Movers */}

@@ -112,7 +112,7 @@ export default function Compare() {
           </div>
           <div>
             <h1 className="text-xl font-semibold tracking-tight" data-testid="text-compare-title">
-              County comparison
+              County Comparison
             </h1>
             <p className="text-xs text-muted-foreground">
               Side-by-side factor breakdown for up to four counties.
@@ -124,7 +124,7 @@ export default function Compare() {
       {/* County picker chips */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Selected counties</CardTitle>
+          <CardTitle className="text-sm">Selected Counties</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {selected.length === 0 ? (
@@ -288,7 +288,7 @@ export default function Compare() {
           {/* Factor comparison chart */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Factor scores side by side</CardTitle>
+              <CardTitle className="text-base">Factor Scores Side by Side</CardTitle>
               <p className="text-xs text-muted-foreground">
                 {selected.length === 1
                   ? "Snapshot of every factor for this county. Add another to compare against a peer."

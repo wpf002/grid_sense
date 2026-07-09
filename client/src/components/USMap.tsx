@@ -352,9 +352,6 @@ export function USMap({ counties }: USMapProps) {
             <Zap className="h-3 w-3" />
             {showTx ? "Transmission ON (zoom ≥7)" : "Show transmission"}
           </button>
-          <div className="bg-card/90 backdrop-blur border border-border rounded-md px-2.5 py-1 text-[10px] font-mono text-muted-foreground">
-            Click a marker to inspect parcels
-          </div>
           {showTx ? (
             <div className="bg-card/90 backdrop-blur border border-border rounded-md p-2 text-[9px] font-mono space-y-0.5">
               <div className="text-muted-foreground uppercase tracking-wider mb-0.5">Voltage (kV)</div>

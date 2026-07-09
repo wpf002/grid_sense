@@ -90,7 +90,7 @@ export default function Signals({ embedded = false }: { embedded?: boolean } = {
         <div className="flex flex-col gap-1">
           <h1 className="text-xl font-semibold tracking-tight flex items-center gap-2">
             <Radio className="h-5 w-5 text-primary" />
-            Signal feed
+            Signal Feed
           </h1>
           <p className="text-sm text-muted-foreground">
             Every detected event that feeds the parcel-trigger layer of the scoring model.

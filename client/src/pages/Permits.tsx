@@ -79,7 +79,7 @@ export default function Permits({ embedded = false }: { embedded?: boolean } = {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-xl font-semibold tracking-tight inline-flex items-center gap-2">
-            <FileCheck2 className="h-5 w-5 text-primary" /> Permit tracker
+            <FileCheck2 className="h-5 w-5 text-primary" /> Permit Tracker
           </h1>
           <p className="text-sm text-muted-foreground">
             Rezoning, building, electrical, and water permits filed at county planning offices. Cross-referenced against known shell LLCs and operators.
@@ -156,7 +156,7 @@ export default function Permits({ embedded = false }: { embedded?: boolean } = {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Recent permits</CardTitle>
+          <CardTitle className="text-base">Recent Permits</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? <Skeleton className="h-96 w-full" /> : (

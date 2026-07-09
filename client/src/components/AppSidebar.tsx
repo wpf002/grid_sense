@@ -30,7 +30,7 @@ const sections: { label: string; items: NavItem[] }[] = [
     label: "Overview",
     items: [
       { title: "Dashboard", url: "/", icon: LayoutDashboard, testid: "link-dashboard" },
-      { title: "National radar", url: "/map", icon: Map, testid: "link-map" },
+      { title: "National Radar", url: "/map", icon: Map, testid: "link-map" },
       { title: "Counties", url: "/counties", icon: Table2, testid: "link-counties" },
       { title: "Compare", url: "/compare", icon: GitCompare, testid: "link-compare" },
       { title: "Operators", url: "/operators", icon: Building2, testid: "link-operators" },
@@ -45,9 +45,9 @@ const sections: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
-    label: "Site intel",
+    label: "Site Intel",
     items: [
-      { title: "Site intel", url: "/parcels", icon: LandPlot, testid: "link-site-intel", match: ["/parcels", "/permits", "/competitive"] },
+      { title: "Site Intel", url: "/parcels", icon: LandPlot, testid: "link-site-intel", match: ["/parcels", "/permits", "/competitive"] },
     ],
   },
   {
@@ -55,14 +55,14 @@ const sections: { label: string; items: NavItem[] }[] = [
     items: [
       { title: "Watchlist", url: "/watchlist", icon: Star, testid: "link-watchlist", match: ["/watchlist", "/my-watchlist"] },
       { title: "Portfolio", url: "/portfolio", icon: FolderUp, testid: "link-portfolio" },
-      { title: "Lead-gen", url: "/leadgen", icon: Users, testid: "link-leadgen" },
+      { title: "Lead-Gen", url: "/leadgen", icon: Users, testid: "link-leadgen" },
       { title: "Backtest", url: "/backtest", icon: Target, testid: "link-backtest" },
     ],
   },
   {
-    label: "Data & ops",
+    label: "Data & Ops",
     items: [
-      { title: "Data health", url: "/heartbeat", icon: HeartPulse, testid: "link-data-health", match: ["/heartbeat", "/ingestion", "/data-quality"] },
+      { title: "Data Health", url: "/heartbeat", icon: HeartPulse, testid: "link-data-health", match: ["/heartbeat", "/ingestion", "/data-quality"] },
     ],
   },
   {
@@ -96,14 +96,11 @@ function GridSenseLogo() {
         <line x1="10" y1="13" x2="22" y2="13" stroke="currentColor" strokeWidth="1.5" />
         <line x1="10" y1="17" x2="22" y2="17" stroke="currentColor" strokeWidth="1.5" />
         <line x1="10" y1="21" x2="22" y2="21" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M2 6 L10 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M2 16 L10 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M2 26 L10 21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         <circle cx="16" cy="16" r="1.5" fill="currentColor" />
       </svg>
       <div className="flex flex-col">
         <span className="font-semibold text-sm tracking-tight text-sidebar-foreground">GridSense</span>
-        <span className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60">DC land radar</span>
+        <span className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60">DC Land Radar</span>
       </div>
     </div>
   );

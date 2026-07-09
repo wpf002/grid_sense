@@ -202,7 +202,7 @@ export default function IngestionRuns({ embedded = false }: { embedded?: boolean
     <div className={embedded ? "space-y-4 sm:space-y-6" : "space-y-6 p-6"} data-testid="page-ingestion-runs">
       <div>
         <h1 className="text-xl font-semibold flex items-center gap-2" data-testid="text-page-title">
-          <Activity className="h-5 w-5 text-primary" /> Ingestion runs
+          <Activity className="h-5 w-5 text-primary" /> Ingestion Runs
         </h1>
         <p className="text-sm text-muted-foreground mt-1 max-w-3xl">
           Every public-data pipeline that feeds county scoring. Each row shows the last time
@@ -214,7 +214,7 @@ export default function IngestionRuns({ embedded = false }: { embedded?: boolean
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Latest run per pipeline</CardTitle>
+          <CardTitle className="text-base">Latest Run per Pipeline</CardTitle>
         </CardHeader>
         <CardContent>
           {latest.isLoading ? (
@@ -280,7 +280,7 @@ export default function IngestionRuns({ embedded = false }: { embedded?: boolean
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Database className="h-4 w-4" /> Recent activity
+            <Database className="h-4 w-4" /> Recent Activity
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -334,7 +334,7 @@ export default function IngestionRuns({ embedded = false }: { embedded?: boolean
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">How refreshes work</CardTitle>
+          <CardTitle className="text-base">How Refreshes Work</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
           <p>

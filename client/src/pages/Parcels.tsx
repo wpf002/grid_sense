@@ -76,7 +76,7 @@ export default function Parcels({ embedded = false }: { embedded?: boolean } = {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-xl font-semibold tracking-tight inline-flex items-center gap-2">
-            <LandPlot className="h-5 w-5 text-primary" /> Site-level parcels
+            <LandPlot className="h-5 w-5 text-primary" /> Site-Level Parcels
           </h1>
           <p className="text-sm text-muted-foreground">
             {rows.length} of {data?.length ?? 0} candidate parcels ranked by our composite parcel score (acres, shell-LLC ownership, substation/fiber proximity). Filter for shell-owned to surface likely hyperscaler assemblages.
@@ -143,7 +143,7 @@ export default function Parcels({ embedded = false }: { embedded?: boolean } = {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Top parcels</CardTitle>
+          <CardTitle className="text-base">Top Parcels</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (

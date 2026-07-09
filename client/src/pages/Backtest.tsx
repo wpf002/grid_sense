@@ -86,7 +86,7 @@ export default function Backtest() {
       <div>
         <h1 className="text-xl font-semibold tracking-tight inline-flex items-center gap-2">
           <Target className="h-5 w-5 text-primary" />
-          Backtest — announced AI data centers 2024-2026
+          Backtest — Announced AI Data Centers 2024-2026
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Curated list of publicly announced hyperscaler AI data-center projects across {new Set(rows.map((r) => r.fips)).size} US counties.
@@ -99,7 +99,7 @@ export default function Backtest() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Card data-testid="tile-hit-rate">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground">Hit rate (≥ 70)</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground">Hit Rate (≥ 70)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold text-primary">{(summary.hit_rate * 100).toFixed(0)}%</div>
@@ -108,7 +108,7 @@ export default function Backtest() {
         </Card>
         <Card data-testid="tile-hit-near-rate">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground">Hit + near (≥ 55)</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground">Hit + Near (≥ 55)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold">{(summary.hit_plus_near_rate * 100).toFixed(0)}%</div>
@@ -126,7 +126,7 @@ export default function Backtest() {
         </Card>
         <Card data-testid="tile-not-tracked">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground">Not tracked</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground">Not Tracked</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold text-muted-foreground">{summary.not_tracked}</div>
@@ -146,7 +146,7 @@ export default function Backtest() {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Announcements ledger</CardTitle>
+          <CardTitle className="text-base">Announcements Ledger</CardTitle>
           <p className="text-xs text-muted-foreground">
             Sourced from company press releases, SEC filings, DCD, Reuters, Bloomberg, and WSJ. This is a curated best-effort list, not exhaustive. To improve backtest quality, we intentionally treat score at announcement time as approximated by the current score — the goal is directional: are the counties operators actually chose already flagged as good?
           </p>
@@ -219,7 +219,7 @@ export default function Backtest() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base inline-flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-primary" />
-              Precision / recall at score cutoffs
+              Precision / Recall at Score Cutoffs
             </CardTitle>
             <p className="text-xs text-muted-foreground">
               For each threshold C, precision = share of flagged counties (score ≥ C) that actually had an announcement. Recall = share of announced counties we caught above C. F1 balances both.

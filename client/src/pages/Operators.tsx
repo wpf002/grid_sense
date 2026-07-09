@@ -308,7 +308,7 @@ function AttributedFilings() {
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-base flex items-center gap-2">
             <Radar className="h-4 w-4 text-primary" />
-            Attributed SEC filings
+            Attributed SEC Filings
           </CardTitle>
           {data && (
             <Badge variant="outline" className="text-[10px] font-mono">
@@ -379,7 +379,7 @@ export default function Operators() {
       <div className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold tracking-tight flex items-center gap-2">
           <Building2 className="h-5 w-5 text-primary" />
-          Operators & shell LLCs
+          Operators & Shell LLCs
         </h1>
         <p className="text-sm text-muted-foreground">
           Known hyperscaler entities and the shell LLC/codename patterns they use to acquire land discreetly.

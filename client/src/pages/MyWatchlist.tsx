@@ -120,7 +120,7 @@ export default function MyWatchlistPage() {
       <div className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold tracking-tight flex items-center gap-2">
           <Star className="h-5 w-5 text-primary" />
-          My watchlist
+          My Watchlist
         </h1>
         <p className="text-sm text-muted-foreground">
           Signed in as <b>{me!.email}</b>. Nightly snapshots compute the day-over-day score delta shown below.
@@ -199,7 +199,7 @@ export default function MyWatchlistPage() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base inline-flex items-center gap-2">
             <Bell className="h-4 w-4 text-primary" />
-            My alert rules
+            My Alert Rules
           </CardTitle>
           <p className="text-xs text-muted-foreground">
             Rules are evaluated by the nightly snapshot. Email-enabled rules dispatch to <b>{me!.email}</b> once SMTP is configured.
@@ -238,7 +238,7 @@ export default function MyWatchlistPage() {
       {/* Quick add-rule helper */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Add an alert rule</CardTitle>
+          <CardTitle className="text-base">Add an Alert Rule</CardTitle>
           <p className="text-xs text-muted-foreground">
             Two rule types are supported right now:
             <br />• <b>Score change</b> — score moves ≥5 points in a day

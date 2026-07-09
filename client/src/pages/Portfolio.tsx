@@ -124,7 +124,7 @@ export default function Portfolio() {
       <div>
         <h1 className="text-xl font-semibold tracking-tight inline-flex items-center gap-2">
           <FolderUp className="h-5 w-5 text-primary" />
-          Portfolio scoring
+          Portfolio Scoring
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Paste or upload a CSV of parcels, sites, or counties. GridSense scores each one against the 3,109-county model and returns the tier, queued load, time-to-power, and hazard profile. Accepts either a <code className="text-xs bg-muted px-1 rounded">fips</code> column (5-digit county FIPS) or <code className="text-xs bg-muted px-1 rounded">lat,lng</code> columns (nearest-county fallback). Optional <code className="text-xs bg-muted px-1 rounded">label</code> column preserves your row names.
@@ -234,7 +234,7 @@ export default function Portfolio() {
               <CardContent><div className="text-xl font-semibold text-muted-foreground">{resp.summary.cold}</div></CardContent>
             </Card>
             <Card data-testid="tile-portfolio-avg">
-              <CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Avg score</CardTitle></CardHeader>
+              <CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Avg Score</CardTitle></CardHeader>
               <CardContent><div className="text-xl font-semibold">{resp.summary.avg_score.toFixed(1)}</div></CardContent>
             </Card>
           </div>
@@ -247,7 +247,7 @@ export default function Portfolio() {
 
           <Card>
             <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Scored parcels ({resp.results.length})</CardTitle>
+              <CardTitle className="text-base">Scored Parcels ({resp.results.length})</CardTitle>
               <Button size="sm" variant="outline" onClick={downloadResults} data-testid="button-download-csv">
                 Download CSV
               </Button>
@@ -301,7 +301,7 @@ export default function Portfolio() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm inline-flex items-center gap-2 text-destructive">
                   <AlertCircle className="h-4 w-4" />
-                  Unmatched rows ({resp.not_found.length})
+                  Unmatched Rows ({resp.not_found.length})
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
                   These rows didn't match any county in the 3,109-county universe. Check the FIPS code (should be 5 digits, zero-padded) or add lat/lng columns for a nearest-neighbor fallback.

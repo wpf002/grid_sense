@@ -122,7 +122,7 @@ export default function DataQuality({ embedded = false }: { embedded?: boolean }
       <div className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold tracking-tight flex items-center gap-2">
           <Database className="h-5 w-5 text-primary" />
-          Data quality &amp; provenance
+          Data Quality &amp; Provenance
         </h1>
         <p className="text-sm text-muted-foreground">
           Every number in GridSense is tagged with its source and fetch timestamp. This page shows what fraction of the model is running on real public data versus curated seed.
@@ -157,7 +157,7 @@ export default function DataQuality({ embedded = false }: { embedded?: boolean }
       {/* Pipeline status */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Live public-data pipelines</CardTitle>
+          <CardTitle className="text-base">Live Public-Data Pipelines</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {PIPELINES.map((p) => {
@@ -201,7 +201,7 @@ export default function DataQuality({ embedded = false }: { embedded?: boolean }
       {/* Factor-by-factor */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Data quality by scoring factor</CardTitle>
+          <CardTitle className="text-base">Data Quality by Scoring Factor</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? <Skeleton className="h-40 w-full" /> : (
@@ -239,7 +239,7 @@ export default function DataQuality({ embedded = false }: { embedded?: boolean }
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <FileCode2 className="h-4 w-4 text-primary" />
-            Recent SEC 8-K filings matched
+            Recent SEC 8-K Filings Matched
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -266,7 +266,7 @@ export default function DataQuality({ embedded = false }: { embedded?: boolean }
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Newspaper className="h-4 w-4 text-primary" />
-            Data Center Dynamics — latest
+            Data Center Dynamics — Latest
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -295,7 +295,7 @@ export default function DataQuality({ embedded = false }: { embedded?: boolean }
       {/* Roadmap */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Data sources roadmap</CardTitle>
+          <CardTitle className="text-base">Data Sources Roadmap</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">

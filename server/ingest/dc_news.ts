@@ -20,7 +20,6 @@ const RSS_SOURCES: Array<{ url: string; source: string }> = [
   { url: "https://www.bisnow.com/rss/data-center", source: "Bisnow Data Center" },
   { url: "https://www.datacenterknowledge.com/rss.xml", source: "Data Center Knowledge" },
   { url: "https://www.utilitydive.com/feeds/news/", source: "Utility Dive" },
-  { url: "https://feeds.reuters.com/reuters/USenergyNews", source: "Reuters Energy" },
 ];
 
 const CATEGORY_PATTERNS: [RegExp, string][] = [

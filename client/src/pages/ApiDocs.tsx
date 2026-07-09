@@ -259,7 +259,7 @@ export default function ApiDocs() {
       <div>
         <h1 className="text-xl font-semibold tracking-tight flex items-center gap-2">
           <Code2 className="h-5 w-5 text-primary" />
-          API reference
+          API Reference
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Every dataset in GridSense is also available as REST JSON. Read-only endpoints are open;
@@ -323,7 +323,7 @@ export default function ApiDocs() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Data freshness</CardTitle>
+          <CardTitle className="text-base">Data Freshness</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>

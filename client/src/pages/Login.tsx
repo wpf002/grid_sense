@@ -56,7 +56,7 @@ export default function Login() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base inline-flex items-center gap-2">
-              <Mail className="h-4 w-4 text-primary" /> Signed in
+              <Mail className="h-4 w-4 text-primary" /> Signed In
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
@@ -89,7 +89,7 @@ export default function Login() {
         <CardHeader>
           <CardTitle className="text-base inline-flex items-center gap-2">
             <Lock className="h-4 w-4 text-primary" />
-            {mode === "login" ? "Sign in" : "Create account"}
+            {mode === "login" ? "Sign In" : "Create Account"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">

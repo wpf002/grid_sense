@@ -84,7 +84,7 @@ export default function Admin() {
 
       {/* Counties by tier */}
       <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-sm">Counties by tier</CardTitle></CardHeader>
+        <CardHeader className="pb-3"><CardTitle className="text-sm">Counties by Tier</CardTitle></CardHeader>
         <CardContent>
           <div className="flex items-center gap-3 flex-wrap">
             {Object.entries(data.counties_by_tier).map(([tier, count]) => (
@@ -101,7 +101,7 @@ export default function Admin() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center justify-between">
-            <span>Ingest pipelines ({data.pipelines.length})</span>
+            <span>Ingest Pipelines ({data.pipelines.length})</span>
             <Link href="/ingestion" className="text-xs text-primary hover:underline">See full runs →</Link>
           </CardTitle>
         </CardHeader>

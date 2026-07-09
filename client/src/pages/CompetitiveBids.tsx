@@ -52,7 +52,7 @@ export default function CompetitiveBids({ embedded = false }: { embedded?: boole
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-xl font-semibold tracking-tight inline-flex items-center gap-2">
-            <Swords className="h-5 w-5 text-primary" /> Competitive bid intel
+            <Swords className="h-5 w-5 text-primary" /> Competitive Bid Intel
           </h1>
           <p className="text-sm text-muted-foreground">
             Who else is looking at your target counties. Detected from SEC 8-Ks, shell-LLC filings, brokerage rumors, county planning agendas, and utility filings over the last 180 days.
@@ -103,7 +103,7 @@ export default function CompetitiveBids({ embedded = false }: { embedded?: boole
         <CardHeader className="pb-3">
           <CardTitle className="text-base inline-flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-primary" />
-            Hottest counties (most competitive activity)
+            Hottest Counties (Most Competitive Activity)
           </CardTitle>
           <p className="text-xs text-muted-foreground">Click a county to see the full bid timeline.</p>
         </CardHeader>

@@ -31,7 +31,7 @@ export default function Heartbeat({ embedded = false }: { embedded?: boolean } =
       <div>
         <h1 className="text-xl font-semibold tracking-tight inline-flex items-center gap-2">
           <HeartPulse className="h-5 w-5 text-primary" />
-          Cron heartbeat
+          Cron Heartbeat
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Freshness monitor for every data pipeline. A pipeline is flagged
@@ -48,7 +48,7 @@ export default function Heartbeat({ embedded = false }: { embedded?: boolean } =
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Pipeline freshness</CardTitle>
+          <CardTitle className="text-base">Pipeline Freshness</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (

@@ -91,7 +91,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold tracking-tight" data-testid="text-page-title">
-          Data center land radar
+          Data Center Land Radar
         </h1>
         <p className="text-sm text-muted-foreground">
           Landing-probability scores across US counties, fused from grid queues, land signals, fiber density, and operator activity.
@@ -110,7 +110,7 @@ export default function Dashboard() {
               <MapIcon className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <div className="text-sm font-semibold">National radar</div>
+              <div className="text-sm font-semibold">National Radar</div>
             </div>
           </div>
           <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -180,11 +180,11 @@ export default function Dashboard() {
               <div className="text-[10px] text-muted-foreground mt-0.5">Rezoning, building, electrical, water filings by county.</div>
             </Link>
             <Link href="/competitive" className="rounded-md border border-border bg-background/60 p-2.5 hover-elevate" data-testid="link-guide-competitive">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold"><Swords className="h-3 w-3 text-primary" />Competitive bids</div>
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold"><Swords className="h-3 w-3 text-primary" />Competitive Bids</div>
               <div className="text-[10px] text-muted-foreground mt-0.5">Rival buyers, LOIs, and signed contracts by county.</div>
             </Link>
             <Link href="/digest" className="rounded-md border border-border bg-background/60 p-2.5 hover-elevate" data-testid="link-guide-digest">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold"><Inbox className="h-3 w-3 text-primary" />Weekly digest</div>
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold"><Inbox className="h-3 w-3 text-primary" />Weekly Digest</div>
               <div className="text-[10px] text-muted-foreground mt-0.5">Preview the last 7 days of movers, permits, and bids.</div>
             </Link>
           </div>
@@ -255,7 +255,7 @@ export default function Dashboard() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Globe className="h-4 w-4 text-primary" />
-            US landing-probability map
+            US Landing-Probability Map
           </CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
             Marker size scales with landing-probability score. Hover for county details.
@@ -277,7 +277,7 @@ export default function Dashboard() {
             <div>
               <CardTitle className="text-base flex items-center gap-2">
                 <Zap className="h-4 w-4 text-primary" />
-                Signal cluster triggers
+                Signal Cluster Triggers
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-1">
                 Counties with 3+ predictive signals in the last 90 days.
@@ -334,7 +334,7 @@ export default function Dashboard() {
             <div>
               <CardTitle className="text-base flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-primary" />
-                Highest-probability counties
+                Highest-Probability Counties
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-1">
                 Ranked by fused landing-probability score. Click a row for parcel drill-down.
@@ -398,7 +398,7 @@ export default function Dashboard() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Radio className="h-4 w-4 text-primary" />
-              Latest signals
+              Latest Signals
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
               Land purchases, rezonings, permits, and interconnection filings.

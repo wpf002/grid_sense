@@ -30,10 +30,6 @@ export function BrandMark({ size = "md", showWordmark = true }: BrandMarkProps) 
         <line x1="10" y1="13" x2="22" y2="13" stroke="currentColor" strokeWidth="1.5" />
         <line x1="10" y1="17" x2="22" y2="17" stroke="currentColor" strokeWidth="1.5" />
         <line x1="10" y1="21" x2="22" y2="21" stroke="currentColor" strokeWidth="1.5" />
-        {/* Three transmission lines converging from left */}
-        <path d="M2 6 L10 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M2 16 L10 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M2 26 L10 21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         {/* Signal dot */}
         <circle cx="16" cy="16" r="1.5" fill="currentColor" />
       </svg>

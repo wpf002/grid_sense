@@ -83,7 +83,7 @@ export default function Pricing() {
       </Link>
       <div className="text-center space-y-2">
         <h1 className="text-xl font-semibold tracking-tight">
-          Plans for solo analysts to hyperscalers
+          Plans for Solo Analysts to Hyperscalers
         </h1>
         <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
           Know where the next hyperscale campus lands before it's public. Free forever
@@ -142,7 +142,7 @@ export default function Pricing() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Frequently asked</CardTitle>
+          <CardTitle className="text-base">Frequently Asked</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
           <div>

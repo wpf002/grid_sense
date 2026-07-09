@@ -99,7 +99,7 @@ export default function Webhooks() {
       {/* Create form */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2"><Plus className="h-4 w-4" />Add a webhook endpoint</CardTitle>
+          <CardTitle className="text-sm flex items-center gap-2"><Plus className="h-4 w-4" />Add a Webhook Endpoint</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
@@ -134,7 +134,7 @@ export default function Webhooks() {
       {/* Existing webhooks */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Active endpoints ({webhooks?.length ?? 0})</CardTitle>
+          <CardTitle className="text-sm">Active Endpoints ({webhooks?.length ?? 0})</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? <Skeleton className="h-32 m-4" /> : (
@@ -183,7 +183,7 @@ export default function Webhooks() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center justify-between">
-            <span>Sample payload</span>
+            <span>Sample Payload</span>
             <Button size="sm" variant="ghost" onClick={copyPayload} data-testid="button-copy-payload">
               <Copy className="h-3 w-3 mr-1" />Copy
             </Button>

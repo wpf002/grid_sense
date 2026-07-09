@@ -315,7 +315,7 @@ export default function CountyDetail() {
             <div className="flex items-start justify-between gap-2">
               <CardTitle className="text-base inline-flex items-center gap-2">
                 <Zap className="h-4 w-4 text-primary" />
-                Power headroom
+                Power Headroom
               </CardTitle>
               <div className="flex items-center gap-2">
                 <Badge
@@ -384,7 +384,7 @@ export default function CountyDetail() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base inline-flex items-center gap-2">
               <LineChartIcon className="h-4 w-4 text-primary" />
-              Score history & explainability
+              Score History & Explainability
             </CardTitle>
             <p className="text-xs text-muted-foreground">
               Day-over-day and 30-day score movement, plus factor waterfall showing which inputs move the model.
@@ -492,7 +492,7 @@ export default function CountyDetail() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base inline-flex items-center gap-2">
               <Zap className="h-4 w-4 text-primary" />
-              Retail electric utilities
+              Retail Electric Utilities
             </CardTitle>
             <p className="text-xs text-muted-foreground">
               Distribution utilities serving this county per EIA Form 861 Service Territory (vintage {utilities.vintage ?? "—"}). The "utility" field in the header is the ISO-queue transmission owner; these are the retail providers a hyperscaler would actually contract with for interconnection.
@@ -528,7 +528,7 @@ export default function CountyDetail() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base inline-flex items-center gap-2">
               <Building2 className="h-4 w-4 text-primary" />
-              Known hyperscaler shell-LLC activity
+              Known Hyperscaler Shell-LLC Activity
             </CardTitle>
             <p className="text-xs text-muted-foreground">
               Curated from press reporting, subprocessor lists, and public filings. Hyperscalers routinely acquire land through anonymous LLCs before disclosing operator identity.
@@ -562,7 +562,7 @@ export default function CountyDetail() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base inline-flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-primary" />
-              Wholesale power price (proxy)
+              Wholesale Power Price (Proxy)
             </CardTitle>
             <p className="text-xs text-muted-foreground">
               State industrial retail electricity price from EIA Electric Power Monthly Table 5.6.A. Best free proxy for nodal LMP without a paid ISO market data license.
@@ -610,7 +610,7 @@ export default function CountyDetail() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base inline-flex items-center gap-2">
                 <Zap className="h-4 w-4 text-primary" />
-                Transmission network
+                Transmission Network
               </CardTitle>
               <p className="text-xs text-muted-foreground">
                 HIFLD electric transmission lines within ~35 km, via NETL DOE mirror. High-voltage density near a candidate site is the single strongest predictor of interconnection feasibility.
@@ -660,7 +660,7 @@ export default function CountyDetail() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base inline-flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-primary" />
-              Recent land comps &mdash; DC transactions
+              Recent Land Comps &mdash; DC Transactions
             </CardTitle>
             <p className="text-xs text-muted-foreground">
               Curated transactions where a known operator, colo, or developer bought or leased land for AI/DC use. Prices are the acquisition price, not build-out capex. Use these to triangulate what you should ask for.
@@ -747,7 +747,7 @@ export default function CountyDetail() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base inline-flex items-center gap-2">
                 <Droplet className="h-4 w-4 text-primary" />
-                Water rights &amp; basin stress — state overlay
+                Water Rights &amp; Basin Stress — State Overlay
               </CardTitle>
               <p className="text-xs text-muted-foreground">
                 State-level composite stress score combining USGS 2020 water use, adjudication status, interstate compact obligations, aquifer-decline flags, and active new-use moratoriums. A hyperscaler in a red-flagged state may need to buy senior water rights or pay for treated municipal effluent.
@@ -802,7 +802,7 @@ export default function CountyDetail() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base inline-flex items-center gap-2">
                 <Activity className="h-4 w-4 text-primary" />
-                Interconnection queue — withdrawal history
+                Interconnection Queue — Withdrawal History
               </CardTitle>
               <p className="text-xs text-muted-foreground">
                 Snapshot rollup across every ISO/RTO queue that touches this county. Withdrawal ratio counts projects marked withdrawn/cancelled/terminated. Snapshot: {l.snapshot_date}.
@@ -871,7 +871,7 @@ export default function CountyDetail() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base inline-flex items-center gap-2">
             <LineChartIcon className="h-4 w-4 text-primary" />
-            Score trajectory
+            Score Trajectory
           </CardTitle>
           <p className="text-xs text-muted-foreground">
             Landing-probability score over the last 12 months. Dashed line marks the hot-tier threshold (75).
@@ -885,7 +885,7 @@ export default function CountyDetail() {
       {/* Score breakdown chart */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Score breakdown</CardTitle>
+          <CardTitle className="text-base">Score Breakdown</CardTitle>
           <p className="text-xs text-muted-foreground">
             Contribution of each factor to the composite landing-probability score (weight × factor value).
           </p>
@@ -932,7 +932,7 @@ export default function CountyDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Detected signals</CardTitle>
+            <CardTitle className="text-base">Detected Signals</CardTitle>
             <p className="text-xs text-muted-foreground">
               {county.signals.length} events feeding the parcel-trigger layer.
             </p>
@@ -988,7 +988,7 @@ export default function CountyDetail() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Candidate parcels</CardTitle>
+            <CardTitle className="text-base">Candidate Parcels</CardTitle>
             <p className="text-xs text-muted-foreground">
               Large parcels within this county, scored on grid/fiber proximity and ownership signals.
             </p>
@@ -1139,7 +1139,7 @@ function CountyProvenanceCard({ fips }: { fips: string }) {
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Database className="h-4 w-4 text-primary" />
-          Data provenance
+          Data Provenance
         </CardTitle>
         <p className="text-xs text-muted-foreground">
           Where every number in this county's score comes from. Hover any row for the source URL and fetch timestamp.
@@ -1242,7 +1242,7 @@ function WhyThisScore({ fips }: { fips: string }) {
         <CardHeader className="pb-3">
           <CardTitle className="text-base inline-flex items-center gap-2">
             <HelpCircle className="h-4 w-4 text-primary" />
-            Why this score?
+            Why This Score?
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -1259,7 +1259,7 @@ function WhyThisScore({ fips }: { fips: string }) {
       <CardHeader className="pb-3">
         <CardTitle className="text-base inline-flex items-center gap-2">
           <HelpCircle className="h-4 w-4 text-primary" />
-          Why this score?
+          Why This Score?
         </CardTitle>
         <p className="text-xs text-muted-foreground">
           Plain-English breakdown of the {Math.round(data.score)} composite. Top three contributors, then the strongest and weakest factors driving the ranking.

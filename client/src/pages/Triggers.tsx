@@ -58,7 +58,7 @@ export default function Triggers({ embedded = false }: { embedded?: boolean } = 
         </div>
         <div>
           <h1 className="text-xl font-semibold tracking-tight" data-testid="text-triggers-title">
-            Signal cluster triggers
+            Signal Cluster Triggers
           </h1>
           <p className="text-xs text-muted-foreground">
             Counties where multiple predictive signals fired within a narrow window. High-conviction watch list.
@@ -126,7 +126,7 @@ export default function Triggers({ embedded = false }: { embedded?: boolean } = 
       {/* Results */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Active triggers</CardTitle>
+          <CardTitle className="text-base">Active Triggers</CardTitle>
           <p className="text-xs text-muted-foreground">
             Ranked by weighted signal score (weight × confidence, summed across recent signals).
           </p>
