@@ -81,6 +81,8 @@ const sections: { label: string; items: NavItem[] }[] = [
 function GridSenseLogo() {
   return (
     <div className="flex items-center gap-2 px-2 py-3">
+      {/* Same mark as the header BrandMark (rack + transmission lines), in the
+          sidebar's teal accent so the logo is consistent everywhere. */}
       <svg
         width="28"
         height="28"
@@ -88,17 +90,20 @@ function GridSenseLogo() {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         aria-label="GridSense logo"
+        className="text-primary"
       >
-        <rect x="3" y="6" width="26" height="6" rx="1" stroke="hsl(175 84% 45%)" strokeWidth="2" fill="none" />
-        <rect x="3" y="14" width="26" height="6" rx="1" stroke="hsl(175 84% 45%)" strokeWidth="2" fill="none" />
-        <rect x="3" y="22" width="26" height="6" rx="1" stroke="hsl(175 84% 45%)" strokeWidth="2" fill="none" />
-        <circle cx="7" cy="9" r="1" fill="hsl(175 84% 45%)" />
-        <circle cx="7" cy="17" r="1" fill="hsl(175 84% 45%)" />
-        <circle cx="7" cy="25" r="1" fill="hsl(175 84% 45%)" />
+        <rect x="10" y="8" width="12" height="16" rx="1.5" stroke="currentColor" strokeWidth="2" />
+        <line x1="10" y1="13" x2="22" y2="13" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="10" y1="17" x2="22" y2="17" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="10" y1="21" x2="22" y2="21" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M2 6 L10 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M2 16 L10 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M2 26 L10 21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="16" cy="16" r="1.5" fill="currentColor" />
       </svg>
       <div className="flex flex-col">
         <span className="font-semibold text-sm tracking-tight text-sidebar-foreground">GridSense</span>
-        <span className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60">DC Land Radar</span>
+        <span className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60">DC land radar</span>
       </div>
     </div>
   );

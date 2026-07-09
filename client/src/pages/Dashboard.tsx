@@ -85,7 +85,6 @@ export default function Dashboard() {
             </div>
             <div>
               <div className="text-sm font-semibold">National radar</div>
-              <div className="text-[11px] text-muted-foreground">3,109 counties, live tier map</div>
             </div>
           </div>
           <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -101,7 +100,6 @@ export default function Dashboard() {
             </div>
             <div>
               <div className="text-sm font-semibold">Public API</div>
-              <div className="text-[11px] text-muted-foreground">12 endpoints · JSON · curl-ready</div>
             </div>
           </div>
           <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
@@ -117,7 +115,6 @@ export default function Dashboard() {
             </div>
             <div>
               <div className="text-sm font-semibold">Pricing</div>
-              <div className="text-[11px] text-muted-foreground">Free · Pro · Enterprise</div>
             </div>
           </div>
           <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
@@ -158,7 +155,7 @@ export default function Dashboard() {
             </Link>
             <Link href="/competitive" className="rounded-md border border-border bg-background/60 p-2.5 hover-elevate" data-testid="link-guide-competitive">
               <div className="flex items-center gap-1.5 text-[11px] font-semibold"><Swords className="h-3 w-3 text-primary" />Competitive bids</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">Who else is sniffing, LOI'ing, or under contract in each market.</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">Rival buyers, LOIs, and signed contracts by county.</div>
             </Link>
             <Link href="/digest" className="rounded-md border border-border bg-background/60 p-2.5 hover-elevate" data-testid="link-guide-digest">
               <div className="flex items-center gap-1.5 text-[11px] font-semibold"><Inbox className="h-3 w-3 text-primary" />Weekly digest</div>

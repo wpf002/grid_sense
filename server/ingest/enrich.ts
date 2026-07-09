@@ -128,7 +128,18 @@ export async function enrichCounties(): Promise<{
     const states: string[] = JSON.parse(n.mentionedStates || "[]");
     let attachTo: string[] = fipsList;
     if (attachTo.length === 0 && states.length > 0) {
-      attachTo = allCounties.filter(c => states.includes(c.state)).map(c => c.fips);
+      // State-only news (no resolvable county): attach to a single representative
+      // county per mentioned state — the highest landing-probability one — instead
+      // of fanning the same story across every county in the state. Fanning it out
+      // duplicated one article hundreds of times in the feed and inflated the
+      // signal-cluster triggers with state-level noise.
+      attachTo = states
+        .map((st) =>
+          allCounties
+            .filter((c) => c.state === st)
+            .sort((a, b) => (b.landingProbability ?? 0) - (a.landingProbability ?? 0))[0]?.fips,
+        )
+        .filter((f): f is string => Boolean(f));
     }
     for (const fips of attachTo) {
       const existing = db.select({ id: signalsTable.id }).from(signalsTable)
@@ -170,28 +181,35 @@ export async function enrichCounties(): Promise<{
     const matchedH = Object.entries(hyperscalers).find(([n]) => e.company.includes(n.split(" ")[0]));
     if (!matchedH) continue;
     const [operator, activeStates] = matchedH;
-    const targets = allCounties.filter(c => activeStates.includes(c.state));
-    for (const c of targets.slice(0, 2)) {
+    // Attach the 8-K to the single most-probable county across the operator's
+    // active states (one row per filing), not the first N counties — the old
+    // slice(0, 2) kept landing on the same two counties and piled dozens of
+    // identical EDGAR signals onto them.
+    const target = allCounties
+      .filter((c) => activeStates.includes(c.state))
+      .sort((a, b) => (b.landingProbability ?? 0) - (a.landingProbability ?? 0))[0];
+    if (target) {
       const existing = db.select({ id: signalsTable.id }).from(signalsTable)
-        .where(sql`${signalsTable.sourceUrl} = ${e.filingUrl} AND ${signalsTable.countyFips} = ${c.fips}`)
+        .where(sql`${signalsTable.sourceUrl} = ${e.filingUrl} AND ${signalsTable.countyFips} = ${target.fips}`)
         .get();
-      if (existing) continue;
-      db.insert(signalsTable).values({
-        countyFips: c.fips,
-        signalType: "codename_resolved",
-        weight: 0.9,
-        leadTimeMonths: 6,
-        headline: `${operator} 8-K referencing "${e.matchedQuery}"`,
-        detail: (e.snippet ?? "").slice(0, 400) || `SEC 8-K filing dated ${e.filedDate}.`,
-        suspectedOperator: operator,
-        shellLlc: null,
-        parcelAcres: null,
-        detectedAt: e.filedDate,
-        sourceUrl: e.filingUrl,
-        sourceName: "SEC EDGAR",
-        confidence: 0.75,
-      }).run();
-      newsSignals++;
+      if (!existing) {
+        db.insert(signalsTable).values({
+          countyFips: target.fips,
+          signalType: "codename_resolved",
+          weight: 0.9,
+          leadTimeMonths: 6,
+          headline: `${operator} 8-K referencing "${e.matchedQuery}"`,
+          detail: (e.snippet ?? "").slice(0, 400) || `SEC 8-K filing dated ${e.filedDate}.`,
+          suspectedOperator: operator,
+          shellLlc: null,
+          parcelAcres: null,
+          detectedAt: e.filedDate,
+          sourceUrl: e.filingUrl,
+          sourceName: "SEC EDGAR",
+          confidence: 0.75,
+        }).run();
+        newsSignals++;
+      }
     }
   }
 

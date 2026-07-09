@@ -105,9 +105,6 @@ export default function App() {
                   <div className="flex items-center gap-2 sm:gap-4">
                     <CommandPalette />
                     <ScoreExplainer />
-                    <div className="text-xs text-muted-foreground font-mono hidden lg:block">
-                      US data center land radar
-                    </div>
                   </div>
                 </header>
                 <main className="flex-1 overflow-y-auto">

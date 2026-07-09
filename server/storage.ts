@@ -365,7 +365,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async listSignals(limit = 50): Promise<Signal[]> {
-    return db.select().from(signals).orderBy(desc(signals.detectedAt)).limit(limit).all();
+    // Dedupe by headline. A single article can be attached to more than one
+    // county at ingest, so the feed must collapse to distinct stories (keeping
+    // the most recent copy) instead of showing the same headline repeatedly.
+    const rows = db.select().from(signals)
+      .orderBy(desc(signals.detectedAt), desc(signals.id)).all();
+    const seen = new Set<string>();
+    const out: Signal[] = [];
+    for (const r of rows) {
+      const key = (r.headline ?? "").trim().toLowerCase() || `id:${r.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(r);
+      if (out.length >= limit) break;
+    }
+    return out;
   }
 
   async listSignalsForCounty(fips: string): Promise<Signal[]> {

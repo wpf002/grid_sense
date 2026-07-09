@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Code2, Copy, Check, Zap, Key, Database, Radio, LandPlot, Building2 } from "lucide-react";
+import { Link } from "wouter";
+import { Code2, Copy, Check, Zap, Key, Database, Radio, LandPlot, Building2, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -252,6 +253,9 @@ function EndpointSnippet({ ep }: { ep: Endpoint }) {
 export default function ApiDocs() {
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-5xl mx-auto">
+      <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground" data-testid="link-back-dashboard">
+        <ArrowLeft className="h-3.5 w-3.5" /> Back to dashboard
+      </Link>
       <div>
         <h1 className="text-xl font-semibold tracking-tight flex items-center gap-2">
           <Code2 className="h-5 w-5 text-primary" />

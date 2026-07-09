@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap, GeoJSON } from "react-leaflet";
 import { Link } from "wouter";
+import { Layers, Zap } from "lucide-react";
 import type { County } from "@shared/schema";
 import "leaflet/dist/leaflet.css";
 import type { Map as LeafletMap } from "leaflet";
@@ -196,6 +197,13 @@ export function USMap({ counties }: USMapProps) {
     enabled: mode === "delta",
   });
   const deltaByFips = new Map<string, DeltaRow>((deltaResp?.rows ?? []).map((r) => [r.fips, r]));
+
+  // Paint low-score markers first so hot/high markers land on top and stay legible
+  // in dense, overlapping regions.
+  const orderedCounties = useMemo(
+    () => [...counties].sort((a, b) => (a.landingProbability ?? 0) - (b.landingProbability ?? 0)),
+    [counties],
+  );
   const deltaColor = (d: number): string => {
     if (d >= 4) return "hsl(175 84% 45%)";
     if (d >= 2) return "hsl(155 70% 50%)";
@@ -226,10 +234,10 @@ export function USMap({ counties }: USMapProps) {
             url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
             maxZoom={10}
           />
-          {counties.map((c) => {
+          {orderedCounties.map((c) => {
             const score = c.landingProbability ?? 0;
             const delta = deltaByFips.get(c.fips)?.delta ?? 0;
-            const radius = mode === "delta" ? 5 + Math.min(Math.abs(delta), 10) : 5 + (score / 100) * 9;
+            const radius = mode === "delta" ? 3 + Math.min(Math.abs(delta), 8) : 2.5 + (score / 100) * 5.5;
             const color = mode === "delta" ? deltaColor(delta) : tierColor(c.scoreTier);
             const isSelected = selectedFips === c.fips;
             return (
@@ -240,8 +248,8 @@ export function USMap({ counties }: USMapProps) {
                 pathOptions={{
                   color: isSelected ? "hsl(0 0% 100%)" : color,
                   fillColor: color,
-                  fillOpacity: isSelected ? 0.9 : 0.65,
-                  weight: isSelected ? 2.5 : 1.5,
+                  fillOpacity: isSelected ? 0.95 : 0.5,
+                  weight: isSelected ? 2.5 : 0.6,
                 }}
                 eventHandlers={{
                   click: () => setSelectedFips(c.fips),
@@ -327,20 +335,22 @@ export function USMap({ counties }: USMapProps) {
           <button
             data-testid="button-toggle-states"
             onClick={() => setShowStates((v) => !v)}
-            className={`bg-card/90 backdrop-blur border rounded-md px-2.5 py-1 text-[10px] font-mono transition-colors ${
+            className={`bg-card/90 backdrop-blur border rounded-md px-2.5 py-1 text-[10px] font-mono transition-colors inline-flex items-center gap-1.5 ${
               showStates ? "border-primary text-primary" : "border-border text-muted-foreground hover:text-foreground"
             }`}
           >
-            {showStates ? "🗺 State choropleth ON" : "🗺 Show state choropleth"}
+            <Layers className="h-3 w-3" />
+            {showStates ? "State choropleth ON" : "Show state choropleth"}
           </button>
           <button
             data-testid="button-toggle-transmission"
             onClick={() => setShowTx((v) => !v)}
-            className={`bg-card/90 backdrop-blur border rounded-md px-2.5 py-1 text-[10px] font-mono transition-colors ${
+            className={`bg-card/90 backdrop-blur border rounded-md px-2.5 py-1 text-[10px] font-mono transition-colors inline-flex items-center gap-1.5 ${
               showTx ? "border-primary text-primary" : "border-border text-muted-foreground hover:text-foreground"
             }`}
           >
-            {showTx ? "⚡ Transmission ON (zoom ≥7)" : "⚡ Show transmission"}
+            <Zap className="h-3 w-3" />
+            {showTx ? "Transmission ON (zoom ≥7)" : "Show transmission"}
           </button>
           <div className="bg-card/90 backdrop-blur border border-border rounded-md px-2.5 py-1 text-[10px] font-mono text-muted-foreground">
             Click a marker to inspect parcels
