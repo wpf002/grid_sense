@@ -32,6 +32,32 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
+// Readable labels for raw pipeline slugs shown in the freshness banner.
+const PIPELINE_LABELS: Record<string, string> = {
+  dc_news: "DC news",
+  sec_edgar: "SEC EDGAR",
+  score_history: "Score history",
+  score_history_daily: "Score snapshot",
+  isone_queue: "ISO-NE queue",
+  pjm_queue: "PJM queue",
+  miso_queue: "MISO queue",
+  ercot_queue: "ERCOT queue",
+  spp_queue: "SPP queue",
+  caiso_queue: "CAISO queue",
+  nyiso_queue: "NYISO queue",
+  eia860: "EIA-860",
+  eia861: "EIA-861",
+  fema_nri: "FEMA risk index",
+  arcgis_permits: "County permits",
+  socrata_permits: "Open-data permits",
+};
+function pipelineLabel(p: string): string {
+  return PIPELINE_LABELS[p] ?? humanize(p);
+}
+function ageLabel(hours: number): string {
+  return hours < 24 ? `${hours.toFixed(0)}h` : `${(hours / 24).toFixed(1)}d`;
+}
+
 export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery<Stats>({ queryKey: ["/api/stats"] });
   const { data: counties, isLoading: countiesLoading } = useQuery<County[]>({ queryKey: ["/api/counties"] });
@@ -165,26 +191,41 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Data freshness banner (Gap: visible ingest health) */}
-      {(stalePipelines.length > 0 || failingPipelines.length > 0) && (
-        <div className="flex items-start gap-3 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2" data-testid="banner-data-freshness">
-          <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-          <div className="flex-1 text-xs">
-            <div className="font-semibold text-destructive">
-              Data freshness: {stalePipelines.length} stale, {failingPipelines.length} failing
-            </div>
-            <div className="text-muted-foreground mt-0.5">
-              {stalePipelines.slice(0, 4).map((p) => (
-                <span key={p.pipeline} className="inline-block mr-3 font-mono">
-                  <Clock className="h-3 w-3 inline mr-0.5" />
-                  {p.pipeline} · {p.age_hours < 24 ? `${p.age_hours.toFixed(0)}h` : `${(p.age_hours / 24).toFixed(1)}d`} old
-                </span>
-              ))}
-              <Link href="/ingestion" className="text-primary hover:underline">View all →</Link>
+      {/* Data freshness banner — ingest health at a glance. Amber for feeds that
+          are merely behind schedule; red only when a pipeline actually errored. */}
+      {(stalePipelines.length > 0 || failingPipelines.length > 0) && (() => {
+        const hasFailing = failingPipelines.length > 0;
+        const boxTone = hasFailing ? "border-destructive/40 bg-destructive/5" : "border-amber-500/40 bg-amber-500/5";
+        const textTone = hasFailing ? "text-destructive" : "text-amber-600 dark:text-amber-400";
+        const summary = [
+          stalePipelines.length > 0 ? `${stalePipelines.length} ${stalePipelines.length === 1 ? "feed" : "feeds"} behind schedule` : null,
+          failingPipelines.length > 0 ? `${failingPipelines.length} errored` : null,
+        ].filter(Boolean).join(" · ");
+        return (
+          <div className={`flex items-start gap-2.5 rounded-md border px-3 py-2.5 ${boxTone}`} data-testid="banner-data-freshness">
+            <AlertTriangle className={`h-4 w-4 shrink-0 mt-0.5 ${hasFailing ? "text-destructive" : "text-amber-500"}`} />
+            <div className="flex-1 min-w-0 text-xs">
+              <div className={`font-semibold ${textTone}`}>
+                Data freshness — {summary}
+              </div>
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                {failingPipelines.map((p) => (
+                  <span key={p.pipeline} className="inline-flex items-center gap-1 rounded bg-destructive/10 text-destructive px-1.5 py-0.5 text-[11px]">
+                    {pipelineLabel(p.pipeline)} · errored
+                  </span>
+                ))}
+                {stalePipelines.slice(0, 5).map((p) => (
+                  <span key={p.pipeline} className="inline-flex items-center gap-1 rounded bg-muted text-muted-foreground px-1.5 py-0.5 text-[11px]">
+                    <Clock className="h-3 w-3" />
+                    {pipelineLabel(p.pipeline)} · {ageLabel(p.age_hours)}
+                  </span>
+                ))}
+                <Link href="/ingestion" className="text-primary hover:underline text-[11px] ml-0.5">View all →</Link>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
