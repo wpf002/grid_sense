@@ -67,7 +67,7 @@ export function CommandPalette() {
     { path: "/operators", label: "Operators", Icon: Building2 },
     { path: "/parcels", label: "Parcels", Icon: LandPlot },
     { path: "/permits", label: "Permits", Icon: FileText },
-    { path: "/competitive-bids", label: "Competitive bids", Icon: Flame },
+    { path: "/competitive", label: "Competitive bids", Icon: Flame },
     { path: "/signals", label: "Signals", Icon: Newspaper },
     { path: "/movers", label: "Movers", Icon: TrendingUp },
     { path: "/digest", label: "Digest", Icon: BookOpen },

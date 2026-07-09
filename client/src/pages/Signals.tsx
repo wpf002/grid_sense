@@ -35,7 +35,7 @@ const signalTypes = [
   { value: "codename_resolved", label: "Codename resolved" },
 ];
 
-export default function Signals() {
+export default function Signals({ embedded = false }: { embedded?: boolean } = {}) {
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [operatorFilter, setOperatorFilter] = useState("all");
@@ -84,7 +84,7 @@ export default function Signals() {
   }, [signals, query, typeFilter, operatorFilter, countyFilter, sortDir]);
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1400px] mx-auto">
+    <div className={embedded ? "space-y-4 sm:space-y-6" : "p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1400px] mx-auto"}>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex flex-col gap-1">
           <h1 className="text-xl font-semibold tracking-tight flex items-center gap-2">

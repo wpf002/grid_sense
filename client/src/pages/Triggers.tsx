@@ -28,7 +28,7 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-export default function Triggers() {
+export default function Triggers({ embedded = false }: { embedded?: boolean } = {}) {
   const [minCount, setMinCount] = useState("3");
   const [windowDays, setWindowDays] = useState("90");
 
@@ -49,7 +49,7 @@ export default function Triggers() {
   }, [triggers]);
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1400px] mx-auto">
+    <div className={embedded ? "space-y-4 sm:space-y-6" : "p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1400px] mx-auto"}>
       {/* Header */}
       <div className="flex items-start gap-3">
         <div className="h-9 w-9 rounded-md border border-border bg-card flex items-center justify-center">

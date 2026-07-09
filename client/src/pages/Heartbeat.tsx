@@ -19,14 +19,14 @@ interface Heartbeat {
   checked_at: string;
 }
 
-export default function Heartbeat() {
+export default function Heartbeat({ embedded = false }: { embedded?: boolean } = {}) {
   const { data, isLoading } = useQuery<Heartbeat>({
     queryKey: ["/api/cron/heartbeat"],
     refetchInterval: 60_000,
   });
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1400px] mx-auto">
+    <div className={embedded ? "space-y-4 sm:space-y-6" : "p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1400px] mx-auto"}>
       <div>
         <h1 className="text-xl font-semibold tracking-tight inline-flex items-center gap-2">
           <HeartPulse className="h-5 w-5 text-primary" />

@@ -43,7 +43,7 @@ const STATUS_STYLE: Record<string, string> = {
   appealed: "bg-orange-500/20 text-orange-700 dark:text-orange-400",
 };
 
-export default function Permits() {
+export default function Permits({ embedded = false }: { embedded?: boolean } = {}) {
   const [type, setType] = useState("all");
   const [status, setStatus] = useState("all");
   const [operatorOnly, setOperatorOnly] = useState(false);
@@ -75,7 +75,7 @@ export default function Permits() {
   }, [data]);
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1600px] mx-auto">
+    <div className={embedded ? "space-y-4 sm:space-y-6" : "p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1600px] mx-auto"}>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-xl font-semibold tracking-tight inline-flex items-center gap-2">

@@ -94,7 +94,7 @@ const ROADMAP = [
   { name: "ZoomProspector / commercial CRE", status: "Deferred", note: "Paid subscription. Adds building permits and site plan filings." },
 ];
 
-export default function DataQuality() {
+export default function DataQuality({ embedded = false }: { embedded?: boolean } = {}) {
   const { data, isLoading } = useQuery<Response>({ queryKey: ["/api/data-quality"] });
   const { data: edgar } = useQuery<EdgarRow[]>({ queryKey: ["/api/edgar-filings"] });
   const { data: news } = useQuery<NewsRow[]>({ queryKey: ["/api/dc-news"] });
@@ -117,7 +117,7 @@ export default function DataQuality() {
   })).sort((a, b) => (b.real + b.partial) - (a.real + a.partial));
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1100px] mx-auto" data-testid="page-data-quality">
+    <div className={embedded ? "space-y-4 sm:space-y-6" : "p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1100px] mx-auto"} data-testid="page-data-quality">
       <div className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold tracking-tight flex items-center gap-2">
           <Database className="h-5 w-5 text-primary" />

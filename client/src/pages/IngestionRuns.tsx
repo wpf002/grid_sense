@@ -190,7 +190,7 @@ function fmtDuration(start: number, end: number | null): string {
   return `${Math.floor(s / 60)}m ${s % 60}s`;
 }
 
-export default function IngestionRuns() {
+export default function IngestionRuns({ embedded = false }: { embedded?: boolean } = {}) {
   const latest = useQuery<IngestionRun[]>({ queryKey: ["/api/ingestion-runs/latest"] });
   const history = useQuery<IngestionRun[]>({ queryKey: ["/api/ingestion-runs"] });
 
@@ -199,7 +199,7 @@ export default function IngestionRuns() {
   (latest.data ?? []).forEach((r) => byPipeline.set(r.pipeline, r));
 
   return (
-    <div className="space-y-6 p-6" data-testid="page-ingestion-runs">
+    <div className={embedded ? "space-y-4 sm:space-y-6" : "space-y-6 p-6"} data-testid="page-ingestion-runs">
       <div>
         <h1 className="text-xl font-semibold flex items-center gap-2" data-testid="text-page-title">
           <Activity className="h-5 w-5 text-primary" /> Ingestion Runs

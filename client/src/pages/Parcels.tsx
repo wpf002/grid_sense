@@ -46,7 +46,7 @@ const STATUS_STYLE: Record<string, string> = {
   under_contract: "bg-green-500/20 text-green-700 dark:text-green-400",
 };
 
-export default function Parcels() {
+export default function Parcels({ embedded = false }: { embedded?: boolean } = {}) {
   const [minAcres, setMinAcres] = useState("0");
   const [shellOnly, setShellOnly] = useState(false);
   const [query, setQuery] = useState("");
@@ -71,7 +71,7 @@ export default function Parcels() {
   }, [data, minAcres, shellOnly, query]);
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1600px] mx-auto">
+    <div className={embedded ? "space-y-4 sm:space-y-6" : "p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1600px] mx-auto"}>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-xl font-semibold tracking-tight inline-flex items-center gap-2">

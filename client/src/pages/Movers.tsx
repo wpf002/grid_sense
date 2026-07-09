@@ -21,13 +21,13 @@ interface MoversPayload {
   losers: MoverRow[];
 }
 
-export default function Movers() {
+export default function Movers({ embedded = false }: { embedded?: boolean } = {}) {
   const { data, isLoading } = useQuery<MoversPayload>({
     queryKey: ["/api/score-history/daily-diff"],
   });
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1400px] mx-auto">
+    <div className={embedded ? "space-y-4 sm:space-y-6" : "p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1400px] mx-auto"}>
       <div>
         <h1 className="text-xl font-semibold tracking-tight">Daily movers</h1>
         <p className="text-sm text-muted-foreground mt-1">

@@ -12,25 +12,19 @@ import Pricing from "@/pages/Pricing";
 import Counties from "@/pages/Counties";
 import CountyDetail from "@/pages/CountyDetail";
 import Compare from "@/pages/Compare";
-import Triggers from "@/pages/Triggers";
-import Signals from "@/pages/Signals";
-import Watchlist from "@/pages/Watchlist";
 import Operators from "@/pages/Operators";
 import Methodology from "@/pages/Methodology";
 import Alerts from "@/pages/Alerts";
-import DataQuality from "@/pages/DataQuality";
-import IngestionRuns from "@/pages/IngestionRuns";
 import Backtest from "@/pages/Backtest";
-import Movers from "@/pages/Movers";
 import LeadGen from "@/pages/LeadGen";
 import Login from "@/pages/Login";
-import Heartbeat from "@/pages/Heartbeat";
-import MyWatchlist from "@/pages/MyWatchlist";
 import Portfolio from "@/pages/Portfolio";
-import Parcels from "@/pages/Parcels";
-import Permits from "@/pages/Permits";
-import CompetitiveBids from "@/pages/CompetitiveBids";
 import Digest from "@/pages/Digest";
+// Consolidated tab hubs (each groups what were several separate nav items).
+import SignalsHub from "@/pages/SignalsHub";
+import SiteIntel from "@/pages/SiteIntel";
+import DataHealth from "@/pages/DataHealth";
+import WatchlistHub from "@/pages/WatchlistHub";
 import Landing from "@/pages/Landing";
 import Admin from "@/pages/Admin";
 import Webhooks from "@/pages/Webhooks";
@@ -50,25 +44,29 @@ function AppRouter() {
       <Route path="/counties" component={Counties} />
       <Route path="/counties/:fips" component={CountyDetail} />
       <Route path="/compare" component={Compare} />
-      <Route path="/triggers" component={Triggers} />
-      <Route path="/signals" component={Signals} />
-      <Route path="/watchlist" component={Watchlist} />
       <Route path="/operators" component={Operators} />
-      <Route path="/data-quality" component={DataQuality} />
-      <Route path="/ingestion" component={IngestionRuns} />
       <Route path="/methodology" component={Methodology} />
       <Route path="/alerts" component={Alerts} />
       <Route path="/backtest" component={Backtest} />
-      <Route path="/movers" component={Movers} />
       <Route path="/leadgen" component={LeadGen} />
       <Route path="/login" component={Login} />
-      <Route path="/heartbeat" component={Heartbeat} />
-      <Route path="/my-watchlist" component={MyWatchlist} />
       <Route path="/portfolio" component={Portfolio} />
-      <Route path="/parcels" component={Parcels} />
-      <Route path="/permits" component={Permits} />
-      <Route path="/competitive" component={CompetitiveBids} />
       <Route path="/digest" component={Digest} />
+      {/* Signals & activity hub (Feed / Triggers / Movers) */}
+      <Route path="/signals" component={SignalsHub} />
+      <Route path="/triggers" component={SignalsHub} />
+      <Route path="/movers" component={SignalsHub} />
+      {/* Site intelligence hub (Parcels / Permits / Competitive) */}
+      <Route path="/parcels" component={SiteIntel} />
+      <Route path="/permits" component={SiteIntel} />
+      <Route path="/competitive" component={SiteIntel} />
+      {/* Data health hub (Freshness / Ingestion runs / Data quality) */}
+      <Route path="/heartbeat" component={DataHealth} />
+      <Route path="/ingestion" component={DataHealth} />
+      <Route path="/data-quality" component={DataHealth} />
+      {/* Watchlist (personal when signed in, shared otherwise) */}
+      <Route path="/watchlist" component={WatchlistHub} />
+      <Route path="/my-watchlist" component={WatchlistHub} />
       <Route path="/api-docs" component={ApiDocs} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/admin" component={Admin} />

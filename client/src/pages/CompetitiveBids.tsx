@@ -29,7 +29,7 @@ const STAGE_STYLE: Record<string, string> = {
   walked: "bg-red-500/20 text-red-700 dark:text-red-400",
 };
 
-export default function CompetitiveBids() {
+export default function CompetitiveBids({ embedded = false }: { embedded?: boolean } = {}) {
   const { data: heat, isLoading } = useQuery<HeatRow[]>({
     queryKey: ["/api/competitive-bids/heat"],
     queryFn: async () => (await fetch("/api/competitive-bids/heat")).json(),
@@ -48,7 +48,7 @@ export default function CompetitiveBids() {
   }, [heat]);
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1600px] mx-auto">
+    <div className={embedded ? "space-y-4 sm:space-y-6" : "p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1600px] mx-auto"}>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-xl font-semibold tracking-tight inline-flex items-center gap-2">
