@@ -60,7 +60,7 @@ export interface RealDataOverlay {
     maxVoltage: number | null;
   } | null;
   // ISO interconnection queue rows for this county (PJM/MISO/ERCOT combined)
-  queue?: { rowsCount: number; queuedMw: number; withdrawnMw: number } | null;
+  queue?: { rowsCount: number; queuedMw: number; withdrawnMw: number; ttpMonths?: number | null } | null;
   // FEMA National Risk Index — 0-100 composite; higher = more hazard
   nri?: { riskScore: number | null; ealScore: number | null } | null;
 }
@@ -97,8 +97,13 @@ export function computeCountyFactorsV5(
   // rougher path to energization. Otherwise use seed timeToPowerMonths.
   let timeToPower: number;
   let ttpQuality: DataQuality = "synthetic";
-  if (overlay.queue && overlay.queue.queuedMw > 100) {
-    // Blend: base on seed ttm if present, but adjust ±10 pts by withdrawal ratio.
+  if (overlay.queue && overlay.queue.ttpMonths != null) {
+    // REAL: median queue-entry -> in-service duration from dated ISO projects in
+    // this county (or its ISO region). Shorter = higher score.
+    timeToPower = clamp(100 - ((overlay.queue.ttpMonths - 18) / (60 - 18)) * 100);
+    ttpQuality = "real";
+  } else if (overlay.queue && overlay.queue.queuedMw > 100) {
+    // Partial proxy: adjust seed ttm by the queue's withdrawal ratio.
     const withdrawalRatio =
       overlay.queue.withdrawnMw /
       Math.max(1, overlay.queue.queuedMw + overlay.queue.withdrawnMw);

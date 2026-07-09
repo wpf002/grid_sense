@@ -13,7 +13,7 @@ let _hifldMap: Map<string, {
   ehvLinesCount: number;
   maxVoltage: number | null;
 }> | null = null;
-let _queueMap: Map<string, { rowsCount: number; queuedMw: number; withdrawnMw: number }> | null = null;
+let _queueMap: Map<string, { rowsCount: number; queuedMw: number; withdrawnMw: number; ttpMonths: number | null }> | null = null;
 let _nriMap: Map<string, { riskScore: number | null; ealScore: number | null }> | null = null;
 
 export function warmOverlayCaches() {
@@ -61,7 +61,50 @@ export function warmOverlayCaches() {
       rowsCount: r.rowsCount,
       queuedMw: r.queuedMw ?? 0,
       withdrawnMw: r.withdrawnMw ?? 0,
+      ttpMonths: null,
     });
+
+  // Real time-to-power: the median queue-entry -> in-service duration (months)
+  // from dated projects. Use the county median where we have >= 3 dated projects,
+  // otherwise the ISO-region median. Filtered to recent submissions (last 8y) and
+  // plausible durations (6-120 months) to drop stalled decades-old outliers.
+  const durRows = sqlite
+    .prepare(`
+      SELECT fips, iso, (julianday(expected_in_service) - julianday(submitted_date)) / 30.44 AS months
+      FROM raw_iso_queue
+      WHERE fips IS NOT NULL AND submitted_date IS NOT NULL AND expected_in_service IS NOT NULL
+        AND submitted_date >= date('now', '-8 years')
+    `)
+    .all() as { fips: string; iso: string; months: number }[];
+  const median = (a: number[]): number => {
+    const s = a.slice().sort((x, y) => x - y);
+    const m = Math.floor(s.length / 2);
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  };
+  const push = (map: Map<string, number[]>, key: string, v: number) => {
+    const arr = map.get(key); if (arr) arr.push(v); else map.set(key, [v]);
+  };
+  const countyDur = new Map<string, number[]>();
+  const isoDur = new Map<string, number[]>();
+  for (const r of durRows) {
+    if (!(r.months >= 6 && r.months <= 120)) continue;
+    push(countyDur, r.fips, r.months);
+    if (r.iso) push(isoDur, r.iso, r.months);
+  }
+  const isoMedian = new Map<string, number>();
+  for (const [iso, arr] of isoDur) isoMedian.set(iso, median(arr));
+  const fipsIso = new Map<string, string>();
+  for (const r of sqlite.prepare("SELECT fips, iso FROM raw_iso_queue WHERE fips IS NOT NULL").all() as { fips: string; iso: string }[]) {
+    if (!fipsIso.has(r.fips) && r.iso) fipsIso.set(r.fips, r.iso);
+  }
+  for (const [fips, entry] of _queueMap) {
+    const cd = countyDur.get(fips);
+    if (cd && cd.length >= 3) entry.ttpMonths = Math.round(median(cd));
+    else {
+      const iso = fipsIso.get(fips);
+      if (iso && isoMedian.has(iso)) entry.ttpMonths = Math.round(isoMedian.get(iso)!);
+    }
+  }
 
   _nriMap = new Map();
   const nriRows = sqlite

@@ -86,8 +86,15 @@ export async function enrichCounties(): Promise<{
     // (1,500+ RTO counties) instead of the sparse seed values. Counties outside
     // any RTO legitimately have no ISO queue -> 0.
     const realQueueMw = Math.round(overlay.queue?.queuedMw ?? 0);
+    const realTtp = overlay.queue?.ttpMonths ?? null;
     db.update(countiesTable)
-      .set({ landingProbability, scoreTier: tier, queuedLoadMw: realQueueMw })
+      .set({
+        landingProbability,
+        scoreTier: tier,
+        queuedLoadMw: realQueueMw,
+        // Persist the real median time-to-power for display when we have it.
+        ...(realTtp != null ? { timeToPowerMonths: realTtp } : {}),
+      })
       .where(eq(countiesTable.id, c.id))
       .run();
 

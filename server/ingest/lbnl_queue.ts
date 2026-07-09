@@ -75,7 +75,16 @@ type Detected = {
   cType: number;
   cId: number;
   cName: number;
+  cQDate: number;
+  cOnDate: number;
 };
+
+// LBNL dates are Excel serial numbers (days since 1899-12-30). Convert to ISO.
+function excelToIso(v: unknown): string | null {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 10000 || n > 80000) return null;
+  return new Date(Date.UTC(1899, 11, 30) + n * 86400000).toISOString().slice(0, 10);
+}
 
 // Scan a sheet for the header row (LBNL sheets can have title rows first) and
 // map the columns we need. Returns null if the sheet isn't the project dataset.
@@ -104,6 +113,8 @@ function detectSheet(ws: XLSX.WorkSheet): Detected | null {
         cType: findCol(header, /type_clean|resource|fuel|technolog|project_type/i),
         cId: findCol(header, /queue|q_id|q_no|request/i),
         cName: findCol(header, /project.?name|^name$/i),
+        cQDate: findCol(header, /^q_date$|queue_date|request_date/i),
+        cOnDate: findCol(header, /^on_date$|online|in.?service|operational_date|^cod$/i),
       };
     }
   }
@@ -170,7 +181,7 @@ export async function ingestLbnlQueue(): Promise<number> {
     const stmt = sqlite.prepare(`
       INSERT INTO raw_iso_queue
         (iso, queue_no, project_name, state, county, fips, mw, fuel_type, status, submitted_date, expected_in_service, fetched_at, source_url)
-      VALUES ('LBNL', ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?)
+      VALUES ('LBNL', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     let inserted = 0, skippedCovered = 0, unresolved = 0;
@@ -201,6 +212,8 @@ export async function ingestLbnlQueue(): Promise<number> {
         if (seen.has(dedupeKey)) continue;
         seen.add(dedupeKey);
 
+        const submitted = best!.cQDate >= 0 ? excelToIso(row[best!.cQDate]) : null;
+        const inService = best!.cOnDate >= 0 ? excelToIso(row[best!.cOnDate]) : null;
         stmt.run(
           qno || null,
           best!.cName >= 0 ? String(row[best!.cName] ?? "").trim() || null : null,
@@ -210,6 +223,8 @@ export async function ingestLbnlQueue(): Promise<number> {
           mw || null,
           best!.cType >= 0 ? String(row[best!.cType] ?? "").trim() || null : null,
           status || null,
+          submitted,
+          inService,
           now,
           "https://emp.lbl.gov/queues",
         );
