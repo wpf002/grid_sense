@@ -82,6 +82,12 @@ const PIPELINE_META: Record<string, { name: string; source: string; url: string;
     url: "https://irtt.iso-ne.com/reports/external",
     cadence: "Monthly",
   },
+  lbnl_queue: {
+    name: "LBNL non-RTO interconnection queue",
+    source: "LBNL 'Queued Up' data file — extends queue coverage into non-RTO regions (Southeast, Arizona, Carolinas, Northwest). Manual annual download.",
+    url: "https://emp.lbl.gov/queues",
+    cadence: "Annual (manual file)",
+  },
   fcc_bdc: {
     name: "FCC Broadband Data Collection (fiber)",
     source: "ArcGIS Living Atlas mirror · view e1343efc — table 10 (BDC records for counties), tech=50 (Fiber)",

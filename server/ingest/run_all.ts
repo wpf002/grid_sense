@@ -12,6 +12,7 @@ import { ingestSppQueue } from "./spp_queue.js";
 import { ingestCaisoQueue } from "./caiso_queue.js";
 import { ingestNyisoQueue } from "./nyiso_queue.js";
 import { ingestIsoneQueue } from "./isone_queue.js";
+import { ingestLbnlQueue } from "./lbnl_queue.js";
 import { ingestFccBdc } from "./fcc_bdc.js";
 import { ingestUsgsWater } from "./usgs_water.js";
 import { ingestUsdaLand } from "./usda_land.js";
@@ -43,6 +44,7 @@ type PipeName =
   | "eia860"
   | "edgar"
   | "dc_news"
+  | "lbnl_queue"
   | "fema_nri"
   | "miso_queue"
   | "pjm_queue"
@@ -98,6 +100,7 @@ export async function runAll(pipes?: PipeName[]): Promise<Record<string, any>> {
   if (shouldRun("caiso_queue")) results.caiso_queue = await safe("CAISO queue", () => ingestCaisoQueue());
   if (shouldRun("nyiso_queue")) results.nyiso_queue = await safe("NYISO queue", () => ingestNyisoQueue());
   if (shouldRun("isone_queue")) results.isone_queue = await safe("ISO-NE queue", () => ingestIsoneQueue());
+  if (shouldRun("lbnl_queue")) results.lbnl_queue = await safe("LBNL non-RTO queue", () => ingestLbnlQueue());
   if (shouldRun("fcc_bdc")) results.fcc_bdc = await safe("FCC BDC (fiber)", () => ingestFccBdc());
   if (shouldRun("usgs_water")) results.usgs_water = await safe("USGS water use 2015", () => ingestUsgsWater());
   if (shouldRun("usda_land")) results.usda_land = await safe("USDA NASS Land Values 2025", () => ingestUsdaLand());

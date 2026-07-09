@@ -86,7 +86,7 @@ const PIPELINES = [
 ];
 
 const ROADMAP = [
-  { name: "Non-RTO interconnection queues", status: "Planned", note: "The Southeast, Northwest, and Mountain West have no public RTO queue. Wire the LBNL “Queued Up” dataset for utility-level coverage." },
+  { name: "Non-RTO interconnection queues", status: "Active", note: "LBNL “Queued Up” ingest is built (extends coverage to the Southeast, Arizona, Carolinas, Northwest). LBNL blocks automated download, so drop the data file at data/lbnl_queue.xlsx to activate it." },
   { name: "More county parcel feeds", status: "Active", note: "Real assessor ArcGIS feeds are live for 41 counties; adding high-value data-center markets one at a time." },
   { name: "Land sale prices (deed records)", status: "Planned", note: "Assessor feeds omit sale price. Scrape county recorder / deed sales for real $/acre where a county publishes it free." },
   { name: "Re-point stale county endpoints", status: "Planned", note: "About 8 configured assessor feeds now return no rows (their endpoints moved) and need a maintenance pass." },
