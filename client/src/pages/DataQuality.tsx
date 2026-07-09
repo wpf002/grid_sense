@@ -88,7 +88,7 @@ const PIPELINES = [
 const ROADMAP = [
   { name: "Non-RTO interconnection queues", status: "Active", note: "LBNL “Queued Up” ingest is built (extends coverage to the Southeast, Arizona, Carolinas, Northwest). LBNL blocks automated download, so drop the data file at data/lbnl_queue.xlsx to activate it." },
   { name: "More county parcel feeds", status: "Active", note: "Real assessor ArcGIS feeds are live for 41 counties; adding high-value data-center markets one at a time." },
-  { name: "Land sale prices (deed records)", status: "Planned", note: "Assessor feeds omit sale price. Scrape county recorder / deed sales for real $/acre where a county publishes it free." },
+  { name: "Land sale prices", status: "Active", note: "Real per-parcel sale price / assessed land value now pulled from assessor layers that publish it (~17 counties, 10k+ parcels), with a per-acre sanity filter. Counties that keep valuation in a separate CAMA table still show no price." },
   { name: "Re-point stale county endpoints", status: "Planned", note: "About 8 configured assessor feeds now return no rows (their endpoints moved) and need a maintenance pass." },
   { name: "Regrid / parcel APIs (paid)", status: "Deferred", note: "$5–20k/yr for nationwide per-parcel data; too costly during development." },
   { name: "CoreLogic / ATTOM (paid)", status: "Deferred", note: "Enterprise pricing (~$12k/yr+); would add sale prices and liens nationwide." },

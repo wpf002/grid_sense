@@ -28,6 +28,7 @@ interface ParcelSource {
   zoningField?: string;
   areaUnit?: "sqft" | "sqm"; // acresField is an area, not acres
   extraWhere?: string; // e.g. COUNTY='DALLAS COUNTY'
+  priceField?: string; // optional override; otherwise auto-detected (sale price / land value)
   pageSize: number;
 }
 
@@ -106,13 +107,37 @@ function loadOperatorDicts(): OperatorDict[] {
   return rows.map((r) => ({ name: r.name, shellLlcs: parse(r.shell_llcs), codenames: parse(r.codenames) }));
 }
 
-interface Row { apn: string; acres: number; zoning: string | null; owner: string | null }
+interface Row { apn: string; acres: number; zoning: string | null; owner: string | null; price: number | null }
+
+// Auto-detect a per-parcel price/value field on the layer. Prefer a real sale
+// price, then assessed LAND value (a land radar cares about dirt, not buildings).
+// Returns null when the layer exposes neither — many counties keep valuation in a
+// separate CAMA table — so the parcel shows no price rather than a fabricated one.
+async function detectPriceField(src: ParcelSource): Promise<string | null> {
+  if (src.priceField) return src.priceField;
+  try {
+    const meta = await fetchJson<any>(`${src.base}?f=json`, { cacheKey: `arcgis_parcels_${src.key}_meta.json`, maxAgeMs: 7 * DAY });
+    const flds: any[] = meta?.fields ?? [];
+    const numeric = new Set(flds.filter((f) => /Integer|Double|Single|Float|Money/i.test(f?.type ?? "")).map((f) => String(f.name)));
+    const names = flds.map((f) => String(f.name));
+    const pick = (re: RegExp) => names.find((n) => re.test(n) && numeric.has(n)) ?? null;
+    return (
+      pick(/last.?sale.?price|sale.?price|sale.?amt|saleprice|sale_amount/i) ||
+      pick(/land.?value.?cur|current.?land|land.?val.?cur|landvalue|land_val|assd.?land|assess.?land/i) ||
+      pick(/land.?value|market.?land|land.?mkt/i) ||
+      null
+    );
+  } catch {
+    return null;
+  }
+}
 
 async function fetchParcels(src: ParcelSource): Promise<Row[]> {
   const div = src.areaUnit ? AREA_DIV[src.areaUnit] : 1;
   const minVal = MIN_ACRES * div;
-  const maxVal = MAX_ACRES * div;
-  const fields = [src.idField, src.acresField, src.ownerField, src.zoningField].filter(Boolean).join(",");
+  const priceField = await detectPriceField(src);
+  if (priceField) console.log(`[arcgis_parcels] ${src.key}: price field = ${priceField}`);
+  const fields = [src.idField, src.acresField, src.ownerField, src.zoningField, priceField].filter(Boolean).join(",");
   const where = [`${src.acresField}>${minVal}`, src.extraWhere].filter(Boolean).join(" AND ");
   const out: Row[] = [];
   for (let offset = 0; offset < CAP; offset += src.pageSize) {
@@ -121,10 +146,13 @@ async function fetchParcels(src: ParcelSource): Promise<Row[]> {
       `&outFields=${encodeURIComponent(fields)}&returnGeometry=false` +
       (order ? `&orderByFields=${encodeURIComponent(`${src.acresField} DESC`)}` : "") +
       `&resultRecordCount=${src.pageSize}&resultOffset=${offset}&f=json`;
-    let j = await fetchJson<any>(q(true), { cacheKey: `arcgis_parcels_${src.key}_${offset}.json`, maxAgeMs: 7 * DAY });
+    // Cache key includes whether a price field is in the request, so adding price
+    // extraction busts the old (price-less) cached responses instead of reusing them.
+    const cv = priceField ? "p" : "0";
+    let j = await fetchJson<any>(q(true), { cacheKey: `arcgis_parcels_${src.key}_${offset}_${cv}.json`, maxAgeMs: 7 * DAY });
     // Some servers 400 on orderBy/offset combos — retry unordered.
     if (j?.error || !j?.features) {
-      j = await fetchJson<any>(q(false), { cacheKey: `arcgis_parcels_${src.key}_${offset}_no.json`, maxAgeMs: 7 * DAY });
+      j = await fetchJson<any>(q(false), { cacheKey: `arcgis_parcels_${src.key}_${offset}_${cv}_no.json`, maxAgeMs: 7 * DAY });
     }
     const feats = j?.features ?? [];
     for (const f of feats) {
@@ -136,11 +164,19 @@ async function fetchParcels(src: ParcelSource): Promise<Row[]> {
       let acres = Number(a[src.acresField]) / div;
       const apn = a[src.idField];
       if (!apn || !Number.isFinite(acres) || acres < MIN_ACRES || acres > MAX_ACRES) continue;
+      const rawPrice = priceField ? Number(a[priceField]) : NaN;
+      // Keep only plausible amounts. Reject $0/nominal transfers and, via a
+      // per-acre band, the artifacts common in raw assessor price fields —
+      // bulk/portfolio sale totals smeared across parcels, or data errors.
+      // Ceiling $5M/acre is ~3x the priciest US data-center dirt (Loudoun).
+      const perAcre = Number.isFinite(rawPrice) && acres > 0 ? rawPrice / acres : NaN;
+      const priceOk = Number.isFinite(rawPrice) && rawPrice > 1000 && perAcre >= 500 && perAcre <= 5_000_000;
       out.push({
         apn: String(apn),
         acres: Math.round(acres * 100) / 100,
         zoning: src.zoningField ? (a[src.zoningField] ?? null) : null,
         owner: src.ownerField ? (a[src.ownerField] ?? null) : null,
+        price: priceOk ? Math.round(rawPrice) : null,
       });
     }
     if (feats.length < src.pageSize) break;
@@ -155,7 +191,7 @@ export async function ingestArcgisParcels(): Promise<Record<string, number>> {
     const ins = sqlite.prepare(
       `INSERT INTO parcels
         (county_fips, apn, acres, owner_name, owner_is_shell_llc, resolved_operator, substation_distance_mi, fiber_distance_mi, zoning, land_price, last_transfer_date, parcel_score, status)
-       VALUES (@fips, @apn, @acres, @owner, @isShell, @op, NULL, NULL, @zoning, NULL, NULL, @score, 'available')`,
+       VALUES (@fips, @apn, @acres, @owner, @isShell, @op, NULL, NULL, @zoning, @price, NULL, @score, 'available')`,
     );
     const out: Record<string, number> = {};
     let total = 0, attributed = 0;
@@ -170,7 +206,7 @@ export async function ingestArcgisParcels(): Promise<Record<string, number>> {
             ins.run({
               fips: src.fips, apn: p.apn, acres: p.acres, owner: p.owner,
               isShell: attr ? 1 : 0, op: attr?.operator ?? null,
-              zoning: p.zoning, score: parcelScore(p.acres),
+              zoning: p.zoning, score: parcelScore(p.acres), price: p.price,
             });
           }
         });
