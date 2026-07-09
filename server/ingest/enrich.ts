@@ -66,11 +66,10 @@ export async function enrichCounties(): Promise<{
   console.log("[enrich v0.5] Enriching", allCounties.length, "counties");
 
   // Clear old provenance rows for factors we're refreshing.
-  db.delete(dataProvenance).where(sql`${dataProvenance.factorKey} IN (
-    'gridDemandIntent','timeToPower','onsiteGeneration','landAvailability','landAffordability',
-    'fiberConnectivity','fiscalIncentives','clusterAdjacency','waterAvailability','hazardSafety',
-    'existingGridCapacityMw','transmissionDensity'
-  )`).run();
+  // Clear ALL prior provenance — enrich is the sole writer and rewrites every
+  // factor below. Deleting only a subset let stale rows for carbon/gas/cooling/
+  // generation accumulate across runs and double-count on the Data Quality page.
+  db.delete(dataProvenance).run();
 
   let countiesUpdated = 0;
   const provRows: (typeof dataProvenance.$inferInsert)[] = [];
@@ -82,8 +81,13 @@ export async function enrichCounties(): Promise<{
     const boost = computeSignalBoost(allSignals.filter(s => s.countyFips === c.fips));
     const landingProbability = Math.round(Math.max(0, Math.min(100, base + boost)));
     const tier = scoreTierFor(landingProbability);
+    // Persist the REAL ISO interconnection-queue MW from the overlay back to the
+    // display column so the map, KPI, and county tables show actual queue data
+    // (1,500+ RTO counties) instead of the sparse seed values. Counties outside
+    // any RTO legitimately have no ISO queue -> 0.
+    const realQueueMw = Math.round(overlay.queue?.queuedMw ?? 0);
     db.update(countiesTable)
-      .set({ landingProbability, scoreTier: tier })
+      .set({ landingProbability, scoreTier: tier, queuedLoadMw: realQueueMw })
       .where(eq(countiesTable.id, c.id))
       .run();
 

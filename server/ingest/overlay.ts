@@ -29,9 +29,17 @@ export function warmOverlayCaches() {
   for (const r of eiaRows) _eiaMap.set(r.fips, { totalMw: r.totalMw ?? 0, genCount: r.genCount });
 
   _hifldMap = new Map();
+  // Read the real HIFLD aggregate (transmission_county_agg) written by
+  // hifld_transmission.ts. It stores km per voltage band + a segment count, so
+  // approximate the line counts scoring expects: split segments in proportion to
+  // each band's share of total km. EHV = ≥345 kV, HV = 100-287 kV.
   const hifldRows = sqlite
-    .prepare(`SELECT fips, lines_count as linesCount, hv_lines_count as hvLinesCount,
-              ehv_lines_count as ehvLinesCount, max_voltage as maxVoltage FROM raw_hifld_transmission`)
+    .prepare(`SELECT fips,
+                segment_count AS linesCount,
+                CAST(segment_count * (COALESCE(km_345,0)+COALESCE(km_500,0)+COALESCE(km_735_up,0)) / NULLIF(total_km,0) AS INTEGER) AS ehvLinesCount,
+                CAST(segment_count * (COALESCE(km_100_161,0)+COALESCE(km_220_287,0)) / NULLIF(total_km,0) AS INTEGER) AS hvLinesCount,
+                max_voltage_kv AS maxVoltage
+              FROM transmission_county_agg`)
     .all() as any[];
   for (const r of hifldRows) _hifldMap.set(r.fips, r);
 
