@@ -330,7 +330,7 @@ export function USMap({ counties }: USMapProps) {
               data-testid="button-map-mode-delta"
               onClick={() => setMode("delta")}
               className={`px-2 py-1 rounded ${mode === "delta" ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"}`}
-            >Δ score</button>
+            >Δ Score</button>
           </div>
           <button
             data-testid="button-toggle-states"
@@ -340,7 +340,7 @@ export function USMap({ counties }: USMapProps) {
             }`}
           >
             <Layers className="h-3 w-3" />
-            {showStates ? "State choropleth ON" : "Show state choropleth"}
+            {showStates ? "State Choropleth ON" : "Show State Choropleth"}
           </button>
           <button
             data-testid="button-toggle-transmission"
@@ -350,7 +350,7 @@ export function USMap({ counties }: USMapProps) {
             }`}
           >
             <Zap className="h-3 w-3" />
-            {showTx ? "Transmission ON (zoom ≥7)" : "Show transmission"}
+            {showTx ? "Transmission ON (zoom ≥7)" : "Show Transmission"}
           </button>
           {showTx ? (
             <div className="bg-card/90 backdrop-blur border border-border rounded-md p-2 text-[9px] font-mono space-y-0.5">

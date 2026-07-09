@@ -241,7 +241,7 @@ export default function Dashboard() {
             <StatCard
               label="Queued load"
               value={formatMw(stats.totalQueuedMw)}
-              hint="Total interconnection queue"
+              hint="Power projects awaiting grid hookup"
               icon={Zap}
               accent="primary"
               testId="stat-queued"
