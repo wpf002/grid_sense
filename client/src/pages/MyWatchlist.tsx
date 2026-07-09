@@ -241,8 +241,8 @@ export default function MyWatchlistPage() {
           <CardTitle className="text-base">Add an alert rule</CardTitle>
           <p className="text-xs text-muted-foreground">
             Two rule types are supported right now:
-            <br />• <b>SCORE_CHANGE</b> — score moves \u22655 points in a day
-            <br />• <b>TIER_UPGRADE</b> — county crosses tier boundary
+            <br />• <b>Score change</b> — score moves ≥5 points in a day
+            <br />• <b>Tier upgrade</b> — county crosses tier boundary
           </p>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
@@ -257,7 +257,7 @@ export default function MyWatchlistPage() {
             }}
             data-testid="button-add-score-change"
           >
-            + SCORE_CHANGE (all)
+            + Score change (all)
           </Button>
           <Button
             size="sm"
@@ -270,7 +270,7 @@ export default function MyWatchlistPage() {
             }}
             data-testid="button-add-tier-upgrade"
           >
-            + TIER_UPGRADE (all)
+            + Tier upgrade (all)
           </Button>
         </CardContent>
       </Card>

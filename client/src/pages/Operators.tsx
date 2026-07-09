@@ -318,7 +318,7 @@ function AttributedFilings() {
         </div>
         <p className="text-xs text-muted-foreground">
           Recent SEC EDGAR filings resolved to a tracked operator by shell-LLC,
-          codename, or parent name — a forward signal no competitor productizes.
+          codename, or parent name.
         </p>
       </CardHeader>
       <CardContent>

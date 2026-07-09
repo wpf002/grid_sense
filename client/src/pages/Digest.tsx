@@ -46,7 +46,7 @@ export default function Digest() {
           <Inbox className="h-5 w-5 text-primary" /> Weekly digest
         </h1>
         <p className="text-sm text-muted-foreground">
-          High-signal events since {data.since}. This is the same content a scheduled email digest would deliver.
+          High-signal events since {data.since}. Same as the weekly email digest.
         </p>
       </div>
 
@@ -146,7 +146,7 @@ export default function Digest() {
           </section>
 
           <div className="text-[10px] text-muted-foreground text-center border-t pt-3">
-            You can schedule this digest to auto-email weekly. Contact your admin, or go to <Link href="/alerts"><button className="text-primary">Alerts</button></Link> to configure per-county rules.
+            Schedule this as a weekly email, or set per-county rules in <Link href="/alerts"><button className="text-primary">Alerts</button></Link>.
           </div>
         </CardContent>
       </Card>

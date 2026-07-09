@@ -131,7 +131,7 @@ export default function MapView() {
           <SelectContent>
             <SelectItem value="all">All tiers</SelectItem>
             {TIER_ORDER.map((t) => (
-              <SelectItem key={t} value={t}>{t}</SelectItem>
+              <SelectItem key={t} value={t}>{t[0].toUpperCase() + t.slice(1)}</SelectItem>
             ))}
           </SelectContent>
         </Select>

@@ -80,12 +80,11 @@ export default function Pricing() {
     <div className="p-4 sm:p-6 space-y-6 sm:space-y-10 max-w-6xl mx-auto">
       <div className="text-center space-y-2">
         <h1 className="text-xl font-semibold tracking-tight">
-          Pricing that scales with your site strategy
+          Plans for solo analysts to hyperscalers
         </h1>
         <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-          GridSense is the fastest way to know where the next hyperscale campus lands
-          before it's public. Free forever for individuals, tiered plans for teams,
-          custom deals for the biggest operators.
+          Know where the next hyperscale campus lands before it's public. Free forever
+          for individuals, tiered plans for teams, custom deals for the biggest operators.
         </p>
       </div>
 

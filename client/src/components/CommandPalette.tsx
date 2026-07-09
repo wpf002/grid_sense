@@ -219,7 +219,7 @@ export function CommandPalette() {
             </CommandGroup>
           )}
           {bids.length > 0 && (
-            <CommandGroup heading="Competitive Bids">
+            <CommandGroup heading="Competitive bids">
               {bids.slice(0, 5).map((b) => (
                 <CommandItem
                   key={b.id}

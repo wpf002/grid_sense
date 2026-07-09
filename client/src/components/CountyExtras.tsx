@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { humanize } from "@/lib/utils";
 
 type ParcelRow = {
   id: string;
@@ -165,7 +166,7 @@ export function CountyExtras({ fips }: { fips: string }) {
                         <TableCell className="text-xs py-2">{p.zoning ?? "—"}</TableCell>
                         <TableCell className="py-2">
                           <Badge variant="outline" className="text-[10px] uppercase">
-                            {p.status ?? "—"}
+                            {p.status ? humanize(p.status) : "—"}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-xs font-mono text-right py-2">
@@ -223,7 +224,7 @@ export function CountyExtras({ fips }: { fips: string }) {
                         </TableCell>
                         <TableCell className="text-xs font-mono text-right py-2">{fmtAcres(p.acres)}</TableCell>
                         <TableCell className="py-2">
-                          <Badge variant="outline" className="text-[10px] uppercase">{p.status ?? "—"}</Badge>
+                          <Badge variant="outline" className="text-[10px] uppercase">{p.status ? humanize(p.status) : "—"}</Badge>
                         </TableCell>
                         <TableCell className="py-2">
                           {p.source_url ? (

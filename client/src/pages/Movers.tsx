@@ -32,7 +32,7 @@ export default function Movers({ embedded = false }: { embedded?: boolean } = {}
         <h1 className="text-xl font-semibold tracking-tight">Daily movers</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Counties whose landing-probability score changed most between the last
-          two daily snapshots. Powered by the nightly score-history table (Gap 12).
+          two daily snapshots.
         </p>
         {data?.today && data?.yesterday && (
           <p className="mt-1 text-xs font-mono text-muted-foreground">

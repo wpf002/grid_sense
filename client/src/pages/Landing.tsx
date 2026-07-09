@@ -85,7 +85,7 @@ export default function Landing() {
       <div className="border-t border-border bg-muted/30">
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="mb-10">
-            <h2 className="text-xl font-semibold tracking-tight" data-testid="text-features-title">Everything you need to underwrite a data center site.</h2>
+            <h2 className="text-xl font-semibold tracking-tight" data-testid="text-features-title">Underwrite a data center site from one screen.</h2>
             <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
               Site selection used to mean six months of RFIs and Excel jockeying. GridSense replaces it with a single, source-cited dashboard.
             </p>
