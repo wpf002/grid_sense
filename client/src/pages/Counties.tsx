@@ -351,14 +351,6 @@ export default function Counties() {
               </PopoverContent>
             </Popover>
           )}
-          {!isAuthed && (
-            <Link href="/login">
-              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" data-testid="button-login-for-saved">
-                <Bookmark className="h-3.5 w-3.5 mr-1.5" />
-                Sign in to save searches
-              </Button>
-            </Link>
-          )}
           <Button
             variant="outline"
             size="sm"

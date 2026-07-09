@@ -203,7 +203,7 @@ export default function Portfolio() {
               {csv.split(/\r?\n/).filter((l) => l.trim()).length} lines · Max 5,000 rows
             </div>
             <Button onClick={handleScore} disabled={loading || !csv.trim()} data-testid="button-score-portfolio">
-              {loading ? "Scoring…" : "Score portfolio"}
+              {loading ? "Scoring…" : "Score Portfolio"}
             </Button>
           </div>
         </CardContent>

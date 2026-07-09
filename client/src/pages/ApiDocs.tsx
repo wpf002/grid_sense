@@ -253,7 +253,7 @@ function EndpointSnippet({ ep }: { ep: Endpoint }) {
 export default function ApiDocs() {
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-5xl mx-auto">
-      <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground" data-testid="link-back-dashboard">
+      <Link href="/" className="flex w-fit items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground" data-testid="link-back-dashboard">
         <ArrowLeft className="h-3.5 w-3.5" /> Back to Dashboard
       </Link>
       <div>
