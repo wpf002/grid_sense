@@ -53,7 +53,8 @@ export class ErrorBoundary extends Component<Props, State> {
                 variant="default"
                 size="sm"
                 onClick={() => {
-                  window.location.hash = "#/";
+                  window.history.pushState(null, "", "/");
+                  window.dispatchEvent(new PopStateEvent("popstate"));
                   this.reset();
                 }}
                 data-testid="button-error-home"

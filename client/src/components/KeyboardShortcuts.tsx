@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Keyboard } from "lucide-react";
 
@@ -20,11 +21,12 @@ const shortcuts: Array<{ keys: string[]; label: string; scope: string }> = [
 export function KeyboardShortcuts() {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<string | null>(null);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     let pendingTimer: any = null;
     const nav = (path: string) => {
-      window.location.hash = path;
+      setLocation(path);
       setPending(null);
     };
     const isTypingTarget = (t: EventTarget | null): boolean => {
@@ -48,15 +50,15 @@ export function KeyboardShortcuts() {
       if (pending === "g") {
         e.preventDefault();
         const k = e.key.toLowerCase();
-        if (k === "d") nav("#/");
-        else if (k === "c") nav("#/counties");
-        else if (k === "m") nav("#/map");
-        else if (k === "s") nav("#/signals");
-        else if (k === "a") nav("#/alerts");
-        else if (k === "o") nav("#/operators");
-        else if (k === "p") nav("#/portfolio");
-        else if (k === "w") nav("#/watchlist");
-        else if (k === "h") nav("#/heartbeat");
+        if (k === "d") nav("/");
+        else if (k === "c") nav("/counties");
+        else if (k === "m") nav("/map");
+        else if (k === "s") nav("/signals");
+        else if (k === "a") nav("/alerts");
+        else if (k === "o") nav("/operators");
+        else if (k === "p") nav("/portfolio");
+        else if (k === "w") nav("/watchlist");
+        else if (k === "h") nav("/heartbeat");
         setPending(null);
         if (pendingTimer) clearTimeout(pendingTimer);
       }
@@ -66,7 +68,7 @@ export function KeyboardShortcuts() {
       window.removeEventListener("keydown", onKey);
       if (pendingTimer) clearTimeout(pendingTimer);
     };
-  }, [pending]);
+  }, [pending, setLocation]);
 
   return (
     <>

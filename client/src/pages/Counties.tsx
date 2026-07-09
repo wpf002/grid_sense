@@ -31,20 +31,16 @@ function formatMw(mw?: number | null): string {
   return `${mw.toFixed(0)} MW`;
 }
 
-// Read query string from the hash (wouter's useSearch only reads path-suffix in some versions;
-// for reliability, parse window.location.hash directly).
-function readHashQuery(): URLSearchParams {
-  const h = typeof window !== "undefined" ? window.location.hash : "";
-  const qi = h.indexOf("?");
-  return new URLSearchParams(qi >= 0 ? h.slice(qi + 1) : "");
+// URL-synced filters live in the real query string now that routing is
+// path-based (was hash-fragment parsing when the app used hash routing).
+function readUrlQuery(): URLSearchParams {
+  return new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
 }
 
-function writeHashQuery(params: URLSearchParams) {
+function writeUrlQuery(params: URLSearchParams) {
   if (typeof window === "undefined") return;
-  const h = window.location.hash || "#/";
-  const qi = h.indexOf("?");
-  const base = qi >= 0 ? h.slice(0, qi) : h;
   const q = params.toString();
+  const base = window.location.pathname;
   window.history.replaceState(null, "", q ? `${base}?${q}` : base);
 }
 
@@ -95,7 +91,7 @@ function downloadCsv(rows: County[], filename: string) {
 export default function Counties() {
   const [location] = useLocation();
   // Read initial state from URL
-  const initial = useMemo(() => readHashQuery(), [location]);
+  const initial = useMemo(() => readUrlQuery(), [location]);
   const [query, setQuery] = useState(initial.get("q") ?? "");
   const [tierFilter, setTierFilter] = useState<string>(initial.get("tier") ?? "all");
   const [isoFilter, setIsoFilter] = useState<string>(initial.get("iso") ?? "all");
@@ -116,7 +112,7 @@ export default function Counties() {
     if (moratoriumFilter !== "all") p.set("mor", moratoriumFilter);
     if (minScore !== "0") p.set("min", minScore);
     if (sortBy !== "score") p.set("sort", sortBy);
-    writeHashQuery(p);
+    writeUrlQuery(p);
   }, [query, tierFilter, isoFilter, stateFilter, moratoriumFilter, minScore, sortBy]);
 
   const uniqueIsos = useMemo(() => {

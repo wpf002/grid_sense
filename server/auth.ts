@@ -147,7 +147,7 @@ export function registerAuth(app: Express) {
         }
         req.session.userId = user.id;
         req.session.email = user.email;
-        res.redirect("/#/");
+        res.redirect("/");
       } catch (e: any) {
         res.status(500).send("sso failed: " + e.message);
       }

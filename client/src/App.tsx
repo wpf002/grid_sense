@@ -1,5 +1,4 @@
 import { Switch, Route, Router } from "wouter";
-import { useHashLocation } from "wouter/use-hash-location";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -90,10 +89,12 @@ export default function App() {
       <TooltipProvider>
         {/* Router must wrap everything that calls Link/useLocation (sidebar,
             command palette, page routes) — not just the routed pages —
-            otherwise those components fall back to wouter's default
-            browser-path hook instead of the hash hook, and clicking a nav
-            link pushes a real path the hash-based Switch never sees. */}
-        <Router hook={useHashLocation}>
+            otherwise those components render outside the shared routing
+            context. wouter defaults to real browser History routing (no
+            `hook` prop needed); the Express catch-all in server/vite.ts and
+            server/static.ts serves index.html for any non-API path so direct
+            loads/refreshes on a route like /counties work. */}
+        <Router>
           <SidebarProvider style={style as React.CSSProperties}>
             <div className="flex h-screen w-full bg-background">
               <AppSidebar />

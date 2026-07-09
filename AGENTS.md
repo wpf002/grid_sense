@@ -20,7 +20,7 @@ Users: hyperscaler siting teams, data-center REITs, industrial land brokers, and
 
 ## Stack
 
-- **Frontend**: React 18.3.1 + Vite + Tailwind v3 + shadcn/ui + wouter (hash routing) + TanStack Query v5 + Recharts + Leaflet + us-atlas/topojson-client
+- **Frontend**: React 18.3.1 + Vite + Tailwind v3 + shadcn/ui + wouter (real browser routing) + TanStack Query v5 + Recharts + Leaflet + us-atlas/topojson-client
 - **Backend**: Express + Drizzle ORM + better-sqlite3 (synchronous)
 - **Auth**: bcryptjs + httpOnly session cookies (single admin user by default, seeded demo users for the Admin panel)
 - **Deploy**: single Node process, `dist/index.cjs` serves both API and the built SPA on port 5000
@@ -28,17 +28,11 @@ Users: hyperscaler siting teams, data-center REITs, industrial land brokers, and
 ## Critical gotchas — read before touching code
 
 1. **React must stay pinned at 18.3.1.** Several radix + shadcn packages resolve peer deps against 18.x. When you install anything, use `npm install --legacy-peer-deps`. Do not upgrade to React 19 without a full audit — it will silently break Radix components.
-2. **Hash routing is mandatory.** The app is served from `/computer/a/...` iframes in the original hosting environment; wouter uses `useHashLocation`. Router shape is:
-   ```tsx
-   <Router hook={useHashLocation}>
-     <Switch>...</Switch>
-   </Router>
-   ```
-   `hook` goes on `<Router>`, NOT on `<Switch>`. Do not use `<a href="#anchor">` for in-page navigation — hash routing intercepts it. Use `document.getElementById(...).scrollIntoView()` for section scrolls.
-3. **No localStorage / sessionStorage / cookies from the client** other than the httpOnly session cookie set by the server. The original sandbox blocked storage APIs; keeping this constraint means the app remains portable to iframes and privacy-strict environments. Use React state, TanStack Query cache, and the backend DB.
+2. **Routing is real browser History routing (no hash hook).** wouter's `<Router>` uses its default location hook — real paths like `/counties`, not `/#/counties`. This used to be hash-based because the app was served from `/computer/a/...` iframes in an earlier hosting environment; that constraint no longer applies. `<Router>` must wrap the ENTIRE app tree — sidebar, command palette, and routed pages alike — not just the `<Switch>`, or components outside it fall back to a different location context and navigation silently breaks (this exact bug shipped once; see git history). Both `server/vite.ts` (dev) and `server/static.ts` (prod) already serve `index.html` on any unmatched path, so direct loads/refreshes on a real route work.
+3. **localStorage / sessionStorage are fine to use now** if a feature genuinely needs client-only persistence (e.g. a UI preference) — this is a regular browser app, not an iframe sandbox. The httpOnly session cookie remains the only mechanism for auth state.
 4. **better-sqlite3 is synchronous.** Every Drizzle query terminates in `.get()`, `.all()`, or `.run()`. Do not destructure query builders directly (`const [row] = db.select()...` will not work). SQLite has no array columns — lists are stored as JSON text and parsed in app code.
 5. **`text-xl` is the max heading size** anywhere in the app. Nothing uses `text-2xl` or above.
-6. **API calls must use `apiRequest` from `@/lib/queryClient`.** Raw `fetch()` breaks the `__PORT_5000__` proxy substitution used at deploy time. Query keys are arrays (e.g. `['/api/counties', id]`), never template strings.
+6. **API calls must use `apiRequest` from `@/lib/queryClient`.** It centralizes error handling (`throwIfResNotOk`) and keeps query keys consistent. Query keys are arrays (e.g. `['/api/counties', id]`), never template strings. Frontend and API are same-origin (one Express process), so URLs are plain relative paths — no base-path rewriting needed.
 7. **Forms use shadcn `<Form>` + react-hook-form + zod resolvers** against insert schemas from `@shared/schema.ts`. `<SelectItem value="...">` must always have a non-empty `value`.
 8. **All interactive elements have `data-testid`** for future Playwright coverage. Follow `{action}-{target}` for actions and `{type}-{content}` for displays, with a unique suffix for dynamic rows.
 
@@ -54,7 +48,7 @@ gridsense/
 │       ├── main.tsx          # ReactDOM entry
 │       ├── index.css         # Tailwind + CSS vars (HSL H S% L% form)
 │       ├── components/       # USMap, CommandPalette, KeyboardShortcuts, layout, Radix wrappers
-│       ├── lib/queryClient.ts # apiRequest wrapper + __PORT_5000__ handling
+│       ├── lib/queryClient.ts # apiRequest wrapper (relative-URL fetch + error handling)
 │       ├── hooks/            # useToast, useAuth, custom data hooks
 │       └── pages/            # 30 route pages (see routes list below)
 ├── server/
@@ -136,11 +130,11 @@ Everything hits real SQLite. There are zero mocks in the codebase and zero TODO/
 
 Dashboard, Counties, CountyDetail, MapView, Watchlists, Alerts, Signals, Movers, Digest, Backtest, LeadGen, Portfolio, Parcels, Permits, CompetitiveBids, Operators, ShellLLCs, DataQuality, Methodology, ApiDocs, Webhooks, Admin, Auth (Login/Signup), Settings, Pricing, About, Landing, Changelog, NotFound.
 
-`App.tsx` registers all of them under `<Router hook={useHashLocation}>`.
+`App.tsx` registers all of them under a single `<Router>` (real browser routing) wrapping the whole app tree.
 
 ## Cron / scheduled ingestion
 
-The Perplexity Computer version ran these via a cron system:
+The original prototype ran these via a cron system:
 
 - **Daily 03:00 CT** — `npx tsx server/ingest/score_history.ts` — nightly score snapshot
 - **Daily 06:00 CT** — SEC EDGAR full-text search + Data Center Dynamics RSS, auto-tag against shell-LLC and metro dictionaries
@@ -217,11 +211,9 @@ All are read via `process.env` and documented in `.env.example`. Summary:
 
 ## Things NOT to do
 
-- Do not add localStorage/sessionStorage/cookies from the client.
 - Do not upgrade React to 19 without a full radix audit.
 - Do not use raw `fetch()` in the client — always `apiRequest`.
-- Do not use `<a href="#section">` — hash router intercepts it.
-- Do not put `hook` on `<Switch>` — it belongs on `<Router>`.
+- Do not render `Link`/navigation-using components (sidebar, command palette) outside the top-level `<Router>` — they'll silently use a different location context and clicks won't navigate.
 - Do not remove `--legacy-peer-deps` from install commands.
 - Do not commit `data.db*`, `.env`, or `node_modules`.
 - Do not exceed `text-xl` for any heading.
