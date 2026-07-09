@@ -91,6 +91,14 @@ const SOURCES: ParcelSource[] = [
   { key: "madison_ms", fips: "28089", base: "https://services7.arcgis.com/deoj2Y8l1tBr7P5X/arcgis/rest/services/Madison_Service/FeatureServer/5", idField: "PARCEL_ID", acresField: "TOTAL_AC", ownerField: "OWNERNAME", pageSize: 2000 },
   // WA (Quincy / Columbia Basin DC corridor)
   { key: "grant_wa", fips: "53025", base: "https://services2.arcgis.com/hQZvdtFxRzJpMtdS/arcgis/rest/services/Parcels/FeatureServer/0", idField: "PARCEL", acresField: "TotalAcres", ownerField: "LastName", pageSize: 2000 },
+  // Additional major DC markets (endpoints verified live before adding)
+  { key: "douglas_ne", fips: "31055", base: "https://dcgis.org/server/rest/services/vector/Parcels_public/FeatureServer/0", idField: "PIN", acresField: "ACRES", ownerField: "OWNER_NAME", pageSize: 2000 },
+  { key: "dekalb", fips: "13089", base: "https://dcgis.dekalbcountyga.gov/hosted/rest/services/PropertyAppraisal/Parcels_IASWorld/FeatureServer/0", idField: "PARCELID", acresField: "ACREAGE", ownerField: "OWNERNME1", zoningField: "ZONING", pageSize: 2000 },
+  { key: "douglas_ga", fips: "13097", base: "https://maps.douglascountyga.gov/arcgis/rest/services/LandRecords/LandRecords/MapServer/0", idField: "PIN", acresField: "ACREAGE_GIS", ownerField: "OWNER", zoningField: "ZONING_CODE", pageSize: 1000 },
+  { key: "frederick_md", fips: "24021", base: "https://fcgis.frederickcountymd.gov/server_pub/rest/services/Basemap/Parcels/MapServer/0", idField: "PIN", acresField: "GIS_ACRES", extraWhere: "TAXPARCELTYPE='Base Parcel'", pageSize: 1000 },
+  { key: "king", fips: "53033", base: "https://gismaps.kingcounty.gov/arcgis/rest/services/Property/KingCo_PropertyInfo/MapServer/2", idField: "PIN", acresField: "KCA_ACRES", zoningField: "KCA_ZONING", pageSize: 1000 },
+  { key: "washoe", fips: "32031", base: "https://wcgisweb.washoecounty.us/arcgis/rest/services/OpenData/OpenData/FeatureServer/0", idField: "PIN", acresField: "ACREAGE", ownerField: "LASTNAME", zoningField: "Zoning", pageSize: 1000 },
+  { key: "pottawattamie", fips: "19155", base: "https://gis.pottcounty-ia.gov/arcgis/rest/services/OpenData/MapServer/0", idField: "PIN", acresField: "NETACRES", ownerField: "OWNER", zoningField: "PRIMARYRURALZONING", pageSize: 2000 },
 ];
 
 function parcelScore(acres: number): number {
