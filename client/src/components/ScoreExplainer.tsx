@@ -47,9 +47,9 @@ export function ScoreExplainer() {
           <div>
             <div className="font-semibold mb-1">Tiers</div>
             <div className="grid grid-cols-2 gap-2 text-muted-foreground">
-              <div><span className="text-red-500 font-mono">Hot ≥ 80</span> — near-term announcement likely</div>
-              <div><span className="text-amber-500 font-mono">Warm 65-79</span> — active accumulation</div>
-              <div><span className="text-blue-500 font-mono">Emerging 45-64</span> — worth watching</div>
+              <div><span className="text-red-500 font-mono">Hot ≥ 75</span> — near-term announcement likely</div>
+              <div><span className="text-amber-500 font-mono">Warm 60-74</span> — active accumulation</div>
+              <div><span className="text-blue-500 font-mono">Emerging 45-59</span> — worth watching</div>
               <div><span className="text-muted-foreground font-mono">Cold &lt; 45</span> — no signal</div>
             </div>
           </div>

@@ -9,7 +9,7 @@ import { eq, sql, desc } from "drizzle-orm";
 import { z } from "zod";
 import { registerExportRoutes } from "./exports";
 import { registerAuth } from "./auth";
-import { computeCountyFactorsV5 } from "./scoring";
+import { computeCountyFactorsV5, scoreTierFor } from "./scoring";
 import { buildOverlayFor, warmOverlayCaches } from "./ingest/overlay";
 import { attributeFiling, type OperatorDict } from "./edgar-attribution";
 import { computePowerHeadroom } from "./headroom";
@@ -940,10 +940,10 @@ export async function registerRoutes(
       const summary = {
         rows_scored: results.length,
         rows_unmatched: notFound.length,
-        hot: results.filter((r) => (r.score ?? 0) >= 80).length,
-        warm: results.filter((r) => (r.score ?? 0) >= 60 && (r.score ?? 0) < 80).length,
-        emerging: results.filter((r) => (r.score ?? 0) >= 40 && (r.score ?? 0) < 60).length,
-        cold: results.filter((r) => (r.score ?? 0) < 40).length,
+        hot: results.filter((r) => scoreTierFor(r.score ?? 0) === "hot").length,
+        warm: results.filter((r) => scoreTierFor(r.score ?? 0) === "warm").length,
+        emerging: results.filter((r) => scoreTierFor(r.score ?? 0) === "emerging").length,
+        cold: results.filter((r) => scoreTierFor(r.score ?? 0) === "cold").length,
         avg_score: results.length > 0 ? results.reduce((s, r) => s + (r.score ?? 0), 0) / results.length : 0,
         top_iso: (() => {
           const isoCounts: Record<string, number> = {};

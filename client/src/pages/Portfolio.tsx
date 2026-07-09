@@ -218,19 +218,19 @@ export default function Portfolio() {
               <CardContent><div className="text-xl font-semibold">{resp.summary.rows_scored}</div></CardContent>
             </Card>
             <Card data-testid="tile-portfolio-hot">
-              <CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Hot (≥80)</CardTitle></CardHeader>
+              <CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Hot (≥75)</CardTitle></CardHeader>
               <CardContent><div className="text-xl font-semibold text-primary">{resp.summary.hot}</div></CardContent>
             </Card>
             <Card data-testid="tile-portfolio-warm">
-              <CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Warm (60-80)</CardTitle></CardHeader>
+              <CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Warm (60-74)</CardTitle></CardHeader>
               <CardContent><div className="text-xl font-semibold">{resp.summary.warm}</div></CardContent>
             </Card>
             <Card data-testid="tile-portfolio-emerging">
-              <CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Emerging</CardTitle></CardHeader>
+              <CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Emerging (45-59)</CardTitle></CardHeader>
               <CardContent><div className="text-xl font-semibold">{resp.summary.emerging}</div></CardContent>
             </Card>
             <Card data-testid="tile-portfolio-cold">
-              <CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Cold (&lt;40)</CardTitle></CardHeader>
+              <CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Cold (&lt;45)</CardTitle></CardHeader>
               <CardContent><div className="text-xl font-semibold text-muted-foreground">{resp.summary.cold}</div></CardContent>
             </Card>
             <Card data-testid="tile-portfolio-avg">
