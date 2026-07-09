@@ -12,6 +12,7 @@
 // Every entry cites a primary press report. Update as new shells surface.
 
 import { sqlite } from "../storage.js";
+import { beginRun } from "./util.js";
 
 export type ShellLlc = {
   llc: string;              // exact LLC / codename as it appears in filings
@@ -535,6 +536,8 @@ export async function ingestShellLlcs(): Promise<{
   countiesTouched: number;
   operatorsResolved: number;
 }> {
+  const run = beginRun("shell_llcs", "Shell-LLC ↔ operator ↔ county resolver");
+  try {
   // Create metadata table if it doesn't exist.
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS shell_llc_activity (
@@ -581,9 +584,14 @@ export async function ingestShellLlcs(): Promise<{
   console.log(
     `[shell_llcs] Loaded ${SHELL_LLCS.length} LLCs across ${byFips.size} counties (${operators.size} operators)`,
   );
+  run.complete(byFips.size, `${SHELL_LLCS.length} LLCs · ${operators.size} operators`);
   return {
     llcsLoaded: SHELL_LLCS.length,
     countiesTouched: byFips.size,
     operatorsResolved: operators.size,
   };
+  } catch (err) {
+    run.fail(err);
+    throw err;
+  }
 }

@@ -18,7 +18,7 @@
 // where there's no fiber neighborhood or exchange to peer with.
 
 import { sqlite } from "../storage.js";
-import { fetchJson } from "./util.js";
+import { fetchJson, beginRun } from "./util.js";
 
 const PEERINGDB_URL = "https://www.peeringdb.com/api/fac?country=US";
 const RADIUS_MILES = 40;
@@ -54,6 +54,8 @@ export async function ingestPeeringDb(): Promise<{
   facilitiesLoaded: number;
   countiesWithIx: number;
 }> {
+  const run = beginRun("peeringdb", "PeeringDB IX / peering facility density");
+  try {
   console.log("[peeringdb] Fetching US facilities from PeeringDB…");
   const body = await fetchJson<PdbResponse>(PEERINGDB_URL, { timeoutMs: 60_000 });
   const allFacs = body.data ?? [];
@@ -112,5 +114,10 @@ export async function ingestPeeringDb(): Promise<{
   console.log(
     `[peeringdb] Updated ${updated} counties, ${withIx} have at least one nearby IX facility`,
   );
+  run.complete(updated, `${facs.length} facilities · ${withIx} counties with nearby IX`);
   return { countiesUpdated: updated, facilitiesLoaded: facs.length, countiesWithIx: withIx };
+  } catch (err) {
+    run.fail(err);
+    throw err;
+  }
 }

@@ -59,7 +59,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 }}
                 data-testid="button-error-home"
               >
-                Back to dashboard
+                Back to Dashboard
               </Button>
             </div>
           </div>

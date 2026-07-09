@@ -19,7 +19,7 @@ const STATS = [
   { label: "Site-level parcels", value: "1,704" },
   { label: "Permits tracked", value: "1,612" },
   { label: "Competitive bids", value: "1,107" },
-  { label: "Hyperscaler operators + shell LLCs", value: "45" },
+  { label: "Hyperscaler operators + shell LLC's", value: "45" },
 ];
 
 const OPERATORS = ["Meta","Google","Microsoft","Amazon","Oracle","xAI","OpenAI/Stargate","Digital Realty","Equinix","QTS","CoreWeave","Vantage","Aligned","Stack","Compass","CyrusOne"];
@@ -108,7 +108,7 @@ export default function Landing() {
       <div className="max-w-7xl mx-auto px-6 py-16">
         <div className="mb-6">
           <div className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-2">Operators tracked</div>
-          <h2 className="text-xl font-semibold tracking-tight">The hyperscalers, the neoclouds, and their shell LLCs.</h2>
+          <h2 className="text-xl font-semibold tracking-tight">The hyperscalers, the neoclouds, and their shell LLC's.</h2>
           <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
             When Greater Kudu LLC buys 1,200 acres in Ellis County, you'll know it's Meta before the press release. When Project Firecracker LLC files for 400 MW of interconnect in Wisconsin, you'll know it's Microsoft.
           </p>

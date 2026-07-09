@@ -16,7 +16,7 @@
 
 import proj4 from "proj4";
 import { sqlite } from "../storage.js";
-import { fetchJson, nowIso, sleep } from "./util.js";
+import { fetchJson, nowIso, sleep, beginRun } from "./util.js";
 
 const NETL_URL =
   "https://arcgis.netl.doe.gov/server/rest/services/Hosted/Energy_Transition_Atlas_493d6/FeatureServer/18/query";
@@ -164,6 +164,8 @@ export async function ingestHifldTransmission(): Promise<{
   totalSegments: number;
   countiesWithLines: number;
 }> {
+  const run = beginRun("hifld_transmission", "HIFLD electric transmission lines (per-county aggregate)");
+  try {
   ensureTable();
 
   const counties = sqlite
@@ -244,7 +246,12 @@ export async function ingestHifldTransmission(): Promise<{
   }
 
   console.log(`[hifld] Done: ${processed} counties, ${totalSegments} segments, ${countiesWithLines} with lines`);
-  return { countiesProcessed: processed, totalSegments, countiesWithLines };
+    run.complete(processed, `${countiesWithLines} counties with lines · ${totalSegments} segments`);
+    return { countiesProcessed: processed, totalSegments, countiesWithLines };
+  } catch (err) {
+    run.fail(err);
+    throw err;
+  }
 }
 
 /**

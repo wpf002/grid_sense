@@ -229,8 +229,8 @@ export default function IngestionRuns({ embedded = false }: { embedded?: boolean
                     <th className="pb-2 pr-4">Cadence</th>
                     <th className="pb-2 pr-4">Status</th>
                     <th className="pb-2 pr-4 text-right">Rows</th>
-                    <th className="pb-2 pr-4">Last run</th>
-                    <th className="pb-2 pr-4">Duration</th>
+                    <th className="pb-2 pr-4 whitespace-nowrap">Last run</th>
+                    <th className="pb-2 whitespace-nowrap">Duration</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -261,10 +261,10 @@ export default function IngestionRuns({ embedded = false }: { embedded?: boolean
                         <td className="py-2 pr-4 text-right font-mono" data-testid={`text-rows-${p}`}>
                           {run?.rows?.toLocaleString() ?? "—"}
                         </td>
-                        <td className="py-2 pr-4 text-muted-foreground" data-testid={`text-last-run-${p}`}>
+                        <td className="py-2 pr-4 text-muted-foreground whitespace-nowrap" data-testid={`text-last-run-${p}`}>
                           {run ? fmtDate(run.started_at) : "—"}
                         </td>
-                        <td className="py-2 pr-4 text-muted-foreground">
+                        <td className="py-2 text-muted-foreground whitespace-nowrap">
                           {run ? fmtDuration(run.started_at, run.finished_at) : "—"}
                         </td>
                       </tr>

@@ -220,7 +220,7 @@ export default function Dashboard() {
                     {pipelineLabel(p.pipeline)} · {ageLabel(p.age_hours)}
                   </span>
                 ))}
-                <Link href="/ingestion" className="text-primary hover:underline text-[11px] ml-0.5">View all →</Link>
+                <Link href="/ingestion" className="text-primary hover:underline text-[11px] ml-0.5">View All →</Link>
               </div>
             </div>
           </div>
@@ -345,7 +345,7 @@ export default function Dashboard() {
               className="text-xs font-medium text-primary hover:underline"
               data-testid="link-all-counties"
             >
-              View all →
+              View All →
             </Link>
           </CardHeader>
           <CardContent>

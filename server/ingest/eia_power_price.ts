@@ -13,7 +13,7 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { sqlite } from "../storage.js";
-import { fetchBuffer, nowIso, USER_AGENT, RAW_DIR } from "./util.js";
+import { fetchBuffer, nowIso, USER_AGENT, RAW_DIR, beginRun } from "./util.js";
 
 const EIA_URL = "https://www.eia.gov/electricity/monthly/xls/table_5_06_a.xlsx";
 
@@ -52,6 +52,8 @@ export async function ingestEiaPowerPrice(): Promise<{
   period: string;
   medianCentsPerKwh: number;
 }> {
+  const run = beginRun("eia_power_price", "EIA state industrial electricity price (Table 5.6.A)");
+  try {
   ensureTable();
 
   const buf = await fetchBuffer(EIA_URL, {
@@ -123,7 +125,12 @@ export async function ingestEiaPowerPrice(): Promise<{
   const median = values.length ? values[Math.floor(values.length / 2)] : 0;
 
   console.log(`[eia_power_price] Loaded ${loaded} states for ${period}. Median industrial rate ${median.toFixed(2)} ¢/kWh`);
-  return { statesLoaded: loaded, period, medianCentsPerKwh: median };
+    run.complete(loaded, `${period} · median ${median.toFixed(2)} ¢/kWh`);
+    return { statesLoaded: loaded, period, medianCentsPerKwh: median };
+  } catch (err) {
+    run.fail(err);
+    throw err;
+  }
 }
 
 /** Look up the state industrial retail electricity price for a county. */

@@ -10,7 +10,7 @@ import * as XLSX from "xlsx";
 import AdmZip from "adm-zip";
 import { db } from "../storage.js";
 import { rawEiaGenerators, dataProvenance } from "@shared/schema";
-import { fetchBuffer, nowIso } from "./util.js";
+import { fetchBuffer, nowIso, beginRun } from "./util.js";
 import { lookupFips } from "./counties_ref.js";
 import { sql } from "drizzle-orm";
 
@@ -75,6 +75,8 @@ function parseGeneratorSheet(buf: Buffer): EiaRow[] {
 }
 
 export async function ingestEia860(): Promise<{ inserted: number; countiesTouched: number }> {
+  const run = beginRun("eia860", "EIA-860 annual generator inventory");
+  try {
   console.log("[eia860] Fetching", EIA860_URL);
   const zipBuf = await fetchBuffer(EIA860_URL, {
     cacheKey: `eia860_${EIA860_VINTAGE}.zip`,
@@ -154,7 +156,12 @@ export async function ingestEia860(): Promise<{ inserted: number; countiesTouche
   }
 
   console.log("[eia860] Done. inserted=", inserted, "counties=", perCounty.length);
-  return { inserted, countiesTouched: perCounty.length };
+    run.complete(inserted, `${perCounty.length} counties with operating generators`);
+    return { inserted, countiesTouched: perCounty.length };
+  } catch (err) {
+    run.fail(err);
+    throw err;
+  }
 }
 
 // Run directly with: npx tsx server/ingest/eia860.ts

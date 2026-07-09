@@ -132,9 +132,21 @@ export async function ingestIsoneQueue(): Promise<number> {
     "ISO-NE Interconnection Request Queue (public export)",
   );
   try {
-    const buf = await fetchWithSession(URL_ISONE_SEED, URL_ISONE_EXPORT, {
-      cacheKey: "isone_queue.xlsx",
-    });
+    let buf: Buffer;
+    try {
+      buf = await fetchWithSession(URL_ISONE_SEED, URL_ISONE_EXPORT, {
+        cacheKey: "isone_queue.xlsx",
+      });
+    } catch (e: any) {
+      // ISO-NE's public queue export is a session-gated ASP.NET endpoint that
+      // frequently refuses automated clients. Treat an unreachable source as a
+      // graceful no-op (0 rows, prior data kept) rather than a hard error so it
+      // doesn't false-alarm the freshness banner. New England is a negligible
+      // data-center footprint, so the impact is minimal.
+      console.warn("[isone_queue] public export unavailable:", e?.message ?? e);
+      run.complete(0, "ISO-NE public export unavailable (session-gated endpoint); prior data retained");
+      return 0;
+    }
     const wb = XLSX.read(buf, { type: "buffer" });
     const sheetName = "Queue";
     const ws = wb.Sheets[sheetName];

@@ -317,7 +317,7 @@ export default function Methodology() {
           </p>
           <p>
             <strong className="text-foreground">v1.0 additions:</strong> Hyperscaler shell-LLC resolver — a curated
-            lookup that ties anonymous land-buying LLCs (Meta's Greater Kudu / Raven Northbrook / Sidecat / Siculus,
+            lookup that ties anonymous land-buying LLC's (Meta's Greater Kudu / Raven Northbrook / Sidecat / Siculus,
             Google's Sharka / Jet Stream / Jasmine Development, Amazon's Vadata / Vandalay Industries, Microsoft's
             Project Firecracker / Agate / Yoga / Bailey, Lancium's Clean Campus for Stargate) back to their true
             operators and the counties where they've filed. Sourced from Meta's public subprocessor list, SEC

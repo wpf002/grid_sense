@@ -86,13 +86,12 @@ const PIPELINES = [
 ];
 
 const ROADMAP = [
-  { name: "PJM interconnection queue", status: "Investigating", note: "Landing page returns HTML; need to reverse-engineer real XLSX endpoint or scrape table." },
-  { name: "ERCOT + MISO queues", status: "Planned", note: "Same schema as PJM; extend once XLSX parser lands." },
-  { name: "FEMA National Risk Index", status: "Blocked", note: "Public CSV download endpoint returns SPA HTML — need to use ArcGIS FeatureServer instead." },
-  { name: "FCC Broadband Data Collection", status: "Blocked", note: "Public API changed — needs POST body discovery." },
-  { name: "Water rights / droughts", status: "Planned", note: "USGS + NIDIS Drought Monitor for county-level water stress." },
-  { name: "Regrid / parcel APIs (paid)", status: "Deferred", note: "$5–20k/yr; adds per-parcel scoring nationwide. Waiting on user prioritization." },
-  { name: "ZoomProspector / commercial CRE", status: "Deferred", note: "Paid subscription. Adds building permits and site plan filings." },
+  { name: "Non-RTO interconnection queues", status: "Planned", note: "The Southeast, Northwest, and Mountain West have no public RTO queue. Wire the LBNL “Queued Up” dataset for utility-level coverage." },
+  { name: "More county parcel feeds", status: "Active", note: "Real assessor ArcGIS feeds are live for 41 counties; adding high-value data-center markets one at a time." },
+  { name: "Land sale prices (deed records)", status: "Planned", note: "Assessor feeds omit sale price. Scrape county recorder / deed sales for real $/acre where a county publishes it free." },
+  { name: "Re-point stale county endpoints", status: "Planned", note: "About 8 configured assessor feeds now return no rows (their endpoints moved) and need a maintenance pass." },
+  { name: "Regrid / parcel APIs (paid)", status: "Deferred", note: "$5–20k/yr for nationwide per-parcel data; too costly during development." },
+  { name: "CoreLogic / ATTOM (paid)", status: "Deferred", note: "Enterprise pricing (~$12k/yr+); would add sale prices and liens nationwide." },
 ];
 
 export default function DataQuality({ embedded = false }: { embedded?: boolean } = {}) {
@@ -301,12 +300,12 @@ export default function DataQuality({ embedded = false }: { embedded?: boolean }
           <div className="space-y-2">
             {ROADMAP.map((r) => (
               <div key={r.name} className="flex items-start gap-3 pb-2 border-b border-border/50 last:border-0" data-testid={`roadmap-${r.name.replace(/\s+/g, "-").toLowerCase()}`}>
-                <Badge variant="outline" className={`text-[10px] shrink-0 ${
-                  r.status === "Investigating" ? "border-primary/40 text-primary"
+                <Badge variant="outline" className={`text-[10px] shrink-0 w-[76px] justify-center ${
+                  r.status === "Active" ? "border-emerald-500/40 text-emerald-500"
                   : r.status === "Planned" ? "border-blue-400/40 text-blue-400"
                   : r.status === "Blocked" ? "border-amber-500/40 text-amber-500"
                   : "border-muted-foreground/40 text-muted-foreground"
-                }`}>{humanize(r.status)}</Badge>
+                }`}>{r.status}</Badge>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm">{r.name}</div>
                   <div className="text-xs text-muted-foreground mt-0.5">{r.note}</div>

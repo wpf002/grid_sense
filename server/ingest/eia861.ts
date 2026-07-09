@@ -14,7 +14,7 @@
 import * as XLSX from "xlsx";
 import AdmZip from "adm-zip";
 import { sqlite } from "../storage.js";
-import { fetchBuffer, nowIso } from "./util.js";
+import { fetchBuffer, nowIso, beginRun } from "./util.js";
 import { lookupFips } from "./counties_ref.js";
 
 const EIA861_URL = "https://www.eia.gov/electricity/data/eia861/zip/f8612024.zip";
@@ -81,6 +81,8 @@ export async function ingestEia861(): Promise<{
   countiesTouched: number;
   fipsUnmatched: number;
 }> {
+  const run = beginRun("eia861", "EIA-861 utility service territories");
+  try {
   console.log("[eia861] Fetching", EIA861_URL);
   const zipBuf = await fetchBuffer(EIA861_URL, {
     cacheKey: `eia861_${EIA861_VINTAGE}.zip`,
@@ -135,12 +137,17 @@ export async function ingestEia861(): Promise<{
     `[eia861] Inserted ${inserted} utility-county rows across ${countiesSeen.size} counties (${unmatched} FIPS unmatched)`
   );
 
+  run.complete(inserted, `${countiesSeen.size} counties · ${unmatched} FIPS unmatched`);
   return {
     rowsParsed: rows.length,
     inserted,
     countiesTouched: countiesSeen.size,
     fipsUnmatched: unmatched,
   };
+  } catch (err) {
+    run.fail(err);
+    throw err;
+  }
 }
 
 /**

@@ -379,7 +379,7 @@ export default function Operators() {
       <div className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold tracking-tight flex items-center gap-2">
           <Building2 className="h-5 w-5 text-primary" />
-          Operators & Shell LLCs
+          Operators & Shell LLC's
         </h1>
         <p className="text-sm text-muted-foreground">
           Known hyperscaler entities and the shell LLC/codename patterns they use to acquire land discreetly.
@@ -414,7 +414,7 @@ export default function Operators() {
                 <CardContent className="space-y-4">
                   <div>
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">
-                      Shell LLCs
+                      Shell LLC's
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {shellLlcs.length > 0 ? shellLlcs.map((llc) => (

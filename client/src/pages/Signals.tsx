@@ -25,7 +25,7 @@ function formatDate(iso: string): string {
 }
 
 const signalTypes = [
-  { value: "all", label: "All types" },
+  { value: "all", label: "All Types" },
   { value: "llc_land_purchase", label: "LLC land purchase" },
   { value: "rezoning", label: "Rezoning" },
   { value: "substation_filing", label: "Substation filing" },
@@ -140,10 +140,10 @@ export default function Signals({ embedded = false }: { embedded?: boolean } = {
         </Select>
         <Select value={operatorFilter} onValueChange={setOperatorFilter}>
           <SelectTrigger data-testid="select-signal-operator">
-            <SelectValue placeholder="All operators" />
+            <SelectValue placeholder="All Operators" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All operators</SelectItem>
+            <SelectItem value="all">All Operators</SelectItem>
             {operatorOptions.map((op) => (
               <SelectItem key={op} value={op}>{op}</SelectItem>
             ))}
@@ -152,10 +152,10 @@ export default function Signals({ embedded = false }: { embedded?: boolean } = {
         <div className="flex gap-2">
           <Select value={countyFilter} onValueChange={setCountyFilter}>
             <SelectTrigger data-testid="select-signal-county" className="flex-1">
-              <SelectValue placeholder="All counties" />
+              <SelectValue placeholder="All Counties" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All counties</SelectItem>
+              <SelectItem value="all">All Counties</SelectItem>
               {countyOptions.map((c) => (
                 <SelectItem key={c} value={c}>{c}</SelectItem>
               ))}

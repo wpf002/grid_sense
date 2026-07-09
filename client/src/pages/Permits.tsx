@@ -82,7 +82,7 @@ export default function Permits({ embedded = false }: { embedded?: boolean } = {
             <FileCheck2 className="h-5 w-5 text-primary" /> Permit Tracker
           </h1>
           <p className="text-sm text-muted-foreground">
-            Rezoning, building, electrical, and water permits filed at county planning offices. Cross-referenced against known shell LLCs and operators.
+            Rezoning, building, electrical, and water permits filed at county planning offices. Cross-referenced against known shell LLC's and operators.
           </p>
         </div>
         <Button

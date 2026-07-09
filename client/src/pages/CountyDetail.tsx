@@ -543,7 +543,7 @@ export default function CountyDetail() {
               ))}
             </div>
             <div>
-              <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1.5">Shell LLCs identified ({shellActivity.totalLlcCount})</div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1.5">Shell LLC's identified ({shellActivity.totalLlcCount})</div>
               <div className="flex flex-wrap gap-1.5">
                 {shellActivity.llcNames.map((name) => (
                   <span key={name} className="text-xs px-2 py-0.5 rounded-md border border-border bg-muted/40 text-foreground" data-testid={`text-llc-${name}`}>

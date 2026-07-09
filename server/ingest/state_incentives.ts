@@ -21,6 +21,7 @@
 // business climate) so that the resulting factor value is real for all counties.
 
 import { sqlite } from "../storage.js";
+import { beginRun } from "./util.js";
 
 // (abbrev) -> {score, program}
 const STATE_INCENTIVES: Record<string, { score: number; program: string }> = {
@@ -87,6 +88,8 @@ const STATE_INCENTIVES: Record<string, { score: number; program: string }> = {
 const FLOOR_SCORE = 10; // states not listed still receive baseline business-climate score
 
 export async function ingestStateIncentives(): Promise<{ countiesUpdated: number; statesMapped: number }> {
+  const run = beginRun("state_incentives", "State data-center tax-incentive scores");
+  try {
   const rows = sqlite
     .prepare("SELECT fips, state FROM counties")
     .all() as { fips: string; state: string }[];
@@ -108,7 +111,12 @@ export async function ingestStateIncentives(): Promise<{ countiesUpdated: number
   });
   tx(rows);
 
+  run.complete(updated, `${seenStates.size} states mapped`);
   return { countiesUpdated: updated, statesMapped: seenStates.size };
+  } catch (err) {
+    run.fail(err);
+    throw err;
+  }
 }
 
 // Export program metadata for downstream sourceHint building.

@@ -7,7 +7,7 @@
 
 import { db } from "../storage.js";
 import { rawDcNews } from "@shared/schema";
-import { fetchText, nowIso, STATE_FIPS } from "./util.js";
+import { fetchText, nowIso, STATE_FIPS, beginRun } from "./util.js";
 import { XMLParser } from "fast-xml-parser";
 import { lookupFips } from "./counties_ref.js";
 
@@ -141,15 +141,22 @@ async function ingestOneFeed(url: string, source: string): Promise<{ inserted: n
 }
 
 export async function ingestDcNews(): Promise<{ inserted: number; total: number }> {
-  let totalInserted = 0;
-  let totalItems = 0;
-  for (const { url, source } of RSS_SOURCES) {
-    const r = await ingestOneFeed(url, source);
-    totalInserted += r.inserted;
-    totalItems += r.total;
+  const run = beginRun("dc_news", "Data-center news RSS feeds");
+  try {
+    let totalInserted = 0;
+    let totalItems = 0;
+    for (const { url, source } of RSS_SOURCES) {
+      const r = await ingestOneFeed(url, source);
+      totalInserted += r.inserted;
+      totalItems += r.total;
+    }
+    console.log("[dc_news] Done. inserted=", totalInserted);
+    run.complete(totalInserted, `${totalItems} items across ${RSS_SOURCES.length} feeds`);
+    return { inserted: totalInserted, total: totalItems };
+  } catch (err) {
+    run.fail(err);
+    throw err;
   }
-  console.log("[dc_news] Done. inserted=", totalInserted);
-  return { inserted: totalInserted, total: totalItems };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

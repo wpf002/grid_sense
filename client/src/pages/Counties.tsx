@@ -390,7 +390,7 @@ export default function Counties() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All tiers</SelectItem>
+              <SelectItem value="all">All Tiers</SelectItem>
               <SelectItem value="hot">Hot</SelectItem>
               <SelectItem value="warm">Warm</SelectItem>
               <SelectItem value="emerging">Emerging</SelectItem>
@@ -404,8 +404,8 @@ export default function Counties() {
             <SelectContent>
               <SelectItem value="score">Sort: Score</SelectItem>
               <SelectItem value="queue">Sort: Queue MW</SelectItem>
-              <SelectItem value="ttp">Sort: Time to power</SelectItem>
-              <SelectItem value="land">Sort: Land price</SelectItem>
+              <SelectItem value="ttp">Sort: Time to Power</SelectItem>
+              <SelectItem value="land">Sort: Land Price</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -426,7 +426,7 @@ export default function Counties() {
               <SelectValue placeholder="State" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All states</SelectItem>
+              <SelectItem value="all">All States</SelectItem>
               {uniqueStates.map((s) => (
                 <SelectItem key={s} value={s}>{s}</SelectItem>
               ))}
@@ -437,21 +437,21 @@ export default function Counties() {
               <SelectValue placeholder="Moratorium" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Any moratorium</SelectItem>
+              <SelectItem value="all">Any Moratorium</SelectItem>
               <SelectItem value="clean">No moratorium</SelectItem>
               <SelectItem value="risk">Proposed or active</SelectItem>
             </SelectContent>
           </Select>
           <Select value={minScore} onValueChange={setMinScore}>
             <SelectTrigger className="w-[160px] h-9" data-testid="select-min-score">
-              <SelectValue placeholder="Min score" />
+              <SelectValue placeholder="Min Score" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="0">Min score: any</SelectItem>
-              <SelectItem value="50">Min score: 50</SelectItem>
-              <SelectItem value="60">Min score: 60</SelectItem>
-              <SelectItem value="70">Min score: 70</SelectItem>
-              <SelectItem value="80">Min score: 80</SelectItem>
+              <SelectItem value="0">Min Score: Any</SelectItem>
+              <SelectItem value="50">Min Score: 50</SelectItem>
+              <SelectItem value="60">Min Score: 60</SelectItem>
+              <SelectItem value="70">Min Score: 70</SelectItem>
+              <SelectItem value="80">Min Score: 80</SelectItem>
             </SelectContent>
           </Select>
           {activeFilterCount > 0 && (

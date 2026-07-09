@@ -9,7 +9,7 @@
 
 import { db } from "../storage.js";
 import { rawEdgarFilings } from "@shared/schema";
-import { fetchJson, nowIso } from "./util.js";
+import { fetchJson, nowIso, beginRun } from "./util.js";
 import { sql } from "drizzle-orm";
 
 const QUERIES = [
@@ -92,6 +92,8 @@ function directFilingUrl(cik: string, accession: string): string {
 }
 
 export async function ingestEdgar(): Promise<{ inserted: number; totalHits: number }> {
+  const run = beginRun("edgar", "SEC EDGAR full-text search (data-center 8-Ks)");
+  try {
   const fetchedAt = nowIso();
   let inserted = 0;
   let totalHits = 0;
@@ -174,7 +176,12 @@ export async function ingestEdgar(): Promise<{ inserted: number; totalHits: numb
 
   const finalCount = (db.select({ c: sql<number>`COUNT(*)` }).from(rawEdgarFilings).get() as { c: number }).c;
   console.log("[edgar] Done. inserted=", inserted, "totalHits=", totalHits, "finalCount=", finalCount);
-  return { inserted, totalHits };
+    run.complete(inserted, `${totalHits} search hits · ${finalCount} filings stored`);
+    return { inserted, totalHits };
+  } catch (err) {
+    run.fail(err);
+    throw err;
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
