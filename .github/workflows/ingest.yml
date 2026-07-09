@@ -1,0 +1,75 @@
+name: Scheduled data ingest
+
+# Keeps the real public-data feeds current on a cron. Heavy ingests (ISO queues,
+# EIA-860, FEMA NRI) run here rather than in-process so they never block the API
+# server with synchronous SQLite writes.
+#
+# PERSISTENCE CAVEAT: a cloud runner cannot update a developer's LOCAL data.db.
+# This workflow is meaningful once the app is deployed against a persistent
+# database. Until then it validates that the pipelines run end-to-end and
+# produces a refreshed data.db as a downloadable artifact. When you deploy:
+#   - point storage at your hosted DB (Postgres, or SQLite on a mounted volume), and
+#   - replace the artifact upload with a step that writes back to that DB.
+# For LOCAL dev the server already refreshes news/EDGAR/score-snapshot on boot
+# and every 6h; run the heavy ones on demand with:
+#   npx tsx server/ingest/run_all.ts
+
+on:
+  workflow_dispatch: {}          # manual "Run workflow" button
+  schedule:
+    - cron: "0 7 * * *"          # daily 07:00 UTC — news, EDGAR, score snapshot
+    - cron: "0 8 1 * *"          # monthly 1st — ISO interconnection queues
+    - cron: "0 9 1 1,4,7,10 *"   # quarterly — EIA-860 + FEMA NRI
+
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --legacy-peer-deps
+
+      # Persist data.db across scheduled runs via cache (a lightweight stand-in
+      # for a real database until deploy).
+      - name: Restore database
+        uses: actions/cache@v4
+        with:
+          path: data.db
+          key: gridsense-db-${{ github.run_id }}
+          restore-keys: gridsense-db-
+
+      # Build the county base if this is a cold start (no cached DB yet).
+      - name: Seed base data if missing
+        run: |
+          if [ ! -f data.db ]; then
+            npx tsx scripts/expand_full_us.ts
+          fi
+
+      # Choose the pipeline set from which cron fired (defaults to the full run
+      # on manual dispatch).
+      - name: Run ingest
+        env:
+          GRIDSENSE_SESSION_SECRET: ci
+          GRIDSENSE_ADMIN_PASSWORD: ci
+        run: |
+          case "${{ github.event.schedule }}" in
+            "0 8 1 * *")        SRC="miso_queue,pjm_queue,ercot_queue,spp_queue,caiso_queue,nyiso_queue,isone_queue,enrich,score_history" ;;
+            "0 9 1 1,4,7,10 *") SRC="eia860,fema_nri,enrich,score_history" ;;
+            "0 7 * * *")        SRC="dc_news,edgar,enrich,score_history" ;;
+            *)                  SRC="" ;;   # manual dispatch -> full run_all
+          esac
+          if [ -n "$SRC" ]; then npx tsx server/ingest/run_all.ts "$SRC"; else npx tsx server/ingest/run_all.ts; fi
+
+      - name: Upload refreshed database
+        uses: actions/upload-artifact@v4
+        with:
+          name: data-db
+          path: data.db
+          retention-days: 14

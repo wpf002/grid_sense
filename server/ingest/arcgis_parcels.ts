@@ -88,6 +88,8 @@ const SOURCES: ParcelSource[] = [
   // TN + MS
   { key: "montgomery_tn", fips: "47125", base: "https://apnsgis4.apsu.edu/arcgis/rest/services/CMCGIS/Parcels/MapServer/0", idField: "parcelid", acresField: "calcacreage", ownerField: "owner", zoningField: "zoning", pageSize: 2000 },
   { key: "madison_ms", fips: "28089", base: "https://services7.arcgis.com/deoj2Y8l1tBr7P5X/arcgis/rest/services/Madison_Service/FeatureServer/5", idField: "PARCEL_ID", acresField: "TOTAL_AC", ownerField: "OWNERNAME", pageSize: 2000 },
+  // WA (Quincy / Columbia Basin DC corridor)
+  { key: "grant_wa", fips: "53025", base: "https://services2.arcgis.com/hQZvdtFxRzJpMtdS/arcgis/rest/services/Parcels/FeatureServer/0", idField: "PARCEL", acresField: "TotalAcres", ownerField: "LastName", pageSize: 2000 },
 ];
 
 function parcelScore(acres: number): number {
