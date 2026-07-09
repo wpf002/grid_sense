@@ -88,34 +88,39 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <SidebarProvider style={style as React.CSSProperties}>
-          <div className="flex h-screen w-full bg-background">
-            <AppSidebar />
-            <div className="flex flex-col flex-1 min-w-0">
-              <header className="flex items-center justify-between px-4 py-2 border-b border-border shrink-0 gap-4">
-                <div className="flex items-center gap-3">
-                  <SidebarTrigger data-testid="button-sidebar-toggle" />
-                  <BrandMark size="md" />
-                </div>
-                <div className="flex items-center gap-2 sm:gap-4">
-                  <CommandPalette />
-                  <ScoreExplainer />
-                  <div className="text-xs text-muted-foreground font-mono hidden lg:block">
-                    US data center land radar
+        {/* Router must wrap everything that calls Link/useLocation (sidebar,
+            command palette, page routes) — not just the routed pages —
+            otherwise those components fall back to wouter's default
+            browser-path hook instead of the hash hook, and clicking a nav
+            link pushes a real path the hash-based Switch never sees. */}
+        <Router hook={useHashLocation}>
+          <SidebarProvider style={style as React.CSSProperties}>
+            <div className="flex h-screen w-full bg-background">
+              <AppSidebar />
+              <div className="flex flex-col flex-1 min-w-0">
+                <header className="flex items-center justify-between px-4 py-2 border-b border-border shrink-0 gap-4">
+                  <div className="flex items-center gap-3">
+                    <SidebarTrigger data-testid="button-sidebar-toggle" />
+                    <BrandMark size="md" />
                   </div>
-                </div>
-              </header>
-              <main className="flex-1 overflow-y-auto">
-                <ErrorBoundary>
-                  <Router hook={useHashLocation}>
+                  <div className="flex items-center gap-2 sm:gap-4">
+                    <CommandPalette />
+                    <ScoreExplainer />
+                    <div className="text-xs text-muted-foreground font-mono hidden lg:block">
+                      US data center land radar
+                    </div>
+                  </div>
+                </header>
+                <main className="flex-1 overflow-y-auto">
+                  <ErrorBoundary>
                     <AppRouter />
-                  </Router>
-                </ErrorBoundary>
-              </main>
+                  </ErrorBoundary>
+                </main>
+              </div>
             </div>
-          </div>
-        </SidebarProvider>
-        <KeyboardShortcuts />
+          </SidebarProvider>
+          <KeyboardShortcuts />
+        </Router>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
