@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { humanize } from "@/lib/utils";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -90,7 +91,7 @@ export default function Backtest() {
         <p className="text-sm text-muted-foreground mt-1">
           Curated list of publicly announced hyperscaler AI data-center projects across {new Set(rows.map((r) => r.fips)).size} US counties.
           For each, we check: did GridSense's current score flag this county as hot (score ≥ 70) or warm (55-70)?
-          A robust siting model should have all of these lit up before the press releases dropped.
+          A working siting model should have all of these lit up before the press releases dropped.
         </p>
       </div>
 
@@ -188,7 +189,7 @@ export default function Backtest() {
                   </TableCell>
                   <TableCell className="text-xs py-2">
                     <Badge variant={r.status === "operational" ? "default" : "secondary"} className="text-xs capitalize">
-                      {r.status.replace(/_/g, " ")}
+                      {humanize(r.status)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-xs py-2">

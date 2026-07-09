@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { humanize } from "@/lib/utils";
 import { Link } from "wouter";
 import { MapContainer, TileLayer, CircleMarker, Tooltip, Marker, useMap } from "react-leaflet";
 import { useEffect } from "react";
@@ -174,7 +175,7 @@ export function CountyDrillPanel({ fips, onClose }: Props) {
                       <div className="text-[10px]">
                         <div className="font-semibold">{p.ownerName ?? "(owner unknown)"}</div>
                         <div className="font-mono text-muted-foreground">
-                          {p.acres.toFixed(0)} ac · score {(p.parcelScore ?? 0).toFixed(0)} · {p.status}
+                          {p.acres.toFixed(0)} ac · score {(p.parcelScore ?? 0).toFixed(0)} · {humanize(p.status)}
                         </div>
                       </div>
                     </Tooltip>

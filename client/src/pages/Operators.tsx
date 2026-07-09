@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { humanize } from "@/lib/utils";
 import { useState } from "react";
 import { Link } from "wouter";
 import { Building2, ChevronDown, ChevronUp, Sparkles, ExternalLink, LandPlot, FileText, Flame, Newspaper, Radar } from "lucide-react";
@@ -97,7 +98,7 @@ function OperatorActivity({ name }: { name: string }) {
           {data.signals.slice(0, 15).map((s) => (
             <div key={s.id} className="text-[11px] rounded border border-border p-2" data-testid={`op-signal-${s.id}`}>
               <div className="flex items-start justify-between gap-2 mb-0.5">
-                <Badge variant="outline" className="text-[9px] uppercase">{(s.signal_type ?? "signal").replace(/_/g, " ")}</Badge>
+                <Badge variant="outline" className="text-[9px] uppercase">{humanize(s.signal_type ?? "signal")}</Badge>
                 <span className="text-[10px] text-muted-foreground shrink-0">{fmtActDate(s.detected_at)}</span>
               </div>
               <div className="font-medium">{s.headline ?? "(no headline)"}</div>
@@ -345,7 +346,7 @@ function AttributedFilings() {
                     <span className="font-medium truncate">{h.attribution.operator}</span>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <Badge className={`text-[9px] uppercase ${MATCH_STYLES[h.attribution.matchType]}`}>
-                        {h.attribution.matchType}
+                        {humanize(h.attribution.matchType)}
                       </Badge>
                       <span className="text-[10px] text-muted-foreground font-mono">{h.filedDate}</span>
                     </div>

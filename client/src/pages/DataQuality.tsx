@@ -1,4 +1,5 @@
 import { Database, CheckCircle2, AlertTriangle, HelpCircle, FileCode2, Newspaper, Zap, Cable, ExternalLink } from "lucide-react";
+import { humanize } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
@@ -90,7 +91,7 @@ const ROADMAP = [
   { name: "FEMA National Risk Index", status: "Blocked", note: "Public CSV download endpoint returns SPA HTML — need to use ArcGIS FeatureServer instead." },
   { name: "FCC Broadband Data Collection", status: "Blocked", note: "Public API changed — needs POST body discovery." },
   { name: "Water rights / droughts", status: "Planned", note: "USGS + NIDIS Drought Monitor for county-level water stress." },
-  { name: "Regrid / parcel APIs (paid)", status: "Deferred", note: "$5–20k/yr; unlock per-parcel scoring nationwide. Waiting on user prioritization." },
+  { name: "Regrid / parcel APIs (paid)", status: "Deferred", note: "$5–20k/yr; adds per-parcel scoring nationwide. Waiting on user prioritization." },
   { name: "ZoomProspector / commercial CRE", status: "Deferred", note: "Paid subscription. Adds building permits and site plan filings." },
 ];
 
@@ -305,7 +306,7 @@ export default function DataQuality({ embedded = false }: { embedded?: boolean }
                   : r.status === "Planned" ? "border-blue-400/40 text-blue-400"
                   : r.status === "Blocked" ? "border-amber-500/40 text-amber-500"
                   : "border-muted-foreground/40 text-muted-foreground"
-                }`}>{r.status}</Badge>
+                }`}>{humanize(r.status)}</Badge>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm">{r.name}</div>
                   <div className="text-xs text-muted-foreground mt-0.5">{r.note}</div>

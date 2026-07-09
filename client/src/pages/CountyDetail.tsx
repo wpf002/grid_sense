@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { humanize } from "@/lib/utils";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useRoute } from "wouter";
 import {
@@ -326,7 +327,7 @@ export default function CountyDetail() {
                         : "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/40"
                   }`}
                 >
-                  {headroom.tier}
+                  {humanize(headroom.tier)}
                 </Badge>
                 <Badge variant="outline" className="text-[10px] uppercase">{headroom.confidence}</Badge>
               </div>
@@ -708,7 +709,7 @@ export default function CountyDetail() {
                       <TableCell className="text-xs py-2 text-muted-foreground">{c.seller}</TableCell>
                       <TableCell className="text-xs font-mono py-2">{c.acres.toLocaleString()}</TableCell>
                       <TableCell className="text-xs font-mono py-2">${(c.price_per_acre / 1000).toFixed(0)}k</TableCell>
-                      <TableCell className="text-xs py-2"><Badge variant="outline" className="text-[10px] capitalize">{c.deal_type.replace(/_/g, " ")}</Badge></TableCell>
+                      <TableCell className="text-xs py-2"><Badge variant="outline" className="text-[10px] capitalize">{humanize(c.deal_type)}</Badge></TableCell>
                       <TableCell className="py-2"><a href={c.source_url} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center gap-1 text-xs">link <ExternalLink className="h-3 w-3" /></a></TableCell>
                     </TableRow>
                   ))}
@@ -950,7 +951,7 @@ export default function CountyDetail() {
                   >
                     <div className="flex items-start justify-between gap-2">
                       <Badge variant="outline" className="text-[10px] font-mono uppercase">
-                        {s.signalType.replace(/_/g, " ")}
+                        {humanize(s.signalType)}
                       </Badge>
                       <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(s.detectedAt)}</span>
                     </div>
@@ -1025,7 +1026,7 @@ export default function CountyDetail() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-[10px] uppercase">
-                            {p.status}
+                            {humanize(p.status)}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">

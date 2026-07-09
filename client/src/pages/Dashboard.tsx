@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { humanize } from "@/lib/utils";
 import { useState } from "react";
 import { Link } from "wouter";
 import { Flame, Thermometer, Sprout, Snowflake, Zap, Radio, TrendingUp, MapPin, Globe, ArrowRight, AlertTriangle, Clock, Sparkles, X, LandPlot, FileCheck2, Swords, Inbox, Map as MapIcon, Code2, DollarSign } from "lucide-react";
@@ -381,7 +382,7 @@ export default function Dashboard() {
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="text-[10px] font-mono uppercase tracking-wider text-primary">
-                        {s.signalType.replace(/_/g, " ")}
+                        {humanize(s.signalType)}
                       </div>
                       <div className="text-[10px] text-muted-foreground shrink-0">
                         {formatDate(s.detectedAt)}

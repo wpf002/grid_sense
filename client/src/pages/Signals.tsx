@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { humanize } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Search, Radio, Download, ArrowDownAZ, ArrowUpAZ } from "lucide-react";
@@ -199,7 +200,7 @@ export default function Signals({ embedded = false }: { embedded?: boolean } = {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <Badge variant="outline" className="text-[10px] font-mono uppercase">
-                        {s.signalType.replace(/_/g, " ")}
+                        {humanize(s.signalType)}
                       </Badge>
                       {s.confidence != null && (
                         <span className="text-[10px] text-muted-foreground font-mono">

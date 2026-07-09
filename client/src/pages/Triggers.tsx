@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { humanize } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Zap, Filter, ArrowRight, AlertCircle } from "lucide-react";
@@ -212,7 +213,7 @@ export default function Triggers({ embedded = false }: { embedded?: boolean } = 
                               variant="outline"
                               className="text-[10px] font-mono uppercase"
                             >
-                              {st.replace(/_/g, " ")}
+                              {humanize(st)}
                             </Badge>
                           ))}
                           {t.signalTypes.length > 4 && (

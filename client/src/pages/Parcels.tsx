@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { humanize } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { LandPlot, MapPin, Building2, DollarSign, Cable, Zap, Download } from "lucide-react";
@@ -198,7 +199,7 @@ export default function Parcels({ embedded = false }: { embedded?: boolean } = {
                       <TableCell className="text-right font-mono text-xs">{r.fiber_distance_mi != null ? `${r.fiber_distance_mi.toFixed(1)}mi` : "—"}</TableCell>
                       <TableCell className="text-right font-mono">{fmt$(r.land_price)}</TableCell>
                       <TableCell>
-                        <Badge className={`text-[10px] uppercase ${STATUS_STYLE[r.status] ?? STATUS_STYLE.watch}`}>{r.status.replace("_", " ")}</Badge>
+                        <Badge className={`text-[10px] uppercase ${STATUS_STYLE[r.status] ?? STATUS_STYLE.watch}`}>{humanize(r.status)}</Badge>
                       </TableCell>
                     </TableRow>
                   ))}

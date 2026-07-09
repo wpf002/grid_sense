@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { humanize } from "@/lib/utils";
 import { HeartPulse, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -71,7 +72,7 @@ export default function Heartbeat({ embedded = false }: { embedded?: boolean } =
                     <TableCell className="text-xs font-mono">{p.age_hours.toFixed(1)}</TableCell>
                     <TableCell>
                       <Badge variant={p.status === "ok" ? "outline" : p.status === "error" ? "destructive" : "secondary"}>
-                        {p.status}
+                        {humanize(p.status)}
                       </Badge>
                     </TableCell>
                     <TableCell>

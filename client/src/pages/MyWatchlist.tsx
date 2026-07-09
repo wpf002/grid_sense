@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { humanize } from "@/lib/utils";
 
 type WatchRow = {
   fips: string;
@@ -212,7 +213,7 @@ export default function MyWatchlistPage() {
               {alerts.map((a) => (
                 <div key={a.id} className="flex items-center justify-between border rounded-sm px-2 py-1.5 text-xs">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="outline" className="text-[9px] font-mono">{a.trigger_kind}</Badge>
+                    <Badge variant="outline" className="text-[9px] font-mono">{humanize(a.trigger_kind)}</Badge>
                     <span>
                       {a.fips ? `FIPS ${a.fips}` : a.operator ? `operator=${a.operator}` : "all counties"}
                     </span>
