@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { Search, Download, X, Bookmark, Trash2 } from "lucide-react";
+import { Search, Download, X, Bookmark, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -170,6 +170,17 @@ export default function Counties() {
     (moratoriumFilter !== "all" ? 1 : 0) +
     (minScore !== "0" ? 1 : 0) +
     (query.trim() ? 1 : 0);
+
+  // Pagination — 50 rows per page. Reset to the first page whenever the filtered
+  // set changes so you never land on an out-of-range page.
+  const PAGE_SIZE = 50;
+  const [page, setPage] = useState(0);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  useEffect(() => { setPage(0); }, [query, tierFilter, isoFilter, stateFilter, moratoriumFilter, minScore, sortBy]);
+  const pageSafe = Math.min(page, pageCount - 1);
+  const paged = filtered.slice(pageSafe * PAGE_SIZE, pageSafe * PAGE_SIZE + PAGE_SIZE);
+  const rangeStart = filtered.length === 0 ? 0 : pageSafe * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(filtered.length, (pageSafe + 1) * PAGE_SIZE);
 
   // Saved searches (auth-gated)
   const { data: me } = useQuery<{ id: number; email: string } | null>({
@@ -449,9 +460,6 @@ export default function Counties() {
               Clear ({activeFilterCount})
             </Button>
           )}
-          <Badge variant="outline" className="ml-auto font-mono text-[10px]">
-            URL syncs live · deep-link filters
-          </Badge>
         </div>
       </div>
 
@@ -477,7 +485,7 @@ export default function Counties() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((c) => (
+                  {paged.map((c) => (
                     <TableRow key={c.fips} data-testid={`row-county-${c.fips}`}>
                       <TableCell className="py-3">
                         <Link href={`/counties/${c.fips}`} className="block hover:text-primary">
@@ -531,6 +539,37 @@ export default function Counties() {
           )}
         </CardContent>
       </Card>
+
+      {!isLoading && filtered.length > 0 && (
+        <div className="flex items-center justify-between gap-4 flex-wrap text-sm">
+          <div className="text-muted-foreground text-xs tabular-nums">
+            Showing {rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of {filtered.length.toLocaleString()}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pageSafe === 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              data-testid="button-page-prev"
+            >
+              <ChevronLeft className="h-3.5 w-3.5 mr-1" /> Prev
+            </Button>
+            <span className="text-xs font-mono text-muted-foreground tabular-nums">
+              Page {pageSafe + 1} of {pageCount}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pageSafe >= pageCount - 1}
+              onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+              data-testid="button-page-next"
+            >
+              Next <ChevronRight className="h-3.5 w-3.5 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

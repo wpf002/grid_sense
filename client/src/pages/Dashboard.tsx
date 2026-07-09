@@ -288,7 +288,7 @@ export default function Dashboard() {
               className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1"
               data-testid="link-all-triggers"
             >
-              All triggers <ArrowRight className="h-3 w-3" />
+              All Triggers <ArrowRight className="h-3 w-3" />
             </Link>
           </CardHeader>
           <CardContent>

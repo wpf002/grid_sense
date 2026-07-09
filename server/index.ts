@@ -172,21 +172,45 @@ app.use((req, res, next) => {
     log(`serving on port ${port}`);
   });
 
-  // Keep the live news feed current: pull the data-center RSS feeds into signals
-  // shortly after boot (non-blocking) and every 6 hours thereafter. This is the
-  // cheap news-only refresh — the full score re-run stays on its own schedule.
+  // Keep the daily feeds current so the data-freshness banner reflects reality:
+  // pull live news -> signals, snapshot today's scores, and refresh SEC EDGAR
+  // shortly after boot (non-blocking) and every 6 hours. Each step is isolated
+  // so one failure doesn't block the others, and each records an ingestion_runs
+  // entry. Heavy monthly/quarterly ingests (ISO queues, EIA, FEMA) stay manual.
   // Opt out with GRIDSENSE_DISABLE_NEWS_REFRESH=1 (e.g. offline dev).
   if (process.env.GRIDSENSE_DISABLE_NEWS_REFRESH !== "1" && process.env.NODE_ENV !== "test") {
-    const runNewsRefresh = async () => {
+    const refreshLiveData = async () => {
       try {
         const { refreshNewsSignals } = await import("./ingest/refresh_news_signals");
         const r = await refreshNewsSignals();
-        log(`news refresh: fetched ${r.fetched}, +${r.signalsAdded} signals`, "news");
+        log(`news refresh: fetched ${r.fetched}, +${r.signalsAdded} signals`, "ingest");
       } catch (e: any) {
-        log(`news refresh failed: ${e?.message ?? e}`, "news");
+        log(`news refresh failed: ${e?.message ?? e}`, "ingest");
+      }
+      try {
+        const { ingestScoreHistory } = await import("./ingest/score_history");
+        const r = await ingestScoreHistory();
+        log(`score snapshot: ${r.rows} counties`, "ingest");
+      } catch (e: any) {
+        log(`score snapshot failed: ${e?.message ?? e}`, "ingest");
+      }
+      try {
+        const { ingestEdgar } = await import("./ingest/edgar");
+        const { beginRun } = await import("./ingest/util");
+        const run = beginRun("sec_edgar", "SEC EDGAR full-text search");
+        try {
+          const r = await ingestEdgar();
+          run.complete(r.inserted, `${r.inserted} filings`);
+          log(`edgar refresh: ${r.inserted} filings`, "ingest");
+        } catch (e) {
+          run.fail(e);
+          throw e;
+        }
+      } catch (e: any) {
+        log(`edgar refresh failed: ${e?.message ?? e}`, "ingest");
       }
     };
-    setTimeout(runNewsRefresh, 4000).unref?.();
-    setInterval(runNewsRefresh, 6 * 60 * 60_000).unref?.();
+    setTimeout(refreshLiveData, 4000).unref?.();
+    setInterval(refreshLiveData, 6 * 60 * 60_000).unref?.();
   }
 })();

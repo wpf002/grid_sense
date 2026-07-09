@@ -12,6 +12,7 @@ import { db } from "../storage.js";
 import { counties as countiesTable, rawDcNews, signals as signalsTable } from "@shared/schema";
 import { sql } from "drizzle-orm";
 import { ingestDcNews } from "./dc_news.js";
+import { beginRun } from "./util.js";
 
 function signalTypeFor(category: string): string {
   return category === "opposition" ? "moratorium_change"
@@ -24,6 +25,17 @@ function weightFor(category: string): number {
 }
 
 export async function refreshNewsSignals(): Promise<{ fetched: number; signalsAdded: number }> {
+  // Record the run so the data-freshness banner reflects the live feed.
+  const run = beginRun("dc_news", "live RSS -> signals");
+  try {
+    return await doRefresh(run);
+  } catch (err) {
+    run.fail(err);
+    throw err;
+  }
+}
+
+async function doRefresh(run: { complete: (rows: number, note?: string) => void }): Promise<{ fetched: number; signalsAdded: number }> {
   const fetched = await ingestDcNews();
 
   const allCounties = db.select().from(countiesTable).all();
@@ -73,6 +85,7 @@ export async function refreshNewsSignals(): Promise<{ fetched: number; signalsAd
     }
   }
 
+  run.complete(signalsAdded, `fetched ${fetched.inserted} items, +${signalsAdded} signals`);
   console.log(`[refresh_news_signals] fetched=${fetched.inserted} signalsAdded=${signalsAdded}`);
   return { fetched: fetched.inserted, signalsAdded };
 }
