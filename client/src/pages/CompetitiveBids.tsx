@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Swords, TrendingUp, Download } from "lucide-react";
+import { Swords, TrendingUp, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { downloadCsv } from "@/lib/csv";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,6 +46,18 @@ export default function CompetitiveBids({ embedded = false }: { embedded?: boole
       ).size,
     };
   }, [heat]);
+
+  // Pagination — 25 rows per page. This list has no client-side filters, so the
+  // page only resets when the underlying data length changes.
+  const heatRows = heat ?? [];
+  const PAGE_SIZE = 25;
+  const [page, setPage] = useState(0);
+  const pageCount = Math.max(1, Math.ceil(heatRows.length / PAGE_SIZE));
+  useEffect(() => { setPage(0); }, [heatRows.length]);
+  const pageSafe = Math.min(page, pageCount - 1);
+  const paged = heatRows.slice(pageSafe * PAGE_SIZE, pageSafe * PAGE_SIZE + PAGE_SIZE);
+  const rangeStart = heatRows.length === 0 ? 0 : pageSafe * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(heatRows.length, (pageSafe + 1) * PAGE_SIZE);
 
   return (
     <div className={embedded ? "space-y-4 sm:space-y-6" : "p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1600px] mx-auto"}>
@@ -129,7 +141,7 @@ export default function CompetitiveBids({ embedded = false }: { embedded?: boole
                       </TableCell>
                     </TableRow>
                   )}
-                  {(heat ?? []).map((r) => (
+                  {paged.map((r) => (
                     <TableRow key={r.fips} data-testid={`row-heat-${r.fips}`}>
                       <TableCell>
                         <Link href={`/counties/${r.fips}`}>
@@ -157,6 +169,37 @@ export default function CompetitiveBids({ embedded = false }: { embedded?: boole
           )}
         </CardContent>
       </Card>
+
+      {!isLoading && heatRows.length > 0 && (
+        <div className="flex items-center justify-between gap-4 flex-wrap text-sm">
+          <div className="text-muted-foreground text-xs tabular-nums">
+            Showing {rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of {heatRows.length.toLocaleString()}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pageSafe === 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              data-testid="button-page-prev"
+            >
+              <ChevronLeft className="h-3.5 w-3.5 mr-1" /> Prev
+            </Button>
+            <span className="text-xs font-mono text-muted-foreground tabular-nums">
+              Page {pageSafe + 1} of {pageCount}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pageSafe >= pageCount - 1}
+              onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+              data-testid="button-page-next"
+            >
+              Next <ChevronRight className="h-3.5 w-3.5 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

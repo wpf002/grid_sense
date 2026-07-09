@@ -1,8 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { humanize } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Search, Radio, Download, ArrowDownAZ, ArrowUpAZ } from "lucide-react";
+import { Search, Radio, Download, ArrowDownAZ, ArrowUpAZ, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { downloadCsv } from "@/lib/csv";
 import type { Signal } from "@shared/schema";
@@ -83,6 +83,17 @@ export default function Signals({ embedded = false }: { embedded?: boolean } = {
       return sortDir === "desc" ? bt - at : at - bt;
     });
   }, [signals, query, typeFilter, operatorFilter, countyFilter, sortDir]);
+
+  // Pagination — 25 rows per page. Reset to the first page whenever the filtered
+  // set changes so you never land on an out-of-range page.
+  const PAGE_SIZE = 25;
+  const [page, setPage] = useState(0);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  useEffect(() => { setPage(0); }, [query, typeFilter, operatorFilter, countyFilter, sortDir]);
+  const pageSafe = Math.min(page, pageCount - 1);
+  const paged = filtered.slice(pageSafe * PAGE_SIZE, pageSafe * PAGE_SIZE + PAGE_SIZE);
+  const rangeStart = filtered.length === 0 ? 0 : pageSafe * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(filtered.length, (pageSafe + 1) * PAGE_SIZE);
 
   return (
     <div className={embedded ? "space-y-4 sm:space-y-6" : "p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1400px] mx-auto"}>
@@ -179,7 +190,7 @@ export default function Signals({ embedded = false }: { embedded?: boolean } = {
         </div>
       ) : (
         <div className="space-y-3">
-          {filtered.map((s) => (
+          {paged.map((s) => (
             <Card
               key={s.id}
               data-testid={`signal-card-${s.id}`}
@@ -265,6 +276,37 @@ export default function Signals({ embedded = false }: { embedded?: boolean } = {
               </CardContent>
             </Card>
           )}
+        </div>
+      )}
+
+      {!isLoading && filtered.length > 0 && (
+        <div className="flex items-center justify-between gap-4 flex-wrap text-sm">
+          <div className="text-muted-foreground text-xs tabular-nums">
+            Showing {rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of {filtered.length.toLocaleString()}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pageSafe === 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              data-testid="button-page-prev"
+            >
+              <ChevronLeft className="h-3.5 w-3.5 mr-1" /> Prev
+            </Button>
+            <span className="text-xs font-mono text-muted-foreground tabular-nums">
+              Page {pageSafe + 1} of {pageCount}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pageSafe >= pageCount - 1}
+              onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+              data-testid="button-page-next"
+            >
+              Next <ChevronRight className="h-3.5 w-3.5 ml-1" />
+            </Button>
+          </div>
         </div>
       )}
 

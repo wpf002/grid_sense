@@ -38,7 +38,7 @@ const SOURCES: ParcelSource[] = [
   { key: "bexar", fips: "48029", base: "https://services.arcgis.com/g1fRTDLeMgspWrYp/arcgis/rest/services/BCAD_Parcels/FeatureServer/0", idField: "PropID", acresField: "legal_acre", ownerField: "Owner_Name", pageSize: 2000 },
   { key: "dallas", fips: "48113", base: "https://gis.dallascityhall.com/arcgis/rest/services/Basemap/DallasTaxParcels/FeatureServer/0", idField: "GIS_ACCT", acresField: "AREA_FEET", areaUnit: "sqft", ownerField: "TAXPANAME1", extraWhere: "COUNTY='DALLAS COUNTY'", pageSize: 2000 },
   { key: "williamson", fips: "48491", base: "https://services1.arcgis.com/Xff0bbfp6vwIWmlU/arcgis/rest/services/WCAD_Tax_Parcels/FeatureServer/0", idField: "PARCELID", acresField: "TotAcreDeed", ownerField: "OWNERNME1", pageSize: 2000 },
-  { key: "franklin_oh", fips: "39049", base: "https://gis.franklincountyohio.gov/hosting/rest/services/ParcelFeatures/Parcel_Features/MapServer/0", idField: "PARCELID", acresField: "STATEDAREA", ownerField: "OWNERNME1", pageSize: 2000 },
+  { key: "franklin_oh", fips: "39049", base: "https://gis.franklincountyohio.gov/hosting/rest/services/ParcelFeatures/Parcel_Features/MapServer/0", idField: "PARCELID", acresField: "STATEDAREA", areaUnit: "sqft", ownerField: "OWNERNME1", pageSize: 2000 },
   { key: "licking", fips: "39089", base: "https://gis.lickingcounty.gov/server/rest/services/Auditor/Parcels/MapServer/0", idField: "Parcel", acresField: "TaxAcres", ownerField: "OwnerName", pageSize: 2000 },
   { key: "fulton", fips: "13121", base: "https://services1.arcgis.com/AQDHTHDrZzfsFsB5/arcgis/rest/services/Tax_Parcels_2025/FeatureServer/0", idField: "ParcelID", acresField: "LandAcres", ownerField: "Owner", pageSize: 2000 },
   { key: "mecklenburg", fips: "37119", base: "https://gis.charlottenc.gov/arcgis/rest/services/CLT_Ex/CLTEx_MoreInfo/MapServer/4", idField: "PID", acresField: "Total_Acreage", ownerField: "Owner_LastName", zoningField: "Zoning", pageSize: 1000 },
@@ -61,7 +61,7 @@ const SOURCES: ParcelSource[] = [
   { key: "laramie", fips: "56021", base: "https://maps.laramiecounty.com/arcgis/rest/services/features/CountyBaseMapFeatures/MapServer/2", idField: "statepidn", acresField: "netacres", ownerField: "name1", pageSize: 2000 },
   { key: "ada", fips: "16001", base: "https://services2.arcgis.com/dgGjZc6xAH5m5JyP/arcgis/rest/services/Parcels/FeatureServer/5", idField: "PARCEL", acresField: "ACRES", zoningField: "ZONING", pageSize: 2000 },
   // OH (Franklin fixed: STATEDAREA not ACRES; + Delaware, Union)
-  { key: "franklin_oh2", fips: "39049", base: "https://gis.franklincountyohio.gov/hosting/rest/services/ParcelFeatures/Parcel_Features/MapServer/0", idField: "PARCELID", acresField: "STATEDAREA", ownerField: "OWNERNME1", pageSize: 2000 },
+  { key: "franklin_oh2", fips: "39049", base: "https://gis.franklincountyohio.gov/hosting/rest/services/ParcelFeatures/Parcel_Features/MapServer/0", idField: "PARCELID", acresField: "STATEDAREA", areaUnit: "sqft", ownerField: "OWNERNME1", pageSize: 2000 },
   { key: "delaware_oh", fips: "39041", base: "https://services2.arcgis.com/ziXVKVy3BiopMCCU/arcgis/rest/services/Parcel/FeatureServer/0", idField: "OBJECTID", acresField: "ACRES", ownerField: "OWNER1", pageSize: 2000 },
   { key: "union_oh", fips: "39159", base: "https://www7.co.union.oh.us/unioncountyohio/rest/services/parcel/MapServer/0", idField: "GISNO", acresField: "Acreage", ownerField: "Owner", pageSize: 2000 },
   // VA (Northern Virginia + exurbs)
@@ -129,7 +129,11 @@ async function fetchParcels(src: ParcelSource): Promise<Row[]> {
     const feats = j?.features ?? [];
     for (const f of feats) {
       const a = f.attributes ?? {};
-      let acres = Number(a[src.acresField]);
+      // Convert the raw area field to acres. For sqft/sqm layers this divides by
+      // AREA_DIV; for acre-native layers div is 1. Without this the post-filter
+      // compared raw square footage (hundreds of thousands) against the 20–5000
+      // acre band and rejected every parcel — why all sqft/sqm counties came back empty.
+      let acres = Number(a[src.acresField]) / div;
       const apn = a[src.idField];
       if (!apn || !Number.isFinite(acres) || acres < MIN_ACRES || acres > MAX_ACRES) continue;
       out.push({
