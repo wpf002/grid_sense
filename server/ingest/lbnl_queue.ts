@@ -69,6 +69,7 @@ type Detected = {
   rows: unknown[][];
   cCounty: number;
   cState: number;
+  cFips: number;
   cMw: number[];
   cStatus: number;
   cType: number;
@@ -85,8 +86,9 @@ function detectSheet(ws: XLSX.WorkSheet): Detected | null {
     if (!Array.isArray(row)) continue;
     const header = row.map((c) => String(c ?? "").trim());
     const cCounty = findCol(header, /county/i);
-    const cState = findCol(header, /state/i, /status|estate/i);
-    const cMw = findCols(header, /(^|_)mw\d?$|capacity|nameplate/i);
+    const cState = findCol(header, /^state$|state/i, /status|estate/i);
+    const cFips = findCol(header, /fips/i);
+    const cMw = findCols(header, /^mw([_ -]?\d+)?$|nameplate|capacity/i);
     const cStatus = findCol(header, /status/i);
     // Require the columns that make county-level scoring possible.
     if (cCounty >= 0 && cState >= 0 && cMw.length > 0) {
@@ -96,11 +98,12 @@ function detectSheet(ws: XLSX.WorkSheet): Detected | null {
         rows: grid.slice(r + 1),
         cCounty,
         cState,
+        cFips,
         cMw,
         cStatus,
-        cType: findCol(header, /type|resource|fuel|technolog/i),
+        cType: findCol(header, /type_clean|resource|fuel|technolog|project_type/i),
         cId: findCol(header, /queue|q_id|q_no|request/i),
-        cName: findCol(header, /project|proj.*name|^name$/i),
+        cName: findCol(header, /project.?name|^name$/i),
       };
     }
   }
@@ -124,7 +127,7 @@ export async function ingestLbnlQueue(): Promise<number> {
       return 0;
     }
 
-    const wb = XLSX.readFile(file);
+    const wb = XLSX.read(fs.readFileSync(file), { type: "buffer" });
     // Pick the sheet that parses as the project-level dataset with the most rows.
     let best: Detected | null = null;
     for (const name of wb.SheetNames) {
@@ -143,6 +146,9 @@ export async function ingestLbnlQueue(): Promise<number> {
     const covered = new Set<string>(
       (sqlite.prepare("SELECT DISTINCT fips FROM raw_iso_queue WHERE fips IS NOT NULL AND iso != 'LBNL'").all() as { fips: string }[]).map((r) => r.fips),
     );
+    const validFips = new Set<string>(
+      (sqlite.prepare("SELECT fips FROM counties").all() as { fips: string }[]).map((r) => r.fips),
+    );
 
     const now = new Date().toISOString();
     sqlite.prepare("DELETE FROM raw_iso_queue WHERE iso = 'LBNL'").run();
@@ -159,10 +165,16 @@ export async function ingestLbnlQueue(): Promise<number> {
         if (!Array.isArray(row)) continue;
         const stateAbbr = toAbbr(row[best!.cState]);
         const countyRaw = String(row[best!.cCounty] ?? "").trim();
-        if (!stateAbbr || !countyRaw) { unresolved++; continue; }
         const county = countyRaw.replace(/\s+county$/i, "").trim();
-        const fips = lookupFips(stateAbbr, county);
-        if (!fips) { unresolved++; continue; }
+        // Prefer the dataset's own fips_code (zero-pad to 5 digits — LBNL drops
+        // the leading zero, e.g. AZ "4005" -> "04005"); fall back to a name lookup.
+        let fips: string | null = null;
+        if (best!.cFips >= 0) {
+          const digits = String(row[best!.cFips] ?? "").replace(/\D/g, "");
+          if (digits.length === 4 || digits.length === 5) fips = digits.padStart(5, "0");
+        }
+        if (!fips && stateAbbr && county) fips = lookupFips(stateAbbr, county);
+        if (!fips || !validFips.has(fips)) { unresolved++; continue; }
         if (covered.has(fips)) { skippedCovered++; continue; }
 
         const status = best!.cStatus >= 0 ? String(row[best!.cStatus] ?? "").trim() : "";

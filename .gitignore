@@ -18,3 +18,5 @@ data/raw/
 
 *.log
 .DS_Store
+data/lbnl_queue.xlsx
+data/*.xlsx
