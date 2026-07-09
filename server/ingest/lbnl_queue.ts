@@ -21,7 +21,7 @@ import fs from "node:fs";
 import path from "node:path";
 import * as XLSX from "xlsx";
 import { sqlite } from "../storage.js";
-import { beginRun } from "./util.js";
+import { beginRun, fetchBuffer } from "./util.js";
 import { lookupFips } from "./counties_ref.js";
 
 const DEFAULT_FILE = path.resolve(process.cwd(), "data", "lbnl_queue.xlsx");
@@ -119,15 +119,30 @@ function isActive(status: string): boolean {
 export async function ingestLbnlQueue(): Promise<number> {
   const run = beginRun("lbnl_queue", "LBNL Queued Up — non-RTO interconnection queue");
   try {
+    // Source order: LBNL_QUEUE_URL (annual auto-pull) -> local file. LBNL's own
+    // site JS-renders the download link so we can't discover it, but if you set
+    // LBNL_QUEUE_URL to that year's "Data File XLSX" link the ingest fetches +
+    // caches it, and the scheduler can re-run it annually.
+    const url = process.env.LBNL_QUEUE_URL;
     const file = process.env.LBNL_QUEUE_FILE || DEFAULT_FILE;
-    if (!fs.existsSync(file)) {
-      const msg = `LBNL workbook not found at ${file}. Download the "Data File XLSX" from https://emp.lbl.gov/queues and place it there (or set LBNL_QUEUE_FILE).`;
+    let buf: Buffer | null = null;
+    if (url) {
+      try {
+        buf = await fetchBuffer(url, { cacheKey: "lbnl_queue_url.xlsx", maxAgeMs: 300 * 24 * 3600 * 1000 });
+        console.log(`[lbnl_queue] fetched from LBNL_QUEUE_URL (${buf.length} bytes)`);
+      } catch (e: any) {
+        console.warn(`[lbnl_queue] LBNL_QUEUE_URL fetch failed (${e?.message ?? e}); falling back to local file.`);
+      }
+    }
+    if (!buf && fs.existsSync(file)) buf = fs.readFileSync(file);
+    if (!buf) {
+      const msg = `No LBNL workbook. Set LBNL_QUEUE_URL to this year's "Data File XLSX" link from https://emp.lbl.gov/queues, or download it to ${file}.`;
       console.warn(`[lbnl_queue] ${msg}`);
       run.complete(0, msg);
       return 0;
     }
 
-    const wb = XLSX.read(fs.readFileSync(file), { type: "buffer" });
+    const wb = XLSX.read(buf, { type: "buffer" });
     // Pick the sheet that parses as the project-level dataset with the most rows.
     let best: Detected | null = null;
     for (const name of wb.SheetNames) {

@@ -1,10 +1,33 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Shield, Database, Activity, Users, Server, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Shield, Database, Activity, Users, Server, Clock, CheckCircle2, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+
+const PAGE = 15;
+
+function Pager({ page, count, onPage }: { page: number; count: number; onPage: (p: number) => void }) {
+  const pageCount = Math.max(1, Math.ceil(count / PAGE));
+  if (count <= PAGE) return null;
+  const safe = Math.min(page, pageCount - 1);
+  return (
+    <div className="flex items-center justify-end gap-2 px-3 py-2 border-t border-border/50 text-xs">
+      <span className="text-muted-foreground tabular-nums">
+        {safe * PAGE + 1}–{Math.min(count, (safe + 1) * PAGE)} of {count}
+      </span>
+      <Button variant="outline" size="sm" className="h-7 px-2" disabled={safe === 0} onClick={() => onPage(safe - 1)}>
+        <ChevronLeft className="h-3 w-3" />
+      </Button>
+      <Button variant="outline" size="sm" className="h-7 px-2" disabled={safe >= pageCount - 1} onClick={() => onPage(safe + 1)}>
+        <ChevronRight className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+}
 
 type AdminStats = {
   db_size_mb: number;
@@ -32,6 +55,8 @@ function formatDate(iso: string | null): string {
 
 export default function Admin() {
   const { data, isLoading } = useQuery<AdminStats>({ queryKey: ["/api/admin/stats"] });
+  const [pipePage, setPipePage] = useState(0);
+  const [tblPage, setTblPage] = useState(0);
 
   if (isLoading) {
     return (
@@ -102,7 +127,7 @@ export default function Admin() {
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center justify-between">
             <span>Ingest Pipelines ({data.pipelines.length})</span>
-            <Link href="/ingestion" className="text-xs text-primary hover:underline">See full runs →</Link>
+            <Link href="/ingestion" className="text-xs text-primary hover:underline">See Full Runs →</Link>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -116,7 +141,7 @@ export default function Admin() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.pipelines.map((p) => (
+              {data.pipelines.slice(pipePage * PAGE, pipePage * PAGE + PAGE).map((p) => (
                 <TableRow key={p.pipeline} data-testid={`admin-pipeline-${p.pipeline}`}>
                   <TableCell className="font-mono text-xs">{p.pipeline}</TableCell>
                   <TableCell>
@@ -132,6 +157,7 @@ export default function Admin() {
               ))}
             </TableBody>
           </Table>
+          <Pager page={pipePage} count={data.pipelines.length} onPage={setPipePage} />
         </CardContent>
       </Card>
 
@@ -149,7 +175,7 @@ export default function Admin() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.tables.map((t) => (
+              {data.tables.slice(tblPage * PAGE, tblPage * PAGE + PAGE).map((t) => (
                 <TableRow key={t.name} data-testid={`admin-table-${t.name}`}>
                   <TableCell className="font-mono text-xs">{t.name}</TableCell>
                   <TableCell className="text-right font-mono text-xs">{t.row_count.toLocaleString()}</TableCell>
@@ -157,6 +183,7 @@ export default function Admin() {
               ))}
             </TableBody>
           </Table>
+          <Pager page={tblPage} count={data.tables.length} onPage={setTblPage} />
         </CardContent>
       </Card>
     </div>

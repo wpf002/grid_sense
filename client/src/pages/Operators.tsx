@@ -317,8 +317,8 @@ function AttributedFilings() {
           )}
         </div>
         <p className="text-xs text-muted-foreground">
-          Recent SEC EDGAR filings resolved to a tracked operator by shell-LLC,
-          codename, or parent name.
+          Recent SEC filings we've traced back to a specific operator — matched by
+          their shell-LLC name, an internal project codename, or the parent company.
         </p>
       </CardHeader>
       <CardContent>
@@ -326,7 +326,7 @@ function AttributedFilings() {
           <Skeleton className="h-40" />
         ) : !data || data.count === 0 ? (
           <div className="text-xs text-muted-foreground py-4 text-center">
-            No attributed filings yet. Run the EDGAR ingest to populate.
+            No recent filings have been linked to a tracked operator yet.
           </div>
         ) : (
           <div className="space-y-3">
@@ -353,8 +353,8 @@ function AttributedFilings() {
                   </div>
                   <div className="text-muted-foreground truncate">{h.company}</div>
                   <div className="flex items-center justify-between gap-2 mt-0.5">
-                    <span className="text-[10px] font-mono text-muted-foreground">
-                      matched “{h.attribution.matchedTerm}” · {h.formType}
+                    <span className="text-[10px] text-muted-foreground">
+                      Matched “{h.attribution.matchedTerm}” in a {h.formType}
                     </span>
                     <a href={h.filingUrl} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary shrink-0">
                       <ExternalLink className="h-3 w-3" />

@@ -4,6 +4,7 @@ import { Inbox, FileCheck2, Swords, TrendingUp, TrendingDown, ExternalLink } fro
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { humanize } from "@/lib/utils";
 
 type Digest = {
   since: string;
@@ -46,7 +47,7 @@ export default function Digest() {
           <Inbox className="h-5 w-5 text-primary" /> Weekly Digest
         </h1>
         <p className="text-sm text-muted-foreground">
-          High-signal events since {data.since}. Same as the weekly email digest.
+          The biggest moves across your markets in the last week — the same rundown the weekly email sends.
         </p>
       </div>
 
@@ -63,7 +64,7 @@ export default function Digest() {
               <TrendingUp className="h-4 w-4 text-primary" /> Score movers ({data.movers.length})
             </div>
             {data.movers.length === 0 ? (
-              <div className="text-xs text-muted-foreground">No counties moved ≥ 3 points day-over-day.</div>
+              <div className="text-xs text-muted-foreground">No county's score moved by 3 points or more this week.</div>
             ) : (
               <div className="space-y-1">
                 {data.movers.slice(0, 8).map((m) => (
@@ -92,14 +93,14 @@ export default function Digest() {
               <FileCheck2 className="h-4 w-4 text-primary" /> Notable permits ({data.permits.length})
             </div>
             {data.permits.length === 0 ? (
-              <div className="text-xs text-muted-foreground">No high-signal permits filed this week.</div>
+              <div className="text-xs text-muted-foreground">No major permits filed this week.</div>
             ) : (
               <div className="space-y-2">
                 {data.permits.slice(0, 8).map((p, i) => (
                   <div key={i} className="border-l-2 border-primary/50 pl-3 py-1" data-testid={`digest-permit-${i}`}>
                     <div className="flex items-center gap-2 text-xs">
                       <span className="font-mono text-muted-foreground">{p.filed_date}</span>
-                      <Badge variant="outline" className="text-[9px] uppercase">{p.permit_type}</Badge>
+                      <Badge variant="outline" className="text-[9px] uppercase">{humanize(p.permit_type)}</Badge>
                       {p.resolved_operator && <Badge className="bg-primary/20 text-primary text-[9px]">{p.resolved_operator}</Badge>}
                       <Link href={`/counties/${p.county_fips}`}>
                         <button className="text-primary hover:underline">{p.county}, {p.state}</button>
@@ -119,14 +120,14 @@ export default function Digest() {
               <Swords className="h-4 w-4 text-primary" /> Active competitive moves ({data.bids.length})
             </div>
             {data.bids.length === 0 ? (
-              <div className="text-xs text-muted-foreground">No new LOI / option / closed activity detected this week.</div>
+              <div className="text-xs text-muted-foreground">No new competitive activity (LOIs, options, closings) this week.</div>
             ) : (
               <div className="space-y-2">
                 {data.bids.slice(0, 8).map((b, i) => (
                   <div key={i} className="border-l-2 border-amber-500/50 pl-3 py-1" data-testid={`digest-bid-${i}`}>
                     <div className="flex items-center gap-2 text-xs">
                       <span className="font-mono text-muted-foreground">{b.observed_date}</span>
-                      <Badge className={`text-[9px] uppercase ${STAGE_STYLE[b.stage] ?? ""}`}>{b.stage.replace("_", " ")}</Badge>
+                      <Badge className={`text-[9px] uppercase ${STAGE_STYLE[b.stage] ?? ""}`}>{humanize(b.stage)}</Badge>
                       <span className="font-medium">{b.operator}</span>
                       →
                       <Link href={`/counties/${b.county_fips}`}>

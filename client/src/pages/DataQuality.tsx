@@ -85,15 +85,6 @@ const PIPELINES = [
     desc: "Industry news feed. Each item categorized (announcement / permit / opposition / expansion / rumor) and state-tagged via regex." },
 ];
 
-const ROADMAP = [
-  { name: "Non-RTO interconnection queues", status: "Active", note: "LBNL “Queued Up” ingest is built (extends coverage to the Southeast, Arizona, Carolinas, Northwest). LBNL blocks automated download, so drop the data file at data/lbnl_queue.xlsx to activate it." },
-  { name: "More county parcel feeds", status: "Active", note: "Real assessor ArcGIS feeds are live for 41 counties; adding high-value data-center markets one at a time." },
-  { name: "Land sale prices", status: "Active", note: "Real per-parcel sale price / assessed land value now pulled from assessor layers that publish it (~17 counties, 10k+ parcels), with a per-acre sanity filter. Counties that keep valuation in a separate CAMA table still show no price." },
-  { name: "Re-point stale county endpoints", status: "Planned", note: "About 8 configured assessor feeds now return no rows (their endpoints moved) and need a maintenance pass." },
-  { name: "Regrid / parcel APIs (paid)", status: "Deferred", note: "$5–20k/yr for nationwide per-parcel data; too costly during development." },
-  { name: "CoreLogic / ATTOM (paid)", status: "Deferred", note: "Enterprise pricing (~$12k/yr+); would add sale prices and liens nationwide." },
-];
-
 export default function DataQuality({ embedded = false }: { embedded?: boolean } = {}) {
   const { data, isLoading } = useQuery<Response>({ queryKey: ["/api/data-quality"] });
   const { data: edgar } = useQuery<EdgarRow[]>({ queryKey: ["/api/edgar-filings"] });
@@ -287,31 +278,6 @@ export default function DataQuality({ embedded = false }: { embedded?: boolean }
                 </a>
               );
             })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Roadmap */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Data Sources Roadmap</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {ROADMAP.map((r) => (
-              <div key={r.name} className="flex items-start gap-3 pb-2 border-b border-border/50 last:border-0" data-testid={`roadmap-${r.name.replace(/\s+/g, "-").toLowerCase()}`}>
-                <Badge variant="outline" className={`text-[10px] shrink-0 w-[76px] justify-center ${
-                  r.status === "Active" ? "border-emerald-500/40 text-emerald-500"
-                  : r.status === "Planned" ? "border-blue-400/40 text-blue-400"
-                  : r.status === "Blocked" ? "border-amber-500/40 text-amber-500"
-                  : "border-muted-foreground/40 text-muted-foreground"
-                }`}>{r.status}</Badge>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm">{r.name}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{r.note}</div>
-                </div>
-              </div>
-            ))}
           </div>
         </CardContent>
       </Card>

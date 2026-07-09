@@ -82,7 +82,7 @@ export default function Heartbeat({ embedded = false }: { embedded?: boolean } =
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-green-600">
-                          <CheckCircle2 className="h-3 w-3" /> fresh
+                          <CheckCircle2 className="h-3 w-3" /> LIVE
                         </span>
                       )}
                     </TableCell>

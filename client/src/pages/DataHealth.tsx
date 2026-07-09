@@ -6,7 +6,7 @@ import IngestionRuns from "./IngestionRuns";
 import Heartbeat from "./Heartbeat";
 
 const TABS: PageTab[] = [
-  { label: "Freshness", path: "/heartbeat" },
+  { label: "Data Health", path: "/heartbeat" },
   { label: "Ingestion Runs", path: "/ingestion" },
   { label: "Data Quality", path: "/data-quality" },
 ];
