@@ -67,6 +67,42 @@ export async function registerRoutes(
     }
   });
 
+  // ---- Point-in-time backtest ----
+  // Scores each announced county using only a snapshot taken BEFORE the
+  // announcement, so post-announcement news can't inflate the result. Returns a
+  // not-ready report until score history reaches back past a real announcement;
+  // that is a valid state, not an error.
+  app.get("/api/backtest/point-in-time", async (_req, res) => {
+    try {
+      const { runBothBases, historyOutlook } = await import("./eval/run.js");
+      const bases = runBothBases();
+      const outlook = historyOutlook();
+      // The evaluated/uncovered arrays can be long; the UI only needs summaries.
+      const slim = (r: (typeof bases)["total"]) => ({
+        basis: r.basis,
+        ready: r.ready,
+        notReady: r.notReady,
+        coverage: r.coverage,
+        evaluatedCount: r.evaluated.length,
+        totalAnnouncements: r.totalAnnouncements,
+        earliestSnapshot: r.earliestSnapshot,
+        latestSnapshot: r.latestSnapshot,
+        metrics: r.metrics,
+      });
+      res.json({
+        total: slim(bases.total),
+        factorsOnly: slim(bases.factorsOnly),
+        outlook,
+        uncoveredReasons: bases.total.uncovered.reduce<Record<string, number>>((acc, u) => {
+          acc[u.reason] = (acc[u.reason] ?? 0) + 1;
+          return acc;
+        }, {}),
+      });
+    } catch (e: any) {
+      res.status(500).json({ error: e?.message ?? "point-in-time backtest failed" });
+    }
+  });
+
   // ---- Ranking quality, with and without the signal boost ----
   // The signal boost is heavily concentrated in announced counties (news about an
   // announcement lands in that county), so the boosted number is optimistic.

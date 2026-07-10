@@ -71,6 +71,152 @@ type RankQuality = {
   positivesWithSignal?: number;
 };
 
+type PitCutoff = {
+  threshold: number;
+  truePositives: number;
+  falseNegatives: number;
+  precision: number | null;
+  recall: number;
+  f1: number | null;
+  flagged: number;
+};
+type PitBasis = {
+  basis: string;
+  ready: boolean;
+  notReady: string | null;
+  coverage: number;
+  evaluatedCount: number;
+  totalAnnouncements: number;
+  earliestSnapshot: string | null;
+  latestSnapshot: string | null;
+  metrics: {
+    meanPercentile: number;
+    medianPercentile: number;
+    meanLeadDays: number;
+    cutoffs: PitCutoff[];
+  } | null;
+};
+type PitReport = {
+  total: PitBasis;
+  factorsOnly: PitBasis;
+  outlook: { snapshotDays: number; earliest: string | null; latest: string | null; announcementsAfterHistoryStart: number; totalAnnouncements: number };
+  uncoveredReasons: Record<string, number>;
+};
+
+/**
+ * The honest backtest. Scores each announced county using only a snapshot taken
+ * before the announcement, so post-announcement news cannot inflate it.
+ *
+ * Until score history reaches back past a real announcement this renders a
+ * status, not a number. That is deliberate — a placeholder metric here would be
+ * worse than none, because it's the metric the leakage disclosure points at.
+ */
+function PointInTimeCard() {
+  const { data } = useQuery<PitReport>({ queryKey: ["/api/backtest/point-in-time"] });
+  if (!data) return null;
+
+  const { total, factorsOnly, outlook } = data;
+  const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
+
+  return (
+    <Card data-testid="card-point-in-time">
+      <CardHeader className="pb-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <CardTitle className="text-base">Point-in-Time Backtest</CardTitle>
+          <Badge
+            variant="outline"
+            className={total.ready
+              ? "border-green-500/50 text-green-600 dark:text-green-500"
+              : "border-muted-foreground/40 text-muted-foreground"}
+            data-testid="badge-pit-status"
+          >
+            {total.ready ? "Ready" : "Collecting History"}
+          </Badge>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Scores each announced county using only a snapshot taken <em className="not-italic font-medium">before</em> the
+          announcement. This is the measurement the leakage note above is waiting on — it can't be inflated by news
+          published after the fact.
+        </p>
+      </CardHeader>
+
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Stat label="Announcements Scored" value={`${total.evaluatedCount} of ${total.totalAnnouncements}`} testId="stat-pit-covered" />
+          <Stat label="Coverage" value={pct(total.coverage)} testId="stat-pit-coverage" />
+          <Stat label="History Recorded" value={`${outlook.snapshotDays} ${outlook.snapshotDays === 1 ? "day" : "days"}`} testId="stat-pit-days" />
+          <Stat label="History Starts" value={outlook.earliest ?? "—"} testId="stat-pit-earliest" />
+        </div>
+
+        {!total.ready ? (
+          <div className="rounded-md border border-border bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">Not enough history yet.</span> {total.notReady}
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="rounded-md border px-3 py-2.5">
+                <div className="text-xs text-muted-foreground">Factors only (leakage-free)</div>
+                <div className="text-xl font-semibold tabular-nums" data-testid="text-pit-factors">
+                  {factorsOnly.metrics ? pct(factorsOnly.metrics.meanPercentile) : "—"}
+                </div>
+                <div className="text-xs text-muted-foreground">Mean percentile before announcement.</div>
+              </div>
+              <div className="rounded-md border px-3 py-2.5">
+                <div className="text-xs text-muted-foreground">With signal boost</div>
+                <div className="text-xl font-semibold tabular-nums text-muted-foreground" data-testid="text-pit-total">
+                  {total.metrics ? pct(total.metrics.meanPercentile) : "—"}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {total.metrics ? `Median ${pct(total.metrics.medianPercentile)}, ${Math.round(total.metrics.meanLeadDays)}d lead.` : ""}
+                </div>
+              </div>
+            </div>
+
+            {total.metrics && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead className="text-muted-foreground">
+                    <tr className="border-b">
+                      <th className="py-1.5 text-left font-medium">Score Cutoff</th>
+                      <th className="py-1.5 text-right font-medium">Caught</th>
+                      <th className="py-1.5 text-right font-medium">Missed</th>
+                      <th className="py-1.5 text-right font-medium">Flagged</th>
+                      <th className="py-1.5 text-right font-medium">Precision</th>
+                      <th className="py-1.5 text-right font-medium">Recall</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {total.metrics.cutoffs.map((c) => (
+                      <tr key={c.threshold} className="border-b border-border/50" data-testid={`row-pit-cutoff-${c.threshold}`}>
+                        <td className="py-1.5">≥ {c.threshold}</td>
+                        <td className="py-1.5 text-right tabular-nums">{c.truePositives}</td>
+                        <td className="py-1.5 text-right tabular-nums">{c.falseNegatives}</td>
+                        <td className="py-1.5 text-right tabular-nums">{c.flagged}</td>
+                        <td className="py-1.5 text-right tabular-nums">{c.precision == null ? "n/a" : pct(c.precision)}</td>
+                        <td className="py-1.5 text-right tabular-nums">{pct(c.recall)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function Stat({ label, value, testId }: { label: string; value: string; testId: string }) {
+  return (
+    <div className="rounded-md border px-3 py-2">
+      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-sm font-semibold tabular-nums" data-testid={testId}>{value}</div>
+    </div>
+  );
+}
+
 // The headline "with signals" number is optimistic: news about an announcement
 // lands as a signal in that very county, so the model is partly reading the
 // answer. We show the leakage-free number next to it rather than only the
@@ -178,6 +324,8 @@ export default function Backtest() {
       </div>
 
       <RankQualityCard />
+
+      <PointInTimeCard />
 
       {/* Summary tiles */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">

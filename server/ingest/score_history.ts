@@ -1,5 +1,12 @@
 // Score history snapshotter — writes today's snapshot for every county.
-// Enables day-over-day score diffs (Gap 12).
+// Enables day-over-day score diffs, and is the substrate for the point-in-time
+// backtest (server/eval/pit.ts).
+//
+// base_score and signal_boost are snapshotted ALONGSIDE the final score on
+// purpose. A point-in-time backtest has to be able to ask "how did this county
+// rank on factors alone, before any news signal touched it?" — and that is
+// unrecoverable after the fact if only the combined score was stored. Every day
+// we don't record them is a day of history that can never answer that question.
 
 import { sqlite } from "../storage.js";
 import { beginRun } from "./util.js";
@@ -20,26 +27,33 @@ export async function ingestScoreHistory() {
         hazard_score REAL,
         water_stress_score REAL,
         moratorium_status TEXT,
+        base_score REAL,
+        signal_boost REAL,
         PRIMARY KEY (snapshot_date, fips)
       )
     `).run();
     sqlite.prepare(`CREATE INDEX IF NOT EXISTS idx_sh_fips ON score_history_daily(fips)`).run();
     sqlite.prepare(`CREATE INDEX IF NOT EXISTS idx_sh_date ON score_history_daily(snapshot_date)`).run();
+    // Additive migration for databases created before the leakage-free columns.
+    for (const col of ["base_score", "signal_boost"]) {
+      try { sqlite.exec(`ALTER TABLE score_history_daily ADD COLUMN ${col} REAL;`); } catch { /* already present */ }
+    }
 
     const today = new Date().toISOString().slice(0, 10);
     const rows = sqlite
       .prepare(
         `SELECT fips, landing_probability AS score, score_tier AS tier,
                 queued_load_mw, substation_headroom_mva, time_to_power_months,
-                fiber_density_score, hazard_score, water_stress_score, moratorium_status
+                fiber_density_score, hazard_score, water_stress_score, moratorium_status,
+                base_score, signal_boost
            FROM counties`,
       )
       .all() as any[];
 
     const stmt = sqlite.prepare(`
       INSERT INTO score_history_daily
-        (snapshot_date, fips, score, tier, queued_load_mw, substation_headroom_mva, time_to_power_months, fiber_density_score, hazard_score, water_stress_score, moratorium_status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (snapshot_date, fips, score, tier, queued_load_mw, substation_headroom_mva, time_to_power_months, fiber_density_score, hazard_score, water_stress_score, moratorium_status, base_score, signal_boost)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(snapshot_date, fips) DO UPDATE SET
         score = excluded.score,
         tier = excluded.tier,
@@ -49,7 +63,9 @@ export async function ingestScoreHistory() {
         fiber_density_score = excluded.fiber_density_score,
         hazard_score = excluded.hazard_score,
         water_stress_score = excluded.water_stress_score,
-        moratorium_status = excluded.moratorium_status
+        moratorium_status = excluded.moratorium_status,
+        base_score = excluded.base_score,
+        signal_boost = excluded.signal_boost
     `);
 
     const tx = sqlite.transaction((items: any[]) => {
@@ -66,6 +82,8 @@ export async function ingestScoreHistory() {
           r.hazard_score ?? null,
           r.water_stress_score ?? null,
           r.moratorium_status ?? null,
+          r.base_score ?? null,
+          r.signal_boost ?? null,
         );
       }
     });

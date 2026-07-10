@@ -66,6 +66,19 @@ describe("feature endpoints", () => {
     expect(Array.isArray(r.body.cutoffs)).toBe(true);
   });
 
+  it("GET /api/backtest/point-in-time returns a report with both bases", async () => {
+    const r = await request(app).get("/api/backtest/point-in-time");
+    expect(r.status).toBe(200);
+    expect(r.body).toHaveProperty("total");
+    expect(r.body).toHaveProperty("factorsOnly");
+    expect(r.body).toHaveProperty("outlook");
+    // Whatever the readiness state, these invariants must hold.
+    expect(typeof r.body.total.ready).toBe("boolean");
+    expect(r.body.total.evaluatedCount).toBeLessThanOrEqual(r.body.total.totalAnnouncements);
+    // Not-ready reports must carry an explanation instead of a bare null metric.
+    if (!r.body.total.ready) expect(typeof r.body.total.notReady).toBe("string");
+  });
+
   it("GET /api/edgar/shell-hits returns attributed filings", async () => {
     const r = await request(app).get("/api/edgar/shell-hits");
     expect(r.status).toBe(200);

@@ -378,9 +378,10 @@ export default function Methodology() {
             <strong className="text-foreground">Next up, and why:</strong>{" "}
             <strong className="text-foreground">A point-in-time backtest.</strong> Today's backtest scores counties as
             they look now, so news published after an announcement leaks into the score — see the Backtest page for the
-            size of that effect. Nightly score snapshots started accumulating recently; once there's enough history to
-            score each county as of the day before its announcement, we can measure the model honestly rather than
-            bounding it.{" "}
+            size of that effect. The evaluation harness for the honest version is now built and wired: nightly snapshots
+            record the factors-only and signal-boosted scores separately, and each future announcement is scored against
+            the snapshot taken before it. It reports "collecting history" until an announcement lands in a county we
+            snapshotted beforehand — which is the correct answer, not a limitation.{" "}
             <strong className="text-foreground">A project-level large-load queue</strong> is the other gap: no public,
             machine-readable, county-tagged dataset of data-center interconnection <em className="not-italic font-medium">requests</em> exists
             today. ERCOT publishes its figure only inside image-based PDFs. FERC docket RM26-4 is forcing disclosure; until

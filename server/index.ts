@@ -194,6 +194,22 @@ app.use((req, res, next) => {
       } catch (e: any) {
         log(`score snapshot failed: ${e?.message ?? e}`, "ingest");
       }
+      // Point-in-time backtest coverage. Read-only and cheap, but logging it on
+      // every refresh is how we notice the day it flips from "not ready" to a
+      // real number — i.e. the day an announcement lands in a county we had
+      // already snapshotted.
+      try {
+        const { runPointInTime } = await import("./eval/run");
+        const r = runPointInTime();
+        log(
+          r.ready
+            ? `point-in-time backtest: READY — ${r.evaluated.length}/${r.totalAnnouncements} scored, mean percentile ${(r.metrics!.meanPercentile * 100).toFixed(1)}%`
+            : `point-in-time backtest: collecting history (${r.evaluated.length}/${r.totalAnnouncements} evaluable)`,
+          "eval",
+        );
+      } catch (e: any) {
+        log(`point-in-time backtest failed: ${e?.message ?? e}`, "eval");
+      }
       try {
         const { ingestEdgar } = await import("./ingest/edgar");
         const { beginRun } = await import("./ingest/util");
