@@ -338,7 +338,7 @@ export default function ApiDocs() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Data Freshness</CardTitle>
+          <CardTitle className="text-base">Data Ingestion</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>

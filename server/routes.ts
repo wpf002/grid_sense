@@ -893,6 +893,7 @@ export async function registerRoutes(
          ORDER BY last_started DESC
       `).all() as any[];
       const now = Date.now();
+      const { isRetriable } = await import("./ingest/scheduler.js");
       const withFresh = rows.map(r => {
         const ageMs = now - Number(r.last_started ?? 0);
         const ageDays = ageMs / (86400 * 1000);
@@ -903,6 +904,7 @@ export async function registerRoutes(
           status: r.status,
           age_hours: ageMs / 3600000,
           stale,
+          retriable: isRetriable(r.pipeline),
         };
       });
       const staleCount = withFresh.filter(r => r.stale).length;
@@ -1303,6 +1305,22 @@ export async function registerRoutes(
       });
     } catch (e: any) {
       res.status(500).json({ error: e?.message ?? "freshness failed" });
+    }
+  });
+
+  // ---- Force one pipeline to re-run now (the "Retry Now" button) ----
+  // The scheduler already retries a behind feed on its next hourly tick; this
+  // skips the wait. Runs in the background and returns immediately.
+  app.post("/api/data-freshness/retry", async (req, res) => {
+    try {
+      const pipeline = String(req.body?.pipeline ?? "").trim();
+      if (!pipeline) return res.status(400).json({ error: "pipeline is required" });
+      const { triggerPipeline } = await import("./ingest/scheduler.js");
+      const result = triggerPipeline(pipeline);
+      if (!result.started) return res.status(409).json({ error: result.reason ?? "could not start" });
+      res.json({ started: true, pipeline });
+    } catch (e: any) {
+      res.status(500).json({ error: e?.message ?? "retry failed" });
     }
   });
 

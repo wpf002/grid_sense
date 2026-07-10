@@ -104,7 +104,7 @@ export default function Compare() {
           className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 w-fit"
           data-testid="link-back-compare"
         >
-          <ArrowLeft className="h-3 w-3" /> All counties
+          <ArrowLeft className="h-3 w-3" /> All Counties
         </Link>
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-md border border-border bg-card flex items-center justify-center">

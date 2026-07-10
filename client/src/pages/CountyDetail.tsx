@@ -240,7 +240,7 @@ export default function CountyDetail() {
           className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 w-fit"
           data-testid="link-back"
         >
-          <ArrowLeft className="h-3 w-3" /> All counties
+          <ArrowLeft className="h-3 w-3" /> All Counties
         </Link>
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
           <div>

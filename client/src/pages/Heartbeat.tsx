@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { humanize } from "@/lib/utils";
 import { pipelineLabel } from "@/lib/pipelines";
-import { HeartPulse, AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { HeartPulse, AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +19,7 @@ interface Pipe {
   status: string;
   age_hours: number;
   stale: boolean;
+  retriable?: boolean;
 }
 interface Heartbeat {
   pipelines: Pipe[];
@@ -39,7 +42,24 @@ export default function Heartbeat({ embedded = false }: { embedded?: boolean } =
     refetchInterval: 60_000,
   });
 
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
+  const [retrying, setRetrying] = useState<string | null>(null);
+
+  // Force one pipeline to re-run now instead of waiting for the hourly tick.
+  const retry = useMutation({
+    mutationFn: (pipeline: string) => apiRequest("POST", "/api/data-freshness/retry", { pipeline }),
+    onMutate: (pipeline: string) => setRetrying(pipeline),
+    onSuccess: (_res, pipeline) => {
+      toast({ title: "Retry Started", description: `${pipelineLabel(pipeline)} is refreshing in the background.` });
+      // Give the run a moment, then refresh the freshness view.
+      setTimeout(() => queryClient.invalidateQueries({ queryKey: ["/api/cron/heartbeat"] }), 4000);
+    },
+    onError: (e: any) =>
+      toast({ title: "Couldn't Retry", description: e?.message ?? "Try again shortly.", variant: "destructive" }),
+    onSettled: () => setRetrying(null),
+  });
 
   // Surface problems first — a stale or failing pipeline shouldn't hide on page 3.
   const pipelines = useMemo(() => {
@@ -66,7 +86,8 @@ export default function Heartbeat({ embedded = false }: { embedded?: boolean } =
         <p className="text-sm text-muted-foreground mt-1">
           Every data pipeline and when it last ran. Each one refreshes on its own cadence — prices daily,
           ISO queues monthly, federal datasets quarterly — so a long gap is normal for the slow ones. A
-          pipeline is flagged stale after 8 days without a successful run.
+          pipeline is flagged stale after 8 days without a successful run. The scheduler retries any behind
+          or errored feed automatically each hour; use Retry Now to force it immediately.
         </p>
       </div>
 
@@ -93,6 +114,7 @@ export default function Heartbeat({ embedded = false }: { embedded?: boolean } =
                     <TableHead>Age</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Freshness</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -117,6 +139,21 @@ export default function Heartbeat({ embedded = false }: { embedded?: boolean } =
                           <span className="inline-flex items-center gap-1 text-green-600">
                             <CheckCircle2 className="h-3 w-3" /> LIVE
                           </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {p.retriable && (p.stale || p.status === "error") && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 gap-1 text-[11px]"
+                            disabled={retry.isPending}
+                            onClick={() => retry.mutate(p.pipeline)}
+                            data-testid={`button-retry-${p.pipeline}`}
+                          >
+                            <RefreshCw className={`h-3 w-3 ${retrying === p.pipeline ? "animate-spin" : ""}`} />
+                            {retrying === p.pipeline ? "Retrying…" : "Retry Now"}
+                          </Button>
                         )}
                       </TableCell>
                     </TableRow>

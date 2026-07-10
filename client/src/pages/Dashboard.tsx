@@ -185,7 +185,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Data freshness banner — ingest health at a glance. Amber for feeds that
+      {/* Data ingestion banner — ingest health at a glance. Amber for feeds that
           are merely behind schedule; red only when a pipeline actually errored. */}
       {(stalePipelines.length > 0 || failingPipelines.length > 0) && (() => {
         const hasFailing = failingPipelines.length > 0;
@@ -200,8 +200,13 @@ export default function Dashboard() {
             <AlertTriangle className={`h-4 w-4 shrink-0 mt-0.5 ${hasFailing ? "text-destructive" : "text-amber-500"}`} />
             <div className="flex-1 min-w-0 text-xs">
               <div className={`font-semibold ${textTone}`}>
-                Data freshness — {summary}
+                Data Ingestion — {summary}
               </div>
+              {!hasFailing && (
+                <div className="mt-0.5 text-[11px] text-muted-foreground">
+                  Retries automatically each hour. Force it now from Data Health.
+                </div>
+              )}
               <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                 {failingPipelines.map((p) => (
                   <span key={p.pipeline} className="inline-flex items-center gap-1 rounded bg-destructive/10 text-destructive px-1.5 py-0.5 text-[11px]">

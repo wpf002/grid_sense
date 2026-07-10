@@ -57,6 +57,26 @@ const CADENCE_MS: Partial<Record<PipeName, number>> = {
   lbnl_queue: 300 * DAY,
 };
 
+// Pipelines a user is allowed to force via "Retry Now": every cadence-scheduled
+// feed plus the three fast feeds the boot refresh owns. Anything else is
+// rejected, so the endpoint can't be coaxed into running an arbitrary name.
+const KNOWN_PIPELINES = new Set<string>([
+  ...Object.keys(CADENCE_MS),
+  "dc_news",
+  "edgar",
+  "score_history",
+]);
+
+/**
+ * Can this pipeline be force-run? Only if its recorded name is also a runnable
+ * pipe argument. The ingestion_runs table records some names that don't map to
+ * a runAll pipe (sec_edgar, score_history_daily, epa_ozone…); those refresh
+ * through other paths and must not offer a Retry button that would 409.
+ */
+export function isRetriable(pipeline: string): boolean {
+  return KNOWN_PIPELINES.has(pipeline);
+}
+
 /** Last time this pipeline finished without erroring, in epoch ms. */
 function lastSuccessAt(pipeline: string): number | null {
   const row = sqlite
@@ -109,6 +129,33 @@ export async function runDueIngests(): Promise<{ ran: PipeName[]; skipped: boole
   } finally {
     running = false;
   }
+}
+
+/**
+ * Force one pipeline to re-run now, then rescore — the manual escape hatch
+ * behind the "Retry Now" button. The scheduler already retries a behind feed on
+ * the next hourly tick; this just skips the wait. Returns immediately and runs
+ * in the background, because an ingest makes network calls and can take a while.
+ *
+ * Respects the same single-flight guard as the scheduler, so a retry can't
+ * collide with an in-progress tick. Only known pipelines can be triggered.
+ */
+export function triggerPipeline(name: string): { started: boolean; reason?: string } {
+  if (!KNOWN_PIPELINES.has(name)) return { started: false, reason: "unknown pipeline" };
+  if (running) return { started: false, reason: "an ingest is already running" };
+  running = true;
+  // Fire-and-forget: the HTTP caller doesn't wait for the fetch to finish.
+  (async () => {
+    try {
+      console.log(`[scheduler] manual retry: ${name}`);
+      await runAll([name as PipeName, "enrich", "score_history"]);
+    } catch (e: any) {
+      console.error(`[scheduler] manual retry ${name} failed: ${e?.message ?? e}`);
+    } finally {
+      running = false;
+    }
+  })();
+  return { started: true };
 }
 
 /**
