@@ -16,7 +16,7 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
 } from "recharts";
-import { ArrowLeft, Star, Zap, Droplet, Cable, DollarSign, MapPin, AlertTriangle, LineChart as LineChartIcon, GitCompare, Database, CheckCircle2, HelpCircle, ExternalLink, Building2, TrendingDown, Activity, FileDown } from "lucide-react";
+import { ArrowLeft, Star, Zap, Droplet, Cable, DollarSign, MapPin, AlertTriangle, LineChart as LineChartIcon, GitCompare, Database, CheckCircle2, HelpCircle, ExternalLink, Building2, TrendingDown, Activity, FileDown, ChevronLeft, ChevronRight } from "lucide-react";
 import type { CountyDetail as CountyDetailType, Watchlist, Signal } from "@shared/schema";
 import { SignalDetailModal } from "@/components/SignalDetailModal";
 import { CountyExtras } from "@/components/CountyExtras";
@@ -47,6 +47,7 @@ export default function CountyDetail() {
   const fips = params?.fips ?? "";
   const { toast } = useToast();
   const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null);
+  const [signalPage, setSignalPage] = useState(0);
 
   const { data: county, isLoading } = useQuery<CountyDetailType>({
     queryKey: ["/api/counties", fips],
@@ -954,9 +955,16 @@ export default function CountyDetail() {
           <CardContent>
             {county.signals.length === 0 ? (
               <p className="text-sm text-muted-foreground py-8 text-center">No signals detected yet.</p>
-            ) : (
+            ) : (() => {
+              const PAGE_SIZE = 8;
+              const pageCount = Math.max(1, Math.ceil(county.signals.length / PAGE_SIZE));
+              const pageSafe = Math.min(signalPage, pageCount - 1);
+              const paged = county.signals.slice(pageSafe * PAGE_SIZE, pageSafe * PAGE_SIZE + PAGE_SIZE);
+              const rangeStart = pageSafe * PAGE_SIZE + 1;
+              const rangeEnd = Math.min(county.signals.length, (pageSafe + 1) * PAGE_SIZE);
+              return (
               <div className="space-y-3">
-                {county.signals.map((s) => (
+                {paged.map((s) => (
                   <div
                     key={s.id}
                     className="rounded-md border border-border p-3 cursor-pointer hover-elevate"
@@ -995,8 +1003,35 @@ export default function CountyDetail() {
                     )}
                   </div>
                 ))}
+                {pageCount > 1 && (
+                  <div className="flex items-center justify-between border-t pt-3">
+                    <span className="text-xs text-muted-foreground" data-testid="text-signal-range">
+                      Showing {rangeStart}–{rangeEnd} of {county.signals.length}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm" variant="outline" className="h-7 gap-1 text-[11px]"
+                        disabled={pageSafe === 0}
+                        onClick={() => setSignalPage((p) => Math.max(0, p - 1))}
+                        data-testid="button-signal-prev"
+                      >
+                        <ChevronLeft className="h-3 w-3" /> Previous
+                      </Button>
+                      <span className="text-xs text-muted-foreground">Page {pageSafe + 1} of {pageCount}</span>
+                      <Button
+                        size="sm" variant="outline" className="h-7 gap-1 text-[11px]"
+                        disabled={pageSafe >= pageCount - 1}
+                        onClick={() => setSignalPage((p) => Math.min(pageCount - 1, p + 1))}
+                        data-testid="button-signal-next"
+                      >
+                        Next <ChevronRight className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+              );
+            })()}
           </CardContent>
         </Card>
 
