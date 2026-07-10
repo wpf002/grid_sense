@@ -3,6 +3,7 @@
 // so this is fast enough to call per-county during rescoring.
 
 import { sqlite } from "../storage.js";
+import { regionForCounty } from "./wholesale_price.js";
 import type { RealDataOverlay } from "../scoring.js";
 
 // Cache-per-run maps built lazily.
@@ -15,6 +16,7 @@ let _hifldMap: Map<string, {
 }> | null = null;
 let _queueMap: Map<string, { rowsCount: number; queuedMw: number; withdrawnMw: number; ttpMonths: number | null }> | null = null;
 let _nriMap: Map<string, { riskScore: number | null; ealScore: number | null }> | null = null;
+let _powerMap: Map<string, { usdPerMwh: number; quality: "real" | "partial" }> | null = null;
 
 export function warmOverlayCaches() {
   _eiaMap = new Map();
@@ -111,10 +113,36 @@ export function warmOverlayCaches() {
     .prepare(`SELECT fips, riskScore, ealScore FROM raw_fema_nri`)
     .all() as { fips: string; riskScore: number | null; ealScore: number | null }[];
   for (const r of nriRows) _nriMap.set(r.fips, { riskScore: r.riskScore, ealScore: r.ealScore });
+
+  // Power price per county: the REAL traded wholesale hub price where one is
+  // published, otherwise the state industrial retail rate as a partial proxy.
+  _powerMap = new Map();
+  const hubPrice = new Map<string, number>();
+  try {
+    for (const r of sqlite.prepare("SELECT region, usd_per_mwh FROM wholesale_hub_price").all() as { region: string; usd_per_mwh: number }[]) {
+      hubPrice.set(r.region, r.usd_per_mwh);
+    }
+  } catch { /* table not created until wholesale_price has run */ }
+  const retail = new Map<string, number>();
+  try {
+    for (const r of sqlite.prepare("SELECT state, industrial_cents_per_kwh FROM state_power_price").all() as { state: string; industrial_cents_per_kwh: number }[]) {
+      if (r.industrial_cents_per_kwh != null) retail.set(r.state, r.industrial_cents_per_kwh * 10); // ¢/kWh -> $/MWh
+    }
+  } catch { /* optional */ }
+  const counties = sqlite.prepare("SELECT fips, iso, state, lat FROM counties").all() as { fips: string; iso: string | null; state: string; lat: number | null }[];
+  for (const c of counties) {
+    const region = regionForCounty(c.iso, c.state, c.lat);
+    const hub = region ? hubPrice.get(region) : undefined;
+    if (hub != null) _powerMap.set(c.fips, { usdPerMwh: hub, quality: "real" });
+    else {
+      const r = retail.get(c.state);
+      if (r != null) _powerMap.set(c.fips, { usdPerMwh: r, quality: "partial" });
+    }
+  }
 }
 
 export function clearOverlayCaches() {
-  _eiaMap = _hifldMap = _queueMap = _nriMap = null;
+  _eiaMap = _hifldMap = _queueMap = _nriMap = _powerMap = null;
 }
 
 export function buildOverlayFor(fips: string): RealDataOverlay {
@@ -124,6 +152,7 @@ export function buildOverlayFor(fips: string): RealDataOverlay {
     hifld: _hifldMap!.get(fips) ?? null,
     queue: _queueMap!.get(fips) ?? null,
     nri: _nriMap!.get(fips) ?? null,
+    power: _powerMap!.get(fips) ?? null,
   };
 }
 

@@ -19,7 +19,9 @@ import type { County, Signal, ScoreFactor } from "@shared/schema";
 // regularized to [0.03, 0.20] so no factor vanishes or dominates). Lifted mean
 // percentile rank of real DC counties 64% -> 74% and precision@70 10% -> 58%
 // without gutting priors. Sums to 1.0.
-export const FACTOR_WEIGHTS = {
+// The 13 calibrated weights (sum to 1.0). Power price is layered on top and the
+// rest are rescaled, so the calibrated *ratios* between them are preserved.
+const BASE_WEIGHTS = {
   gridDemandIntent: 0.105,
   timeToPower: 0.111,
   onsiteGeneration: 0.12,
@@ -34,6 +36,42 @@ export const FACTOR_WEIGHTS = {
   gasAccess: 0.04,
   carbonIntensity: 0.03,
 } as const;
+
+// Power price is DISABLED by default (weight 0). This is an empirical result,
+// not an oversight. Swept against the 37 FIPS-verified announcements with
+// scripts/eval_backtest.ts (re-enriching at each weight):
+//
+//   weight  meanPct  medPct   @70 TP/flagged  prec@70   @80 TP  prec@80
+//   0.00     81.2%    88.7%       6/16         37.5%       2      66.7%
+//   0.04     81.2%    91.2%       5/12         41.7%       1      50.0%
+//   0.06     81.0%    91.0%       6/12         50.0%       1      50.0%
+//   0.10     80.0%    90.6%       6/11         54.5%       1      50.0%
+//   0.15     77.3%    91.6%       5/11         45.5%       1     100.0%
+//
+// Precision@70 improves, but the metric this model was calibrated on — the mean
+// percentile rank of real landings — degrades monotonically with weight, and a
+// top-80 hit is lost at every non-zero weight. The cutoff metrics move by one
+// or two counties on n=36, so they are noise; mean rank over all 36 is not.
+//
+// Why it doesn't predict: announced counties average $48.64/MWh vs $55.00 for
+// all hub-priced counties (only 12% cheaper), and PJM — the priciest hub at
+// $93/MWh — hosts the most landings (6). Hyperscalers trade power cost against
+// fiber, latency and cluster effects. The factor is also blind for 39% of the
+// positives (14 of 36 sit in regions with no published hub), which would inject
+// a systematically different signal for those counties.
+//
+// Power price remains a first-class DISPLAYED metric on the county page — it is
+// genuinely useful for underwriting, just not for ranking where a DC will land.
+// Set GRIDSENSE_POWER_WEIGHT to re-enable and re-sweep.
+const POWER_WEIGHT = Math.min(0.3, Math.max(0, Number(process.env.GRIDSENSE_POWER_WEIGHT ?? "0")));
+
+export const FACTOR_WEIGHTS: Record<keyof typeof BASE_WEIGHTS | "powerPrice", number> = (() => {
+  const scale = 1 - POWER_WEIGHT;
+  const out = {} as Record<string, number>;
+  for (const [k, v] of Object.entries(BASE_WEIGHTS)) out[k] = v * scale;
+  out.powerPrice = POWER_WEIGHT;
+  return out as Record<keyof typeof BASE_WEIGHTS | "powerPrice", number>;
+})();
 
 // Cooling climate score (0-100, higher = better DC cooling climate) from NOAA
 // 1991-2020 annual Cooling/Heating Degree Days. High CDD = high cooling load
@@ -63,6 +101,9 @@ export interface RealDataOverlay {
   queue?: { rowsCount: number; queuedMw: number; withdrawnMw: number; ttpMonths?: number | null } | null;
   // FEMA National Risk Index — 0-100 composite; higher = more hazard
   nri?: { riskScore: number | null; ealScore: number | null } | null;
+  // Wholesale power price for the hub that prices this county ("real"), or the
+  // state industrial retail rate as a fallback ("partial").
+  power?: { usdPerMwh: number; quality: "real" | "partial" } | null;
 }
 
 function clamp(v: number, lo = 0, hi = 100): number {
@@ -222,6 +263,18 @@ export function computeCountyFactorsV5(
   const carbonIntensity = c.carbonIntensityScore ?? 50;
   const carbonQuality: DataQuality = c.carbonIntensityScore != null ? "real" : "synthetic";
 
+  // ---- 14. Power price ----
+  // Cheaper wholesale power scores higher. Observed national hub range runs from
+  // ~$9/MWh (SP15) to ~$93/MWh (PJM West), so anchor the scale at $15-$90.
+  let powerPrice: number;
+  let ppQuality: DataQuality = "synthetic";
+  if (overlay.power) {
+    powerPrice = clamp(100 - ((overlay.power.usdPerMwh - 15) / (90 - 15)) * 100);
+    ppQuality = overlay.power.quality;
+  } else {
+    powerPrice = 50;
+  }
+
   const factors: ScoreFactorV5[] = [
     {
       key: "gridDemandIntent",
@@ -344,6 +397,18 @@ export function computeCountyFactorsV5(
       sourceHint: gasQuality === "real" ? `EIA pipeline/citygate: ${Math.round(gasAccess)}/100` : undefined,
     },
     {
+      key: "powerPrice",
+      label: "Power price",
+      weight: FACTOR_WEIGHTS.powerPrice,
+      value: powerPrice,
+      contribution: 0,
+      dataQuality: ppQuality,
+      sourceHint:
+        overlay.power != null
+          ? `${ppQuality === "real" ? "Wholesale hub" : "State retail"}: $${overlay.power.usdPerMwh.toFixed(2)}/MWh`
+          : undefined,
+    },
+    {
       key: "carbonIntensity",
       label: "Grid carbon",
       weight: FACTOR_WEIGHTS.carbonIntensity,
@@ -354,10 +419,13 @@ export function computeCountyFactorsV5(
     },
   ];
 
-  factors.forEach((f) => {
+  // Drop disabled factors (weight 0) so they don't pollute score breakdowns or
+  // provenance. Power price is disabled by default — see POWER_WEIGHT.
+  const active = factors.filter((f) => f.weight > 0);
+  active.forEach((f) => {
     f.contribution = f.weight * f.value;
   });
-  return factors;
+  return active;
 }
 
 // Legacy shim for callers that don't have overlay yet
