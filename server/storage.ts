@@ -247,6 +247,8 @@ sqlite.exec(`
 // Add priority column if watchlist existed without it (dev-only migration)
 try { sqlite.exec("ALTER TABLE watchlist ADD COLUMN priority TEXT DEFAULT 'normal';"); } catch {}
 // Climate/cooling columns (added after v1 — ALTER for existing DBs).
+try { sqlite.exec("ALTER TABLE counties ADD COLUMN base_score REAL;"); } catch {}
+try { sqlite.exec("ALTER TABLE counties ADD COLUMN signal_boost REAL;"); } catch {}
 try { sqlite.exec("ALTER TABLE counties ADD COLUMN cooling_degree_days REAL;"); } catch {}
 try { sqlite.exec("ALTER TABLE counties ADD COLUMN heating_degree_days REAL;"); } catch {}
 try { sqlite.exec("ALTER TABLE counties ADD COLUMN cooling_score REAL;"); } catch {}

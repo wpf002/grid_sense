@@ -59,6 +59,71 @@ interface Summary {
   hit_plus_near_rate: number;
 }
 
+
+type RankQuality = {
+  available: boolean;
+  positives?: number;
+  totalCounties?: number;
+  meanPercentileWithSignals?: number;
+  meanPercentileFactorsOnly?: number;
+  meanBoostPositives?: number;
+  meanBoostAllCounties?: number;
+  positivesWithSignal?: number;
+};
+
+// The headline "with signals" number is optimistic: news about an announcement
+// lands as a signal in that very county, so the model is partly reading the
+// answer. We show the leakage-free number next to it rather than only the
+// flattering one.
+function RankQualityCard() {
+  const { data } = useQuery<RankQuality>({ queryKey: ["/api/backtest/rank-quality"] });
+  if (!data?.available) return null;
+  const pct = (v?: number) => (v == null ? "—" : `${v.toFixed(1)}%`);
+  const concentration =
+    data.meanBoostAllCounties && data.meanBoostAllCounties > 0
+      ? Math.round((data.meanBoostPositives ?? 0) / data.meanBoostAllCounties)
+      : null;
+  return (
+    <Card data-testid="card-rank-quality">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">Ranking Quality</CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Where the {data.positives} announced counties rank among all {data.totalCounties?.toLocaleString()}.
+          Higher is better; 50% would be random.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="rounded-md border border-border px-3 py-2.5">
+            <div className="text-xs text-muted-foreground">Factors only (leakage-free)</div>
+            <div className="text-xl font-semibold tabular-nums" data-testid="text-rank-base">
+              {pct(data.meanPercentileFactorsOnly)}
+            </div>
+            <div className="text-xs text-muted-foreground">The honest number.</div>
+          </div>
+          <div className="rounded-md border border-border px-3 py-2.5">
+            <div className="text-xs text-muted-foreground">With signal boost</div>
+            <div className="text-xl font-semibold tabular-nums text-muted-foreground" data-testid="text-rank-total">
+              {pct(data.meanPercentileWithSignals)}
+            </div>
+            <div className="text-xs text-muted-foreground">Optimistic — see below.</div>
+          </div>
+        </div>
+        <div className="rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2.5 text-xs text-muted-foreground">
+          <span className="font-medium text-amber-600 dark:text-amber-400">Known limitation: partial label leakage.</span>{" "}
+          Scores are current, not point-in-time. News published <em className="not-italic font-medium">after</em> an
+          announcement becomes a signal in that county, so the boosted figure partly reads the answer. The boost averages{" "}
+          <span className="font-mono">{data.meanBoostPositives?.toFixed(2)}</span> points in announced counties vs{" "}
+          <span className="font-mono">{data.meanBoostAllCounties?.toFixed(2)}</span> everywhere else
+          {concentration ? ` (${concentration}x)` : ""}, and only {data.positivesWithSignal} of {data.positives} carry one.
+          Stripped of signals the model still ranks real landings at {pct(data.meanPercentileFactorsOnly)}, so the factor
+          model stands on its own. A true point-in-time backtest needs history that only starts accumulating now.
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Backtest() {
   const { data, isLoading } = useQuery<{ rows: Row[]; summary: Summary }>({
     queryKey: ["/api/backtest/announcements"],
@@ -94,6 +159,8 @@ export default function Backtest() {
           A working siting model should have all of these lit up before the press releases dropped.
         </p>
       </div>
+
+      <RankQualityCard />
 
       {/* Summary tiles */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">

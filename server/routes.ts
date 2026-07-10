@@ -49,6 +49,63 @@ export async function registerRoutes(
     res.json(stats);
   });
 
+  // ---- Live counts for the public landing page (no hardcoded marketing numbers) ----
+  app.get("/api/landing-stats", async (_req, res) => {
+    try {
+      const n = (sql: string) => ((sqlite.prepare(sql).get() as any)?.n ?? 0) as number;
+      res.json({
+        counties: n("SELECT COUNT(*) n FROM counties"),
+        emergingPlus: n("SELECT COUNT(*) n FROM counties WHERE landing_probability >= 45"),
+        parcels: n("SELECT COUNT(*) n FROM parcels"),
+        parcelCounties: n("SELECT COUNT(DISTINCT county_fips) n FROM parcels"),
+        permits: n("SELECT COUNT(*) n FROM permits"),
+        competitiveBids: n("SELECT COUNT(*) n FROM competitive_bids"),
+        operators: n("SELECT COUNT(*) n FROM operators"),
+      });
+    } catch (e: any) {
+      res.status(500).json({ error: e?.message ?? "landing stats failed" });
+    }
+  });
+
+  // ---- Ranking quality, with and without the signal boost ----
+  // The signal boost is heavily concentrated in announced counties (news about an
+  // announcement lands in that county), so the boosted number is optimistic.
+  // Report both, plus the leakage magnitude, rather than only the flattering one.
+  app.get("/api/backtest/rank-quality", async (_req, res) => {
+    try {
+      const rows = sqlite.prepare(
+        "SELECT fips, landing_probability AS total, base_score AS base, COALESCE(signal_boost,0) AS boost FROM counties WHERE landing_probability IS NOT NULL AND base_score IS NOT NULL",
+      ).all() as { fips: string; total: number; base: number; boost: number }[];
+      if (rows.length < 2) return res.json({ available: false, note: "base_score not yet computed — run enrich" });
+
+      const positives = new Set(
+        (sqlite.prepare("SELECT DISTINCT fips FROM dc_announcements").all() as { fips: string }[]).map((r) => r.fips),
+      );
+      const pos = rows.filter((r) => positives.has(r.fips));
+
+      const meanPct = (key: "total" | "base") => {
+        const sorted = [...rows].sort((a, b) => a[key] - b[key]);
+        const rank = new Map(sorted.map((r, i) => [r.fips, (i / (sorted.length - 1)) * 100]));
+        return pos.reduce((s, r) => s + rank.get(r.fips)!, 0) / pos.length;
+      };
+      const mean = (a: number[]) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
+
+      res.json({
+        available: true,
+        totalCounties: rows.length,
+        positives: pos.length,
+        meanPercentileWithSignals: meanPct("total"),
+        meanPercentileFactorsOnly: meanPct("base"),
+        meanBoostPositives: mean(pos.map((r) => r.boost)),
+        meanBoostAllCounties: mean(rows.map((r) => r.boost)),
+        positivesWithSignal: pos.filter((r) => r.boost > 0).length,
+        note: "Scores are current, not point-in-time. Signal boost comes partly from news published AFTER an announcement, so 'with signals' is optimistic. 'Factors only' is the leakage-free ranking metric.",
+      });
+    } catch (e: any) {
+      res.status(500).json({ error: e?.message ?? "rank-quality failed" });
+    }
+  });
+
   app.get("/api/counties", async (_req, res) => {
     const rows = await storage.listCounties();
     res.json(rows);

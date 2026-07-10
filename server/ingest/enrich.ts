@@ -87,9 +87,15 @@ export async function enrichCounties(): Promise<{
     // any RTO legitimately have no ISO queue -> 0.
     const realQueueMw = Math.round(overlay.queue?.queuedMw ?? 0);
     const realTtp = overlay.queue?.ttpMonths ?? null;
+    // Persist the factors-only score too. The backtest reports both, so the
+    // ranking metric can be read without the signal boost that news about an
+    // announcement injects into that very county.
+    const baseOnly = Math.round(Math.max(0, Math.min(100, base)) * 100) / 100;
     db.update(countiesTable)
       .set({
         landingProbability,
+        baseScore: baseOnly,
+        signalBoost: Math.round(boost * 100) / 100,
         scoreTier: tier,
         queuedLoadMw: realQueueMw,
         // Persist the real median time-to-power for display when we have it.

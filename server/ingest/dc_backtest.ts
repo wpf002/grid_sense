@@ -34,8 +34,8 @@ const ANNOUNCEMENTS: DcAnnouncement[] = [
   // Meta — mega-campuses announced 2024-2026
   { fips: "22035", county_name: "East Baton Rouge", state: "LA", operator: "Meta", project_name: "Hyperion (Richland Parish)", announced_mw: 2000, capex_usd_b: 10, announced_date: "2024-12-04", status: "under_construction", source_url: "https://www.reuters.com/technology/meta-invest-10-billion-ai-data-center-louisiana-2024-12-04/", notes: "Actually in Richland Parish 22083 — see below; EBR is company HQ side" },
   { fips: "22083", county_name: "Richland Parish", state: "LA", operator: "Meta", project_name: "Hyperion", announced_mw: 2000, capex_usd_b: 10, announced_date: "2024-12-04", status: "under_construction", source_url: "https://about.fb.com/news/2024/12/meta-announces-hyperion/", notes: "4M sqft, 2GW campus" },
-  { fips: "56025", county_name: "Natrona", state: "WY", operator: "Meta", project_name: "Cheyenne region campus", announced_mw: 700, capex_usd_b: 800, announced_date: "2024-08-15", status: "under_construction", source_url: "https://about.fb.com/news/2024/08/meta-data-center-cheyenne/", notes: null },
-  { fips: "26055", county_name: "Grand Rapids", state: "MI", operator: "Meta", project_name: null, announced_mw: 300, capex_usd_b: 800, announced_date: "2024-05-01", status: "under_construction", source_url: "https://about.fb.com/news/", notes: null },
+  { fips: "56025", county_name: "Natrona", state: "WY", operator: "Meta", project_name: "Cheyenne region campus", announced_mw: 700, capex_usd_b: 0.8, announced_date: "2024-08-15", status: "under_construction", source_url: "https://about.fb.com/news/2024/08/meta-data-center-cheyenne/", notes: null },
+  { fips: "26055", county_name: "Grand Rapids", state: "MI", operator: "Meta", project_name: null, announced_mw: 300, capex_usd_b: 0.8, announced_date: "2024-05-01", status: "under_construction", source_url: "https://about.fb.com/news/", notes: null },
 
   // Google — recent commitments
   { fips: "31153", county_name: "Sarpy", state: "NE", operator: "Google", project_name: "Papillion expansion", announced_mw: 400, capex_usd_b: 1.5, announced_date: "2024-06-01", status: "operational", source_url: "https://blog.google/inside-google/infrastructure/", notes: null },
@@ -82,8 +82,8 @@ const ANNOUNCEMENTS: DcAnnouncement[] = [
   { fips: "39089", county_name: "Licking", state: "OH", operator: "Anthropic", project_name: "Anthropic Trainium cluster (via AWS)", announced_mw: 500, capex_usd_b: 4, announced_date: "2025-06-01", status: "under_construction", source_url: "https://www.anthropic.com/news", notes: "Uses AWS Ohio capacity" },
 
   // Additional 2025 mega commits
-  { fips: "48113", county_name: "Dallas", state: "TX", operator: "Meta", project_name: "Fort Worth expansion", announced_mw: 350, capex_usd_b: 800, announced_date: "2025-07-01", status: "announced", source_url: "https://about.fb.com/news/", notes: null },
-  { fips: "48439", county_name: "Tarrant", state: "TX", operator: "Meta", project_name: "Fort Worth (Tarrant)", announced_mw: 350, capex_usd_b: 800, announced_date: "2025-07-01", status: "announced", source_url: "https://about.fb.com/news/", notes: null },
+  { fips: "48113", county_name: "Dallas", state: "TX", operator: "Meta", project_name: "Fort Worth expansion", announced_mw: 350, capex_usd_b: 0.8, announced_date: "2025-07-01", status: "announced", source_url: "https://about.fb.com/news/", notes: null },
+  { fips: "48439", county_name: "Tarrant", state: "TX", operator: "Meta", project_name: "Fort Worth (Tarrant)", announced_mw: 350, capex_usd_b: 0.8, announced_date: "2025-07-01", status: "announced", source_url: "https://about.fb.com/news/", notes: null },
   { fips: "04013", county_name: "Maricopa", state: "AZ", operator: "Microsoft", project_name: "Goodyear/El Mirage expansion", announced_mw: 750, capex_usd_b: 3, announced_date: "2024-05-01", status: "under_construction", source_url: "https://blogs.microsoft.com/", notes: null },
   { fips: "04013", county_name: "Maricopa", state: "AZ", operator: "Google", project_name: "Mesa campus", announced_mw: 600, capex_usd_b: 2, announced_date: "2024-11-01", status: "under_construction", source_url: "https://blog.google/", notes: null },
   { fips: "48029", county_name: "Bexar", state: "TX", operator: "Microsoft", project_name: "San Antonio expansion", announced_mw: 500, capex_usd_b: 2, announced_date: "2024-06-01", status: "under_construction", source_url: "https://blogs.microsoft.com/", notes: null },
@@ -92,7 +92,7 @@ const ANNOUNCEMENTS: DcAnnouncement[] = [
   { fips: "17197", county_name: "Will", state: "IL", operator: "Meta", project_name: "Joliet campus", announced_mw: 800, capex_usd_b: 3, announced_date: "2024-07-01", status: "under_construction", source_url: "https://about.fb.com/", notes: null },
   { fips: "37183", county_name: "Wake", state: "NC", operator: "Google", project_name: "Apex expansion", announced_mw: 400, capex_usd_b: 2, announced_date: "2024-08-01", status: "under_construction", source_url: "https://blog.google/", notes: null },
   { fips: "39049", county_name: "Franklin", state: "OH", operator: "Google", project_name: "New Albany (Franklin side)", announced_mw: 700, capex_usd_b: 3, announced_date: "2024-04-01", status: "under_construction", source_url: "https://blog.google/", notes: null },
-  { fips: "27053", county_name: "Hennepin", state: "MN", operator: "Meta", project_name: "Rosemount campus", announced_mw: 300, capex_usd_b: 800, announced_date: "2024-09-01", status: "under_construction", source_url: "https://about.fb.com/", notes: null },
+  { fips: "27053", county_name: "Hennepin", state: "MN", operator: "Meta", project_name: "Rosemount campus", announced_mw: 300, capex_usd_b: 0.8, announced_date: "2024-09-01", status: "under_construction", source_url: "https://about.fb.com/", notes: null },
 ];
 
 export async function ingestDcBacktest(): Promise<{ inserted: number }> {

@@ -1,30 +1,44 @@
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Zap, Radio, LandPlot, FileCheck2, Swords, TrendingUp, Shield, Database, Code2, Map as MapIcon, Sparkles, CheckCircle2 } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 
 const FEATURES = [
   { icon: MapIcon, title: "National radar map", body: "3,109 US counties, tier-coded by landing probability. Zoom, pan, click into any market." },
-  { icon: LandPlot, title: "Site-level parcel intel", body: "1,700+ parcels with shell-LLC ownership, substation distance, fiber distance, and zoning." },
-  { icon: FileCheck2, title: "Permit tracker", body: "1,600+ rezoning, building, electrical, and water permits — filtered by county, operator, or stage." },
-  { icon: Swords, title: "Competitive bid feed", body: "1,100+ observed operator bids from sniffing → LOI → option → under contract → closed." },
+  { icon: LandPlot, title: "Site-level parcel intel", body: "Real assessor parcels with shell-LLC ownership, acreage, zoning, and sale price where the county publishes it." },
+  { icon: FileCheck2, title: "Permit tracker", body: "Rezoning, building, electrical, and water permits pulled straight from county portals — filter by county, operator, or stage." },
+  { icon: Swords, title: "Competitive bid feed", body: "Observed operator activity from sniffing → LOI → option → under contract → closed." },
   { icon: Radio, title: "Signal stream", body: "Fused SEC filings, DCD articles, ISO queue snapshots, county planning agendas, and utility interconnect notices." },
   { icon: Database, title: "Data provenance", body: "Every metric has source lineage. Click any factor to see EIA-860, HIFLD, FEMA NRI, or the exact permit URL." },
   { icon: TrendingUp, title: "Landing-probability model", body: "13-factor scoring — grid, land, fiber, policy, hazard, tax, water. Backtestable, tuneable, auditable." },
-  { icon: Code2, title: "Public REST API", body: "12 documented endpoints. JSON. curl-ready. Free tier: 60 req/min. Pro tier: 600 req/min." },
+  { icon: Code2, title: "Public REST API", body: "Documented JSON endpoints. curl-ready. Free tier: 60 req/min. Pro tier: 600 req/min." },
 ];
 
-const STATS = [
-  { label: "US counties covered", value: "3,109" },
-  { label: "Emerging+ markets", value: "505" },
-  { label: "Site-level parcels", value: "1,704" },
-  { label: "Permits tracked", value: "1,612" },
-  { label: "Competitive bids", value: "1,107" },
-  { label: "Hyperscaler operators + shell LLC's", value: "45" },
-];
+type LandingStats = {
+  counties: number; emergingPlus: number; parcels: number;
+  parcelCounties: number; permits: number; competitiveBids: number; operators: number;
+};
+
+// Every number on this page comes from the live database. Nothing is hardcoded —
+// stale marketing figures were overstating parcels, permits and bids by orders of
+// magnitude.
+function useStats() {
+  const { data } = useQuery<LandingStats>({ queryKey: ["/api/landing-stats"] });
+  const n = (v?: number) => (v == null ? "—" : v.toLocaleString());
+  return [
+    { label: "US counties covered", value: n(data?.counties) },
+    { label: "Emerging+ markets", value: n(data?.emergingPlus) },
+    { label: "Site-level parcels", value: n(data?.parcels) },
+    { label: "Permits tracked", value: n(data?.permits) },
+    { label: "Competitive bids", value: n(data?.competitiveBids) },
+    { label: "Hyperscaler operators + shell LLC's", value: n(data?.operators) },
+  ];
+}
 
 const OPERATORS = ["Meta","Google","Microsoft","Amazon","Oracle","xAI","OpenAI/Stargate","Digital Realty","Equinix","QTS","CoreWeave","Vantage","Aligned","Stack","Compass","CyrusOne"];
 
 export default function Landing() {
+  const STATS = useStats();
   return (
     <div className="min-h-screen bg-background text-foreground" data-testid="page-landing">
       {/* Top nav */}

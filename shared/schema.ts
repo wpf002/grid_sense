@@ -56,7 +56,12 @@ export const counties = sqliteTable("counties", {
   existingDcCapacityMw: real("existing_dc_capacity_mw").default(0),
 
   // Derived
-  landingProbability: real("landing_probability").default(0),      // 0-100
+  landingProbability: real("landing_probability").default(0),      // 0-100 (factors + signal boost)
+  // Score from the 13 factors ALONE, before any news/filing signal boost. Kept so
+  // the backtest can report a ranking metric free of announcement-news leakage.
+  baseScore: real("base_score"),
+  // Points added on top of baseScore by recent news/filing signals.
+  signalBoost: real("signal_boost"),
   scoreTier: text("score_tier").default("cold"),                   // hot | warm | emerging | cold
   updatedAt: text("updated_at").default("2026-07-04"),
 });
