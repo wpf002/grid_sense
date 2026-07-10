@@ -15,9 +15,12 @@ for (const email of demoUsers) {
   if (r.changes) uCount++;
 }
 
+// Every name here must correspond to a REAL ingest pipeline. "epa_ozone" used to
+// be seeded but has no ingest behind it, so it only ever showed up on Data Health
+// as a permanently-stale feed with no way to refresh it. Don't seed phantoms.
 const sources = [
   "eia860","fema_nri","pjm_queue","miso_queue","ercot_queue","isone_queue","spp_queue","caiso_queue","nyiso_queue",
-  "epa_ozone","noaa_climate","sec_edgar","dc_news","enrich","score_history","expand_counties","overpass_parcels",
+  "noaa_climate","sec_edgar","dc_news","enrich","score_history","expand_counties","overpass_parcels",
 ];
 const insIng = db.prepare(
   `INSERT INTO ingestion_runs (pipeline, started_at, finished_at, status, rows) VALUES (?, ?, ?, ?, ?)`

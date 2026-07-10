@@ -330,6 +330,10 @@
 }
 .leaflet-container {
   font-family: var(--font-sans);
+  /* Leaflet gives its panes and controls z-indexes up to 1000. Without a
+     stacking context on the map root, those escape into the page and paint over
+     the sidebar overlay (z-50) and modals. `isolate` traps them inside the map. */
+  isolation: isolate;
 }
 .leaflet-control-attribution {
   background: hsla(220 30% 12% / 0.7) !important;

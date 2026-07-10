@@ -216,7 +216,10 @@ export function USMap({ counties }: USMapProps) {
 
   return (
     <>
-      <div className="relative rounded-md overflow-hidden border border-border bg-muted/20" style={{ height: 420 }}>
+      {/* `isolate` traps Leaflet's high z-indexes (controls sit at z-1000) inside
+          this element's own stacking context, so the map can't paint over the
+          sidebar overlay (z-50) on mobile. */}
+      <div className="relative isolate rounded-md overflow-hidden border border-border bg-muted/20" style={{ height: 420 }}>
         <MapContainer
           center={[39.5, -97]}
           zoom={4}

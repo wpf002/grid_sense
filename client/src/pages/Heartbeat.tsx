@@ -120,11 +120,11 @@ export default function Heartbeat({ embedded = false }: { embedded?: boolean } =
                 <TableBody>
                   {paged.map((p) => (
                     <TableRow key={p.pipeline} data-testid={`row-pipe-${p.pipeline}`}>
-                      <TableCell className="text-sm">{pipelineLabel(p.pipeline)}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
+                      <TableCell className="text-sm whitespace-nowrap">{pipelineLabel(p.pipeline)}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                         {new Date(p.last_started).toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-xs">{ageLabel(p.age_hours)}</TableCell>
+                      <TableCell className="text-xs whitespace-nowrap">{ageLabel(p.age_hours)}</TableCell>
                       <TableCell>
                         <Badge variant={p.status === "ok" ? "outline" : p.status === "error" ? "destructive" : "secondary"}>
                           {humanize(p.status)}
