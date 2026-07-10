@@ -18,7 +18,10 @@ export const counties = sqliteTable("counties", {
   utility: text("utility"),                         // Primary utility
 
   // Grid signal
-  queuedLoadMw: real("queued_load_mw").default(0),  // Interconnection queue MW attributed to this county
+  // GENERATION interconnection-queue MW for this county (solar/gas/wind/storage
+  // seeking to connect). NOT data-center load — load-side queues are not yet
+  // published in machine-readable form. Column name kept for compatibility.
+  queuedLoadMw: real("queued_load_mw").default(0),
   substationHeadroomMva: real("substation_headroom_mva"),
   timeToPowerMonths: real("time_to_power_months"),  // Median energization time
   onsiteGenerationFriendly: integer("onsite_generation_friendly", { mode: "boolean" }).default(false),

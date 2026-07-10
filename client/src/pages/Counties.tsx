@@ -395,7 +395,7 @@ export default function Counties() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="score">Sort: Score</SelectItem>
-              <SelectItem value="queue">Sort: Queue MW</SelectItem>
+              <SelectItem value="queue">Sort: Gen Queue MW</SelectItem>
               <SelectItem value="ttp">Sort: Time to Power</SelectItem>
               <SelectItem value="land">Sort: Land Price</SelectItem>
             </SelectContent>
@@ -468,7 +468,7 @@ export default function Counties() {
                   <TableRow>
                     <TableHead>County</TableHead>
                     <TableHead>ISO / Utility</TableHead>
-                    <TableHead className="text-right">Queue</TableHead>
+                    <TableHead className="text-right">Gen Queue</TableHead>
                     <TableHead className="text-right">TTP</TableHead>
                     <TableHead className="text-right">Fiber</TableHead>
                     <TableHead className="text-right">Land $/ac</TableHead>

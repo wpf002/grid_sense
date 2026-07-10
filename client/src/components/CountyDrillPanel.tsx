@@ -197,7 +197,7 @@ export function CountyDrillPanel({ fips, onClose }: Props) {
             </div>
             <div className="p-3 border-r border-border">
               <div className="flex items-center gap-1 text-[9px] uppercase font-mono text-muted-foreground tracking-wider">
-                <TrendingUp className="h-3 w-3" /> Queue
+                <TrendingUp className="h-3 w-3" /> Gen Queue
               </div>
               <div className="text-lg font-semibold mt-1 tabular-nums">
                 {data.queuedLoadMw && data.queuedLoadMw >= 1000

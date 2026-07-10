@@ -86,8 +86,11 @@ export function computeCountyFactorsV5(
   c: County,
   overlay: RealDataOverlay = {},
 ): ScoreFactorV5[] {
-  // ---- 1. Grid demand intent ----
-  // Prefer real ISO queue queuedMw; fall back to seed queuedLoadMw.
+  // ---- 1. Grid buildout activity (key kept as gridDemandIntent) ----
+  // MW of GENERATION in the interconnection queue for this county — supply-side
+  // grid investment and forming headroom, NOT data-center load. Load-side
+  // interconnection queues are not published in machine-readable form yet
+  // (FERC docket RM26-4 is forcing disclosure).
   const queuedMw = overlay.queue?.queuedMw ?? c.queuedLoadMw ?? 0;
   const gridDemandIntent = logNormalize(queuedMw, 20000);
   const gdQuality: DataQuality = overlay.queue ? "real" : "synthetic";

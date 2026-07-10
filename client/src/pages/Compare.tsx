@@ -251,7 +251,7 @@ export default function Compare() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-2 text-xs">
-                    <StatRow label="Queued load" value={formatMw(d.queuedLoadMw)} />
+                    <StatRow label="Queued generation" value={formatMw(d.queuedLoadMw)} />
                     <StatRow
                       label="Time-to-power"
                       value={d.timeToPowerMonths ? `${d.timeToPowerMonths.toFixed(0)} mo` : "—"}

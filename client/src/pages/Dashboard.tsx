@@ -239,9 +239,9 @@ export default function Dashboard() {
             <StatCard label="Emerging" value={stats.emerging} hint="Score 45-59" icon={Sprout} accent="blue" testId="stat-emerging" />
             <StatCard label="Cold" value={stats.cold} hint="Score < 45" icon={Snowflake} testId="stat-cold" />
             <StatCard
-              label="Queued load"
+              label="Queued Generation"
               value={formatMw(stats.totalQueuedMw)}
-              hint="Power projects awaiting grid hookup"
+              hint="Generation awaiting interconnection"
               icon={Zap}
               accent="primary"
               testId="stat-queued"
@@ -360,7 +360,7 @@ export default function Dashboard() {
                     <TableRow>
                       <TableHead>County</TableHead>
                       <TableHead>ISO</TableHead>
-                      <TableHead className="text-right">Queue MW</TableHead>
+                      <TableHead className="text-right">Gen Queue MW</TableHead>
                       <TableHead className="text-right">TTP mo</TableHead>
                       <TableHead className="text-right">Score</TableHead>
                     </TableRow>

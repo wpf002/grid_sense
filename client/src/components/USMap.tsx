@@ -270,7 +270,7 @@ export function USMap({ counties }: USMapProps) {
                     )}
                     {c.queuedLoadMw ? (
                       <div className="text-[10px] text-muted-foreground">
-                        Queue {c.queuedLoadMw >= 1000 ? `${(c.queuedLoadMw / 1000).toFixed(1)} GW` : `${c.queuedLoadMw.toFixed(0)} MW`}
+                        Gen queue {c.queuedLoadMw >= 1000 ? `${(c.queuedLoadMw / 1000).toFixed(1)} GW` : `${c.queuedLoadMw.toFixed(0)} MW`}
                       </div>
                     ) : null}
                     <div className="text-[10px] text-primary mt-0.5">Click to drill in →</div>

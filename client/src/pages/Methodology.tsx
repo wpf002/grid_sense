@@ -1,29 +1,35 @@
-import { BookOpen, Zap, Cable, MapPin, Droplet, DollarSign, AlertTriangle, Radio, Building2, Clock, Gauge, Sun, LineChart } from "lucide-react";
+import { BookOpen, Zap, Cable, MapPin, Droplet, DollarSign, AlertTriangle, Radio, Building2, Clock, Gauge, Sun, LineChart, Snowflake, Flame, Leaf } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-// KEEP THIS TABLE IN SYNC WITH server/scoring.ts → FACTOR_WEIGHTS
+// KEEP THIS TABLE IN SYNC WITH server/scoring.ts → FACTOR_WEIGHTS (sums to 1.0)
 const factors = [
-  { icon: Gauge, key: "gridDemandIntent", label: "Grid demand intent", weight: 0.20, formula: "log10(1 + queuedLoadMw) / log10(1 + 20000) × 100",
-    desc: "Interconnection-queue MW pending in the county — a saturating log-scaled proxy for hyperscaler demand. Loudoun's 18 GW queue peaks this factor even though supply lags." },
-  { icon: Clock, key: "timeToPower", label: "Time to power", weight: 0.15, formula: "100 − ((TTPmonths − 18) / 42) × 100",
-    desc: "Inverse of median energization months. <24mo scores full, >60mo scores zero. This is why northern Virginia loses ground to Central Ohio and West Texas despite queue demand." },
-  { icon: MapPin, key: "landAvailability", label: "Parcel supply", weight: 0.15, formula: "min(1, largeParcelCount / 40) × 100",
-    desc: "Count of parcels >500 acres. Bulk contiguous acreage matters more than raw acreage — assembling five 100-acre parcels is 5× slower than closing one 500-acre tract." },
-  { icon: Sun, key: "onsiteGeneration", label: "Behind-the-meter", weight: 0.10, formula: "onsiteGenerationFriendly ? 100 : 30",
-    desc: "Whether the state PSC / local rules allow behind-the-meter generation. Meta and Amazon are increasingly siting DCs where they can co-locate solar or gas-peaker capacity." },
-  { icon: Cable, key: "fiberConnectivity", label: "Fiber & peering", weight: 0.10, formula: "fiberDensityScore (0-100 direct)",
-    desc: "Long-haul fiber density plus proximity to peering exchanges. Sub-2ms round-trip to a major exchange is the practical inference-DC threshold." },
-  { icon: DollarSign, key: "fiscalIncentives", label: "Fiscal / policy", weight: 0.10, formula: "taxIncentiveScore × moratoriumMult (+10 if right-to-build)",
-    desc: "Tax abatement package strength adjusted for policy risk. Active moratorium multiplies by 0; proposed by 0.55. Right-to-build zoning adds +10." },
-  { icon: Building2, key: "clusterAdjacency", label: "Cluster adjacency", weight: 0.08, formula: "log10(1 + existingDcMw) / log10(1 + 4000) × 100",
-    desc: "Existing DC capacity — signals mature supply chain, contractor base, and utility familiarity with hyperscale loads. Log-scaled to avoid over-rewarding Ashburn." },
-  { icon: MapPin, key: "landAffordability", label: "Land affordability", weight: 0.05, formula: "100 − log10(1 + $/acre) / log10(1000001) × 100",
-    desc: "Inverse log-scaled median land price. <$5k/acre = 100, >$500k/acre ≈ 0. Deprioritized because hyperscalers underwrite land as a small fraction of total build cost." },
-  { icon: AlertTriangle, key: "hazardSafety", label: "Hazard safety", weight: 0.04, formula: "100 − hazardScore",
-    desc: "Inverse of flood + seismic + wildfire exposure. Coastal Louisiana counties take a hit here even with strong land supply." },
-  { icon: Droplet, key: "waterAvailability", label: "Water availability", weight: 0.03, formula: "100 − waterStressScore",
-    desc: "Inverse of WRI Aqueduct baseline water-stress index. Growing importance as liquid cooling gains share — Phoenix and Central Texas counties penalized." },
+  { icon: Cable, key: "fiberConnectivity", label: "Fiber & peering", weight: 0.125, formula: "distinct fiber providers + served locations (FCC BDC)",
+    desc: "Distinct fiber providers serving the county and how many locations they reach. Carrier diversity matters as much as raw presence — a single provider is a single point of failure." },
+  { icon: Sun, key: "onsiteGeneration", label: "Behind-the-meter generation", weight: 0.12, formula: "log-scaled operating generation MW in county (EIA-860)",
+    desc: "Nameplate MW of operating generators sited in the county. Existing generation nearby means real behind-the-meter and co-location options rather than waiting on the grid." },
+  { icon: Building2, key: "clusterAdjacency", label: "Cluster adjacency", weight: 0.12, formula: "EHV (≥345kV) + HV line counts (HIFLD), blended with existing DC capacity",
+    desc: "Extra-high-voltage transmission in the county. EHV is where hyperscale clusters form — it signals the grid can actually carry the load, and that contractors and utilities have done this before." },
+  { icon: Clock, key: "timeToPower", label: "Time to power", weight: 0.111, formula: "100 − ((median months − 18) / 42) × 100",
+    desc: "Real median queue-entry → in-service duration measured from dated interconnection projects in the county (or its ISO region). Under 24 months scores full; over 60 scores zero." },
+  { icon: Gauge, key: "gridDemandIntent", label: "Grid buildout activity", weight: 0.105, formula: "log10(1 + queued generation MW) / log10(1 + 20000) × 100",
+    desc: "MW of GENERATION (solar, gas, wind, storage) in the interconnection queue for this county. This is supply-side, not data-center demand — it signals grid investment and headroom forming nearby. Load-side queues are not yet published publicly." },
+  { icon: MapPin, key: "landAvailability", label: "Parcel supply", weight: 0.08, formula: "min(1, largeParcelCount / 40) × 100",
+    desc: "Count of large parcels. Bulk contiguous acreage matters more than raw acreage — assembling five 100-acre parcels is far slower than closing one 500-acre tract." },
+  { icon: MapPin, key: "landAffordability", label: "Land affordability", weight: 0.071, formula: "100 − log10(1 + $/acre) / log10(1000001) × 100",
+    desc: "Inverse log-scaled land price. Deprioritized because hyperscalers underwrite land as a small fraction of total build cost — power and fiber dominate." },
+  { icon: Snowflake, key: "coolingEfficiency", label: "Free-cooling hours", weight: 0.068, formula: "log-scaled heating degree days (NOAA climate normals)",
+    desc: "Colder climates give more economizer/free-cooling hours, which cuts cooling load and PUE. This is why Central Ohio and the Columbia Basin punch above their weight." },
+  { icon: DollarSign, key: "fiscalIncentives", label: "Fiscal / policy", weight: 0.065, formula: "taxIncentiveScore × moratoriumMult (+10 if right-to-build)",
+    desc: "State data-center tax abatement strength, adjusted for policy risk. An active moratorium multiplies by 0; a proposed one by 0.55. Right-to-build zoning adds +10." },
+  { icon: Flame, key: "gasAccess", label: "Gas access", weight: 0.04, formula: "state pipeline density + citygate cost (EIA)",
+    desc: "Interstate pipeline density and delivered gas cost. Given the interconnection backlog, easy gas means a credible behind-the-meter bridge to power." },
+  { icon: AlertTriangle, key: "hazardSafety", label: "Hazard safety", weight: 0.035, formula: "100 − hazardScore (FEMA National Risk Index)",
+    desc: "Inverse of combined flood, seismic, wind and wildfire exposure. Coastal and wildfire-exposed counties take a hit even with strong land supply." },
+  { icon: Droplet, key: "waterAvailability", label: "Water availability", weight: 0.03, formula: "100 − waterStressScore (USGS water use)",
+    desc: "Inverse of baseline water stress. Growing importance as liquid cooling gains share — Phoenix and Central Texas counties are penalized." },
+  { icon: Leaf, key: "carbonIntensity", label: "Grid carbon", weight: 0.03, formula: "inverse of state grid CO₂ rate, lb/MWh (EPA eGRID)",
+    desc: "Cleaner grids score higher. Hyperscalers with 24/7 carbon-free-energy targets weight this, though it rarely overrides power availability." },
 ];
 
 const signalWeights = [

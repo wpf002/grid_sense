@@ -299,7 +299,7 @@ export default function CountyDetail() {
 
       {/* Snapshot facts */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <SnapshotStat icon={Zap} label="Queued load" value={formatMw(county.queuedLoadMw)} sub="Interconnection queue" />
+        <SnapshotStat icon={Zap} label="Queued Generation" value={formatMw(county.queuedLoadMw)} sub="Generation interconnection queue" />
         <SnapshotStat icon={Cable} label="Fiber density" value={`${(county.fiberDensityScore ?? 0).toFixed(0)}/100`} sub={`${county.peeringExchangeCount ?? 0} exchanges`} />
         <SnapshotStat icon={MapPin} label="Large parcels" value={String(county.largeParcelCount ?? 0)} sub=">500 acres" />
         <SnapshotStat icon={DollarSign} label="Land price" value={county.medianLandPricePerAcre ? `$${(county.medianLandPricePerAcre / 1000).toFixed(0)}k/ac` : "—"} sub="Median" />
@@ -1100,7 +1100,7 @@ type ProvenanceRow = {
 };
 
 const PROV_FACTOR_LABEL: Record<string, string> = {
-  gridDemandIntent: "Grid demand intent",
+  gridDemandIntent: "Grid buildout activity",
   timeToPower: "Time to power",
   onsiteGeneration: "Behind-the-meter",
   landAvailability: "Parcel supply",

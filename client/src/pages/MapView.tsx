@@ -189,7 +189,7 @@ export default function MapView() {
                               {c.name} County, {c.state}
                             </div>
                             <div>Score: <span className="font-mono">{c.landing_probability}</span> · <span className="uppercase font-mono">{c.score_tier}</span></div>
-                            <div>Queued load: <span className="font-mono">{c.queued_load_mw.toLocaleString()} MW</span></div>
+                            <div>Queued generation: <span className="font-mono">{c.queued_load_mw.toLocaleString()} MW</span></div>
                             {c.existing_dc_count > 0 && (
                               <div>Existing DCs: <span className="font-mono">{c.existing_dc_count}</span></div>
                             )}
