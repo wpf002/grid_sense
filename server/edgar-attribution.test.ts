@@ -13,7 +13,11 @@ const OPERATORS: OperatorDict[] = [
     codenames: [],
   },
   { name: "Core Scientific", shellLlcs: [], codenames: [] },
-  { name: "Digital Realty", shellLlcs: [], codenames: [] },
+  // Seeded with the company's own name/ticker as if they were shells — the
+  // exact data-quality trap the "direct" reclassification guards against.
+  { name: "Applied Digital", shellLlcs: ["Applied Digital Corp", "APLD"], codenames: [] },
+  { name: "Digital Realty", shellLlcs: ["Digital Realty Trust LP"], codenames: [] },
+  { name: "Amazon (AWS)", shellLlcs: ["Vadata Inc"], codenames: [] },
   { name: "Microsoft", shellLlcs: ["Various NDA shells", "Project Pine LLC"], codenames: [] },
 ];
 
@@ -34,7 +38,27 @@ describe("attributeFiling", () => {
   it("attributes a parent by full distinctive name", () => {
     const a = attributeFiling("Digital Realty Trust, Inc.", OPERATORS);
     expect(a?.operator).toBe("Digital Realty");
-    expect(a?.matchType).toBe("parent");
+    // Contains the brand "Digital Realty" → the company's own filing, not a
+    // hidden shell. It matched a shellLlcs entry but must be labeled direct.
+    expect(a?.matchType).toBe("direct");
+  });
+
+  it("REGRESSION: a company filing under its own name is 'direct', never 'shell'", () => {
+    // These are public companies filing as themselves. Tagging them SHELL
+    // overstated the product's ability to unmask hidden buyers.
+    for (const name of ["Applied Digital Corp.", "Digital Realty Trust LP", "TeraWulf Inc."]) {
+      const a = attributeFiling(name, OPERATORS);
+      if (a) expect(a.matchType, `${name} → ${a.matchType}`).not.toBe("shell");
+    }
+    expect(attributeFiling("Applied Digital Corp.", OPERATORS)?.matchType).toBe("direct");
+  });
+
+  it("still tags a genuine anonymous shell as 'shell'", () => {
+    // Vadata reveals nothing about Amazon — this is the real, high-value case.
+    const a = attributeFiling("VADATA, INC.", OPERATORS);
+    expect(a?.operator).toBe("Amazon (AWS)");
+    expect(a?.matchType).toBe("shell");
+    expect(a?.confidence).toBeGreaterThanOrEqual(0.9);
   });
 
   it("does NOT match a generic token against an unrelated company", () => {

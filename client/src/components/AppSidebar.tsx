@@ -1,5 +1,6 @@
 import { LayoutDashboard, Map, Radio, Star, Building2, BookOpen, GitCompare, Bell, Target, Users, Lock, HeartPulse, FolderUp, LandPlot, Inbox, Table2, Code2, DollarSign, Shield, Webhook } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Sidebar,
@@ -12,6 +13,7 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 
@@ -108,6 +110,15 @@ function GridSenseLogo() {
 
 export function AppSidebar() {
   const [location] = useLocation();
+  // On mobile the sidebar is an overlay; close it once navigation lands so the
+  // page it opened isn't left hidden behind the panel. Keying off location
+  // (not a link onClick) catches every route change — nav clicks, the command
+  // palette, keyboard shortcuts — and survives Radix asChild composition, which
+  // swallowed the Link's onClick.
+  const { isMobile, setOpenMobile } = useSidebar();
+  useEffect(() => {
+    if (isMobile) setOpenMobile(false);
+  }, [location, isMobile, setOpenMobile]);
   const { data: alertCount } = useQuery<{ count: number }>({
     queryKey: ["/api/alerts/count-unack"],
     refetchInterval: 30_000,

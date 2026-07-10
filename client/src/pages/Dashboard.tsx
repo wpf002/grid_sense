@@ -80,13 +80,45 @@ export default function Dashboard() {
   const stalePipelines = freshness?.pipelines.filter((p) => p.stale) ?? [];
   const failingPipelines = freshness?.pipelines.filter((p) => p.status === "error") ?? [];
 
+  // Most recent successful ingest across all feeds → "data updated {relative}".
+  // Lets the user see at a glance that they're on current data without asking.
+  const lastUpdated = (() => {
+    const times = (freshness?.pipelines ?? [])
+      .filter((p) => p.status === "ok" && p.last_started_iso)
+      .map((p) => Date.parse(p.last_started_iso!))
+      .filter((t) => Number.isFinite(t));
+    if (!times.length) return null;
+    const mins = Math.round((Date.now() - Math.max(...times)) / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.round(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.round(hrs / 24);
+    return `${days}d ago`;
+  })();
+
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1600px] mx-auto">
       {/* Header */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold tracking-tight" data-testid="text-page-title">
-          Data Center Land Radar
-        </h1>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <h1 className="text-xl font-semibold tracking-tight" data-testid="text-page-title">
+            Data Center Land Radar
+          </h1>
+          {lastUpdated && (
+            <span
+              className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground"
+              title="News and filings refresh every 6 hours, prices and scores daily, structural feeds on their own cadence. The scheduler catches up any overdue feed automatically."
+              data-testid="text-last-updated"
+            >
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500/70" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green-500" />
+              </span>
+              Live · data updated {lastUpdated}
+            </span>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground">
           Landing-probability scores across US counties, fused from grid queues, land signals, fiber density, and operator activity.
         </p>

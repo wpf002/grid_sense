@@ -12,7 +12,15 @@ export interface OperatorDict {
   codenames: string[];
 }
 
-export type AttributionType = "shell" | "codename" | "parent";
+// shell   — an ANONYMOUS shell LLC that hides the buyer (Meta's "Raven Northbrook
+//           LLC"). The high-value signal: the company name reveals nothing.
+// codename — an internal project codename ("Hyperion", "Stargate").
+// direct   — the operator filing under a variant of its OWN name or ticker
+//           ("Applied Digital Corp", "Digital Realty Trust LP"). Still a real
+//           signal that the operator is active, but NOT a shell unmasking — a
+//           genuine shell never contains the parent's brand.
+// parent   — a loose match on the parent's brand name alone.
+export type AttributionType = "shell" | "codename" | "direct" | "parent";
 
 export interface Attribution {
   operator: string;
@@ -79,9 +87,21 @@ export function attributeFiling(
   const okWords = (term: string) => !opts.multiWordOnly || wordCount(term) >= 2;
 
   for (const op of operators) {
+    // Does the filing name itself contain the operator's own brand? If so, this
+    // isn't a hidden shell — it's the company filing under a variant of its own
+    // name. A genuine anonymous shell (Vadata for Amazon, Raven Northbrook for
+    // Meta) never contains the parent brand, so brand presence is the tell.
+    const brand = op.name.replace(/\s*\(.*\)\s*/g, "").trim();
+    const brandInCompany = isDistinctive(brand) && okWords(brand) && containsTerm(company, brand);
+
     for (const shell of op.shellLlcs ?? []) {
       if (isDistinctive(shell) && okWords(shell) && containsTerm(company, shell)) {
-        candidates.push({ operator: op.name, matchType: "shell", matchedTerm: shell, confidence: 0.9 });
+        // Reclassify an "own name / ticker" entry as direct, not a shell.
+        candidates.push(
+          brandInCompany
+            ? { operator: op.name, matchType: "direct", matchedTerm: shell, confidence: 0.8 }
+            : { operator: op.name, matchType: "shell", matchedTerm: shell, confidence: 0.9 },
+        );
       }
     }
     for (const code of op.codenames ?? []) {
@@ -89,19 +109,17 @@ export function attributeFiling(
         candidates.push({ operator: op.name, matchType: "codename", matchedTerm: code, confidence: 0.75 });
       }
     }
-    // Parent-name match: use the FULL operator name (minus parentheticals),
-    // not a short generic token. Matching "core" against "CoreSite" or
-    // "digital" against "Blue Owl Digital Infrastructure" would be a false
-    // positive; requiring the whole distinctive name ("core scientific",
-    // "digital realty") avoids that. Single short generic names are skipped.
-    const brand = op.name.replace(/\s*\(.*\)\s*/g, "").trim();
-    if (isDistinctive(brand) && okWords(brand) && containsTerm(company, brand)) {
+    // Parent-name match: the FULL operator brand (computed above), never a short
+    // generic token. Matching "core" against "CoreSite" or "digital" against
+    // "Blue Owl Digital Infrastructure" would be a false positive; requiring the
+    // whole distinctive name ("core scientific", "digital realty") avoids that.
+    if (brandInCompany) {
       candidates.push({ operator: op.name, matchType: "parent", matchedTerm: brand, confidence: 0.5 });
     }
   }
 
   if (!candidates.length) return null;
-  const rank: Record<AttributionType, number> = { shell: 3, codename: 2, parent: 1 };
+  const rank: Record<AttributionType, number> = { shell: 4, codename: 3, direct: 2, parent: 1 };
   candidates.sort((a, b) => rank[b.matchType] - rank[a.matchType] || b.confidence - a.confidence);
   return candidates[0];
 }

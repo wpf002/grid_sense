@@ -3,7 +3,7 @@ import { formatDay } from "@/lib/dates";
 import { humanize } from "@/lib/utils";
 import { useState } from "react";
 import { Link } from "wouter";
-import { Building2, ChevronDown, ChevronUp, Sparkles, ExternalLink, LandPlot, FileText, Flame, Newspaper, Radar } from "lucide-react";
+import { Building2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Sparkles, ExternalLink, LandPlot, FileText, Flame, Newspaper, Radar } from "lucide-react";
 import type { Operator } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -270,7 +270,7 @@ function OperatorPlaybook({ name }: { name: string }) {
 
 interface Attribution {
   operator: string;
-  matchType: "shell" | "codename" | "parent";
+  matchType: "shell" | "codename" | "direct" | "parent";
   matchedTerm: string;
   confidence: number;
 }
@@ -291,16 +291,29 @@ interface ShellHitsResp {
 const MATCH_STYLES: Record<Attribution["matchType"], string> = {
   shell: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/40",
   codename: "bg-violet-500/15 text-violet-700 dark:text-violet-400 border-violet-500/40",
-  parent: "bg-sky-500/15 text-sky-700 dark:text-sky-400 border-sky-500/40",
+  direct: "bg-sky-500/15 text-sky-700 dark:text-sky-400 border-sky-500/40",
+  parent: "bg-muted text-muted-foreground border-border",
+};
+
+// Honest labels. "Shell" is reserved for a genuinely anonymous LLC that hides
+// the buyer; a company filing under its own name is "Own Filing", not a shell.
+const MATCH_LABELS: Record<Attribution["matchType"], string> = {
+  shell: "Shell LLC",
+  codename: "Codename",
+  direct: "Own Filing",
+  parent: "Parent Co.",
 };
 
 // Hero feed: SEC EDGAR filings attributed to a tracked operator via its
 // shell-LLC dictionary, project codenames, or parent name. Nothing else on the
 // market productizes EDGAR full-text → operator attribution.
+const FILINGS_PER_PAGE = 8;
+
 function AttributedFilings() {
   const { data, isLoading } = useQuery<ShellHitsResp>({
     queryKey: ["/api/edgar/shell-hits"],
   });
+  const [page, setPage] = useState(0);
   return (
     <Card data-testid="card-attributed-filings" className="border-primary/30">
       <CardHeader className="pb-3">
@@ -316,8 +329,13 @@ function AttributedFilings() {
           )}
         </div>
         <p className="text-xs text-muted-foreground">
-          Recent SEC filings we've traced back to a specific operator — matched by
-          their shell-LLC name, an internal project codename, or the parent company.
+          Recent SEC filings traced to a tracked operator — matched by an anonymous
+          shell-LLC name, an internal codename, or the company's own name. Most SEC
+          filers use their own name (labeled <span className="font-medium">Own Filing</span>);
+          a genuinely anonymous <span className="font-medium">Shell LLC</span> that hides
+          the buyer is rare in SEC data, because hyperscalers acquire land through those
+          shells at the county level, not via 8-Ks. See the operator playbooks below for
+          the documented shell-LLC list.
         </p>
       </CardHeader>
       <CardContent>
@@ -338,30 +356,67 @@ function AttributedFilings() {
                   </Badge>
                 ))}
             </div>
-            <div className="space-y-1.5 max-h-72 overflow-y-auto">
-              {data.hits.slice(0, 25).map((h) => (
-                <div key={h.id} className="text-[11px] rounded border border-border p-2" data-testid={`attr-filing-${h.id}`}>
-                  <div className="flex items-start justify-between gap-2 mb-0.5">
-                    <span className="font-medium truncate">{h.attribution.operator}</span>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <Badge className={`text-[9px] uppercase ${MATCH_STYLES[h.attribution.matchType]}`}>
-                        {humanize(h.attribution.matchType)}
-                      </Badge>
-                      <span className="text-[10px] text-muted-foreground font-mono">{h.filedDate}</span>
+            {(() => {
+              const pageCount = Math.max(1, Math.ceil(data.hits.length / FILINGS_PER_PAGE));
+              const pageSafe = Math.min(page, pageCount - 1);
+              const paged = data.hits.slice(pageSafe * FILINGS_PER_PAGE, pageSafe * FILINGS_PER_PAGE + FILINGS_PER_PAGE);
+              const rangeStart = data.hits.length === 0 ? 0 : pageSafe * FILINGS_PER_PAGE + 1;
+              const rangeEnd = Math.min(data.hits.length, (pageSafe + 1) * FILINGS_PER_PAGE);
+              return (
+                <>
+                  <div className="space-y-1.5">
+                    {paged.map((h) => (
+                      <div key={h.id} className="text-[11px] rounded border border-border p-2" data-testid={`attr-filing-${h.id}`}>
+                        <div className="flex items-start justify-between gap-2 mb-0.5">
+                          <span className="font-medium truncate">{h.attribution.operator}</span>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <Badge className={`text-[9px] uppercase ${MATCH_STYLES[h.attribution.matchType]}`}>
+                              {MATCH_LABELS[h.attribution.matchType]}
+                            </Badge>
+                            <span className="text-[10px] text-muted-foreground font-mono">{h.filedDate}</span>
+                          </div>
+                        </div>
+                        <div className="text-muted-foreground truncate">{h.company}</div>
+                        <div className="flex items-center justify-between gap-2 mt-0.5">
+                          <span className="text-[10px] text-muted-foreground">
+                            Matched “{h.attribution.matchedTerm}” in a {h.formType}
+                          </span>
+                          <a href={h.filingUrl} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary shrink-0">
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {pageCount > 1 && (
+                    <div className="flex items-center justify-between border-t pt-3">
+                      <span className="text-[11px] text-muted-foreground" data-testid="text-filing-range">
+                        Showing {rangeStart}–{rangeEnd} of {data.hits.length}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm" variant="outline" className="h-7 gap-1 text-[11px]"
+                          disabled={pageSafe === 0}
+                          onClick={() => setPage((p) => Math.max(0, p - 1))}
+                          data-testid="button-filing-prev"
+                        >
+                          <ChevronLeft className="h-3 w-3" /> Previous
+                        </Button>
+                        <span className="text-[11px] text-muted-foreground">Page {pageSafe + 1} of {pageCount}</span>
+                        <Button
+                          size="sm" variant="outline" className="h-7 gap-1 text-[11px]"
+                          disabled={pageSafe >= pageCount - 1}
+                          onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+                          data-testid="button-filing-next"
+                        >
+                          Next <ChevronRight className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-muted-foreground truncate">{h.company}</div>
-                  <div className="flex items-center justify-between gap-2 mt-0.5">
-                    <span className="text-[10px] text-muted-foreground">
-                      Matched “{h.attribution.matchedTerm}” in a {h.formType}
-                    </span>
-                    <a href={h.filingUrl} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary shrink-0">
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
       </CardContent>
