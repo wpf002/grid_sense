@@ -109,15 +109,32 @@ function RankQualityCard() {
             <div className="text-xs text-muted-foreground">Optimistic — see below.</div>
           </div>
         </div>
-        <div className="rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2.5 text-xs text-muted-foreground">
-          <span className="font-medium text-amber-600 dark:text-amber-400">Known limitation: partial label leakage.</span>{" "}
-          Scores are current, not point-in-time. News published <em className="not-italic font-medium">after</em> an
-          announcement becomes a signal in that county, so the boosted figure partly reads the answer. The boost averages{" "}
-          <span className="font-mono">{data.meanBoostPositives?.toFixed(2)}</span> points in announced counties vs{" "}
-          <span className="font-mono">{data.meanBoostAllCounties?.toFixed(2)}</span> everywhere else
-          {concentration ? ` (${concentration}x)` : ""}, and only {data.positivesWithSignal} of {data.positives} carry one.
-          Stripped of signals the model still ranks real landings at {pct(data.meanPercentileFactorsOnly)}, so the factor
-          model stands on its own. A true point-in-time backtest needs history that only starts accumulating now.
+        <div className="space-y-2 rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2.5 text-xs text-muted-foreground">
+          <div>
+            <span className="font-medium text-amber-600 dark:text-amber-400">
+              Known limitation: partial label leakage.
+            </span>{" "}
+            <em className="not-italic font-medium text-foreground">Leakage</em> means the test accidentally sees
+            the answer it's being graded on. Here's how it happens: when a data center is announced, reporters
+            write about that county. We ingest that news as a signal, and signals raise the county's score. So a
+            county can look high-scoring <em className="not-italic font-medium">because</em> it was announced —
+            the opposite of predicting it.
+          </div>
+          <div>
+            The evidence that this is happening: the signal boost is worth{" "}
+            <span className="font-mono">{data.meanBoostPositives?.toFixed(2)}</span> points in announced counties
+            but only <span className="font-mono">{data.meanBoostAllCounties?.toFixed(2)}</span> everywhere else
+            {concentration ? ` — ${concentration}x more` : ""}. It's concentrated exactly where the answers are.
+            (It's only <em className="not-italic font-medium">partial</em> leakage because just{" "}
+            {data.positivesWithSignal} of {data.positives} announced counties carry a signal at all.)
+          </div>
+          <div>
+            So read the left number, not the right one. With signals stripped out entirely, the factor model still
+            ranks real landings at{" "}
+            <span className="font-medium text-foreground">{pct(data.meanPercentileFactorsOnly)}</span> — it stands
+            on its own without peeking. Settling this properly needs a point-in-time backtest, which requires score
+            history from before each announcement. That history only starts accumulating now.
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -154,9 +171,9 @@ export default function Backtest() {
           Backtest — Announced AI Data Centers 2024-2026
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Curated list of publicly announced hyperscaler AI data-center projects across {new Set(rows.map((r) => r.fips)).size} US counties.
-          For each, we check: did GridSense's current score flag this county as hot (score ≥ 70) or warm (55-70)?
-          A working siting model should have all of these lit up before the press releases dropped.
+          Every hyperscaler AI data center publicly announced across {new Set(rows.map((r) => r.fips)).size} US
+          counties. These are the answers. For each one we ask: does GridSense score that county highly today?
+          A model worth trusting would have lit these counties up before the press releases dropped.
         </p>
       </div>
 
@@ -169,8 +186,10 @@ export default function Backtest() {
             <CardTitle className="text-xs font-medium text-muted-foreground">Hit Rate (≥ 70)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-primary">{(summary.hit_rate * 100).toFixed(0)}%</div>
-            <div className="text-xs text-muted-foreground">{summary.hits} of {summary.total - summary.not_tracked} tracked</div>
+            <div className="text-xl font-semibold text-primary">{(summary.hit_rate * 100).toFixed(0)}%</div>
+            <div className="text-xs text-muted-foreground">
+              {summary.hits} of {summary.total - summary.not_tracked} announced counties we score as hot
+            </div>
           </CardContent>
         </Card>
         <Card data-testid="tile-hit-near-rate">
@@ -178,8 +197,10 @@ export default function Backtest() {
             <CardTitle className="text-xs font-medium text-muted-foreground">Hit + Near (≥ 55)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold">{(summary.hit_plus_near_rate * 100).toFixed(0)}%</div>
-            <div className="text-xs text-muted-foreground">{summary.hits + summary.nears} of {summary.total - summary.not_tracked}</div>
+            <div className="text-xl font-semibold">{(summary.hit_plus_near_rate * 100).toFixed(0)}%</div>
+            <div className="text-xs text-muted-foreground">
+              {summary.hits + summary.nears} of {summary.total - summary.not_tracked} score hot or warm
+            </div>
           </CardContent>
         </Card>
         <Card data-testid="tile-misses">
@@ -187,8 +208,10 @@ export default function Backtest() {
             <CardTitle className="text-xs font-medium text-muted-foreground">Misses</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-destructive">{summary.misses}</div>
-            <div className="text-xs text-muted-foreground">Score below 55</div>
+            <div className="text-xl font-semibold text-destructive">{summary.misses}</div>
+            <div className="text-xs text-muted-foreground">
+              Real data centers landed here, but we score the county below 55. The model overlooked them.
+            </div>
           </CardContent>
         </Card>
         <Card data-testid="tile-not-tracked">
@@ -196,8 +219,8 @@ export default function Backtest() {
             <CardTitle className="text-xs font-medium text-muted-foreground">Not Tracked</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-muted-foreground">{summary.not_tracked}</div>
-            <div className="text-xs text-muted-foreground">County outside tracked-county universe</div>
+            <div className="text-xl font-semibold text-muted-foreground">{summary.not_tracked}</div>
+            <div className="text-xs text-muted-foreground">Announced in a county we don't score at all</div>
           </CardContent>
         </Card>
         <Card data-testid="tile-total">
@@ -205,7 +228,7 @@ export default function Backtest() {
             <CardTitle className="text-xs font-medium text-muted-foreground">Announcements</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold">{summary.total}</div>
+            <div className="text-xl font-semibold">{summary.total}</div>
             <div className="text-xs text-muted-foreground">2024-2026 rolling</div>
           </CardContent>
         </Card>

@@ -34,12 +34,7 @@ export default function Triggers({ embedded = false }: { embedded?: boolean } = 
   const [windowDays, setWindowDays] = useState("90");
 
   const { data: triggers, isLoading } = useQuery<TriggerCounty[]>({
-    queryKey: ["/api/triggers", minCount, windowDays],
-    queryFn: async () => {
-      const res = await fetch(`/api/triggers?min=${minCount}&days=${windowDays}`);
-      if (!res.ok) throw new Error("Failed to load triggers");
-      return res.json();
-    },
+    queryKey: [`/api/triggers?min=${minCount}&days=${windowDays}`],
   });
 
   const summary = useMemo(() => {

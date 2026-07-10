@@ -13,6 +13,12 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["server/**/*.test.ts", "shared/**/*.test.ts"],
+    // Date-only columns used to render a day early for anyone west of UTC.
+    // Pin a non-UTC zone so client/src/lib/dates.test.ts actually catches it;
+    // in UTC those assertions would pass without testing anything.
+    env: { TZ: "America/Chicago" },
+    // client/src/lib holds pure, DOM-free helpers, so they run in the node env
+    // alongside the server tests. Component tests would need jsdom; none yet.
+    include: ["server/**/*.test.ts", "shared/**/*.test.ts", "client/src/lib/**/*.test.ts"],
   },
 });

@@ -50,11 +50,7 @@ export default function Permits({ embedded = false }: { embedded?: boolean } = {
   const [q, setQ] = useState("");
 
   const { data, isLoading } = useQuery<Permit[]>({
-    queryKey: ["/api/permits/recent", 200],
-    queryFn: async () => {
-      const r = await fetch("/api/permits/recent?limit=200");
-      return r.json();
-    },
+    queryKey: ["/api/permits/recent?limit=200"],
   });
 
   const rows = useMemo(() => {
@@ -124,7 +120,7 @@ export default function Permits({ embedded = false }: { embedded?: boolean } = {
           <Card key={s}>
             <CardContent className="pt-4">
               <div className="text-xs text-muted-foreground capitalize">{s.replace("_", " ")}</div>
-              <div className="text-2xl font-semibold">{counts[s] ?? 0}</div>
+              <div className="text-xl font-semibold">{counts[s] ?? 0}</div>
             </CardContent>
           </Card>
         ))}

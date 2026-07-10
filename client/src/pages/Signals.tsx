@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { dayParts } from "@/lib/dates";
 import { humanize } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -201,12 +202,12 @@ export default function Signals({ embedded = false }: { embedded?: boolean } = {
                 <div className="flex items-start gap-4">
                   <div className="flex flex-col items-center gap-1 shrink-0 w-16">
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      {new Date(s.detectedAt).toLocaleDateString("en-US", { month: "short" })}
+                      {dayParts(s.detectedAt).month}
                     </div>
                     <div className="text-lg font-semibold tabular-nums leading-none">
-                      {new Date(s.detectedAt).getDate()}
+                      {dayParts(s.detectedAt).day}
                     </div>
-                    <div className="text-[10px] text-muted-foreground">{new Date(s.detectedAt).getFullYear()}</div>
+                    <div className="text-[10px] text-muted-foreground">{dayParts(s.detectedAt).year}</div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">

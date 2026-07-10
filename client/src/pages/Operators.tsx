@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { formatDay } from "@/lib/dates";
 import { humanize } from "@/lib/utils";
 import { useState } from "react";
 import { Link } from "wouter";
@@ -58,11 +59,9 @@ interface ActivityResp {
   totals: { parcels: number; permits: number; bids: number; signals: number };
 }
 
+// filed_date is date-only; formatDay keeps it on its own calendar day.
 function fmtActDate(d?: string | null) {
-  if (!d) return "—";
-  const dt = new Date(d);
-  if (isNaN(dt.getTime())) return d;
-  return dt.toLocaleDateString();
+  return formatDay(d) || "—";
 }
 
 function OperatorActivity({ name }: { name: string }) {

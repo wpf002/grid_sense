@@ -32,7 +32,6 @@ const STAGE_STYLE: Record<string, string> = {
 export default function CompetitiveBids({ embedded = false }: { embedded?: boolean } = {}) {
   const { data: heat, isLoading } = useQuery<HeatRow[]>({
     queryKey: ["/api/competitive-bids/heat"],
-    queryFn: async () => (await fetch("/api/competitive-bids/heat")).json(),
   });
 
   const totals = useMemo(() => {
@@ -92,22 +91,22 @@ export default function CompetitiveBids({ embedded = false }: { embedded?: boole
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card><CardContent className="pt-4">
           <div className="text-xs text-muted-foreground">Contested counties</div>
-          <div className="text-2xl font-semibold">{totals.hot_counties}</div>
+          <div className="text-xl font-semibold">{totals.hot_counties}</div>
           <div className="text-[10px] text-muted-foreground">2+ operators active</div>
         </CardContent></Card>
         <Card><CardContent className="pt-4">
           <div className="text-xs text-muted-foreground">Total signals</div>
-          <div className="text-2xl font-semibold">{totals.total_bids}</div>
+          <div className="text-xl font-semibold">{totals.total_bids}</div>
           <div className="text-[10px] text-muted-foreground">last 180 days</div>
         </CardContent></Card>
         <Card><CardContent className="pt-4">
           <div className="text-xs text-muted-foreground">Active deals</div>
-          <div className="text-2xl font-semibold">{totals.active_deals}</div>
+          <div className="text-xl font-semibold">{totals.active_deals}</div>
           <div className="text-[10px] text-muted-foreground">LOI · option · UC · closed</div>
         </CardContent></Card>
         <Card><CardContent className="pt-4">
           <div className="text-xs text-muted-foreground">Operators observed</div>
-          <div className="text-2xl font-semibold">{totals.unique_operators}</div>
+          <div className="text-xl font-semibold">{totals.unique_operators}</div>
         </CardContent></Card>
       </div>
 

@@ -1,5 +1,6 @@
 import { ExternalLink, MapPin, Building2, FileText, Calendar, Gauge, Weight, Clock, Radio } from "lucide-react";
 import type { Signal } from "@shared/schema";
+import { formatDay } from "@/lib/dates";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
@@ -48,9 +49,8 @@ const SIGNAL_TYPE_META: Record<string, { label: string; description: string; typ
   },
 };
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-}
+// detectedAt is a date-only string; formatDay keeps it on its own calendar day.
+const formatDate = (iso: string) => formatDay(iso, { month: "long", day: "numeric", year: "numeric" });
 
 interface SignalDetailModalProps {
   signal: Signal | null;

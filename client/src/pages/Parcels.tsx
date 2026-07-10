@@ -52,11 +52,7 @@ export default function Parcels({ embedded = false }: { embedded?: boolean } = {
   const [shellOnly, setShellOnly] = useState(false);
   const [query, setQuery] = useState("");
   const { data, isLoading } = useQuery<Parcel[]>({
-    queryKey: ["/api/parcels/top", 200],
-    queryFn: async () => {
-      const r = await fetch("/api/parcels/top?limit=200");
-      return r.json();
-    },
+    queryKey: ["/api/parcels/top?limit=200"],
   });
 
   const rows = useMemo(() => {

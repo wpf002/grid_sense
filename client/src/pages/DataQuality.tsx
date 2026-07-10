@@ -134,7 +134,7 @@ export default function DataQuality({ embedded = false }: { embedded?: boolean }
                       <Icon className="h-3 w-3" />
                       {QUALITY_LABEL[q]}
                     </div>
-                    <div className="text-2xl font-semibold tracking-tight tabular-nums" data-testid={`text-${q}-count`}>{c}</div>
+                    <div className="text-xl font-semibold tracking-tight tabular-nums" data-testid={`text-${q}-count`}>{c}</div>
                     <div className="text-xs text-muted-foreground">{pct}% of {total} provenance entries</div>
                   </div>
                 </div>
@@ -169,7 +169,7 @@ export default function DataQuality({ embedded = false }: { embedded?: boolean }
                   </a>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="text-2xl font-semibold tabular-nums">
+                  <div className="text-xl font-semibold tabular-nums">
                     {p.name.startsWith("EIA") ? data?.ingestion.eiaGenerators
                       : p.name.startsWith("HIFLD") ? data?.ingestion.hifldTransmissionCounties
                       : p.name.startsWith("SEC") ? data?.ingestion.edgarFilings

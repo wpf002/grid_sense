@@ -289,28 +289,44 @@ export default function Methodology() {
       {/* Prototype scope */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Current Scope · v2.0</CardTitle>
+          <CardTitle className="text-base">Current Scope · v2.1</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
           <p>
             This build tracks <strong className="text-foreground">3,109 US counties</strong>, seeded from a curated list and
             auto-expanded to include every county with material queue-MW activity across <strong className="text-foreground">
-            all seven US ISO/RTO interconnection queues</strong> — PJM, MISO, ERCOT, ISO-NE, SPP, CAISO, and NYISO.
-            <strong className="text-foreground"> All ten scoring factors are now backed by real public data</strong>:
+            all seven US ISO/RTO interconnection queues</strong> — PJM, MISO, ERCOT, ISO-NE, SPP, CAISO, and NYISO —
+            plus the non-RTO West via the LBNL "Queued Up" dataset.
+            <strong className="text-foreground"> All 13 scoring factors are backed by real public data</strong>:
             grid demand intent (ISO queues), hazard safety (FEMA NRI), onsite generation (EIA-860), cluster adjacency (HIFLD),
-            time-to-power (queue withdrawal ratio), fiber connectivity (FCC BDC Dec 2024), water availability (USGS 2015),
-            land affordability (USDA NASS 2025), parcel supply (USDA ERS RUCC 2023), and fiscal incentives (state DC tax matrix).
-            Data quality is stamped per factor per county — every value carries provenance you can inspect on the
-            county detail page or the Data quality view.
+            time-to-power (median queue-to-service duration), fiber connectivity (FCC BDC + PeeringDB), water availability (USGS 2015),
+            land affordability (USDA NASS 2025), parcel supply (USDA ERS RUCC 2023), fiscal incentives (state DC tax matrix),
+            plus cooling efficiency, gas access, and carbon intensity. Data quality is stamped per factor per county —
+            every value carries provenance you can inspect on the county detail page or the Data Quality view.
+            Provenance currently runs about <strong className="text-foreground">84% real, 8% partial, 8% synthetic</strong>.
+          </p>
+          <p>
+            <strong className="text-foreground">v2.1 additions:</strong> Four upgrades, each replacing a proxy with a
+            measurement.
+            (1) <strong className="text-foreground">Real wholesale power prices</strong> — hub settlement prices from
+            EIA/ICE and the ERCOT day-ahead market replace the state industrial retail rate that had been standing in
+            as an LMP proxy. The spread is real: PJM West clears at $93.11/MWh against $14.38 at Mid-Columbia. Counties
+            in regions with no published hub (SPP, NYISO, TVA, the Southeast) show no price rather than an invented one.
+            (2) <strong className="text-foreground">Real time-to-power</strong> — the median queue-submission-to-in-service
+            duration for each county's own dated projects, replacing the withdrawal-ratio proxy. Now real for 1,915 counties.
+            (3) <strong className="text-foreground">LBNL non-RTO queue</strong> — 515 additional counties and 444 GW across
+            Arizona, Oregon, and Washington, which no RTO queue covers.
+            (4) <strong className="text-foreground">ISO-NE queue repaired</strong> — 1,576 projects across 67 New England
+            counties that had been silently missing.
           </p>
           <p>
             <strong className="text-foreground">v2.0 additions:</strong> Three major data expansions.
             (1) <strong className="text-foreground">HIFLD transmission lines</strong> — 60,937 line segments across 624
             counties from the NETL DOE mirror (original HIFLD Open portal shut down Aug 2025), showing max kV
             and total km of transmission by voltage class per county. Loudoun VA has 1,725 km; Maricopa AZ has 3,478 km.
-            (2) <strong className="text-foreground">EIA power price</strong> — April 2026 industrial retail rates from
-            EIA Electric Power Monthly Table 5.6.A, all 51 states, median 8.75¢/kWh with YoY change. Used as a
-            state-level LMP proxy until we integrate nodal pricing.
+            (2) <strong className="text-foreground">EIA power price</strong> — state industrial retail rates from
+            EIA Electric Power Monthly Table 5.6.A. Superseded by real wholesale hub prices in v2.1; still shown on the
+            county page as a retail reference.
             (3) <strong className="text-foreground">Shell-LLC registry expanded to 204 entries</strong> across 24 operators
             and 81 counties — up from 39. Now includes Meta (60+), Google (25+), Microsoft (20+), Amazon (25+), Apple,
             Oracle, ByteDance, xAI, OpenAI/Stargate, CoreWeave, and REIT developers.
@@ -354,9 +370,22 @@ export default function Methodology() {
             tracked counties covered).
           </p>
           <p>
-            <strong className="text-foreground">Next up:</strong> EIA-861 utility service territories,
-            PeeringDB internet exchange proximity, and shell-LLC ↔ operator resolution across EDGAR + state
-            corporate registries.
+            <strong className="text-foreground">Shipped since that list was written:</strong> EIA-861 utility service
+            territories (11,752 utility-county rows), PeeringDB internet-exchange proximity (now blended into the fiber
+            factor for 3,080 counties), and shell-LLC ↔ operator resolution across EDGAR (45 operators, 204 LLCs).
+          </p>
+          <p>
+            <strong className="text-foreground">Next up, and why:</strong>{" "}
+            <strong className="text-foreground">A point-in-time backtest.</strong> Today's backtest scores counties as
+            they look now, so news published after an announcement leaks into the score — see the Backtest page for the
+            size of that effect. Nightly score snapshots started accumulating recently; once there's enough history to
+            score each county as of the day before its announcement, we can measure the model honestly rather than
+            bounding it.{" "}
+            <strong className="text-foreground">A project-level large-load queue</strong> is the other gap: no public,
+            machine-readable, county-tagged dataset of data-center interconnection <em className="not-italic font-medium">requests</em> exists
+            today. ERCOT publishes its figure only inside image-based PDFs. FERC docket RM26-4 is forcing disclosure; until
+            it lands, the queued-MW figure on every county is the <em className="not-italic font-medium">generation</em> queue,
+            not the load queue, and we label it that way.
           </p>
         </CardContent>
       </Card>

@@ -111,7 +111,7 @@ export default function Pricing() {
                   <CardTitle className="text-base">{t.name}</CardTitle>
                 </div>
                 <div>
-                  <div className="text-2xl font-semibold tracking-tight">{t.price}</div>
+                  <div className="text-xl font-semibold tracking-tight">{t.price}</div>
                   <div className="text-xs text-muted-foreground">{t.frequency}</div>
                 </div>
                 <p className="text-xs text-muted-foreground">{t.tagline}</p>

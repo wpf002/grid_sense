@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { humanize } from "@/lib/utils";
+import { formatDay } from "@/lib/dates";
 import { useState } from "react";
 import { Link } from "wouter";
 import { Flame, Thermometer, Sprout, Snowflake, Zap, Radio, TrendingUp, MapPin, Globe, ArrowRight, AlertTriangle, Clock, Sparkles, X, LandPlot, FileCheck2, Swords, Inbox, Map as MapIcon, Code2, DollarSign } from "lucide-react";
@@ -27,10 +28,8 @@ function formatMw(mw: number): string {
   return `${mw.toFixed(0)} MW`;
 }
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
+// detectedAt is a date-only string; formatDay keeps it on its own calendar day.
+const formatDate = (iso: string) => formatDay(iso);
 
 // Readable labels for raw pipeline slugs shown in the freshness banner.
 const PIPELINE_LABELS: Record<string, string> = {
@@ -63,12 +62,7 @@ export default function Dashboard() {
   const { data: counties, isLoading: countiesLoading } = useQuery<County[]>({ queryKey: ["/api/counties"] });
   const { data: signals, isLoading: signalsLoading } = useQuery<Signal[]>({ queryKey: ["/api/signals"] });
   const { data: triggers } = useQuery<TriggerCounty[]>({
-    queryKey: ["/api/triggers"],
-    queryFn: async () => {
-      const res = await fetch("/api/triggers?min=3&days=90");
-      if (!res.ok) throw new Error("Failed to load triggers");
-      return res.json();
-    },
+    queryKey: ["/api/triggers?min=3&days=90"],
   });
 
   const topCounties = counties?.slice(0, 12) ?? [];
