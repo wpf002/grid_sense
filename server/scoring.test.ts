@@ -62,6 +62,20 @@ describe("FACTOR_WEIGHTS", () => {
     const sum = Object.values(FACTOR_WEIGHTS).reduce((a, b) => a + b, 0);
     expect(sum).toBeCloseTo(1.0, 6);
   });
+
+  // powerPrice is defined but weighted 0 by default: a backtest sweep showed it
+  // costs precision (announced counties average $48.64/MWh vs $55.00 overall —
+  // only 12% cheaper, and PJM is both the priciest hub and the busiest market).
+  // GRIDSENSE_POWER_WEIGHT can turn it on; the other 13 keep their ratios.
+  it("weights powerPrice at 0 unless GRIDSENSE_POWER_WEIGHT is set", () => {
+    expect(FACTOR_WEIGHTS.powerPrice).toBe(0);
+  });
+
+  it("omits zero-weight factors from the scored output", () => {
+    const keys = computeCountyFactorsV5(county()).map((f) => f.key);
+    expect(keys).not.toContain("powerPrice");
+    expect(keys).toHaveLength(13);
+  });
 });
 
 describe("computeCountyFactorsV5", () => {

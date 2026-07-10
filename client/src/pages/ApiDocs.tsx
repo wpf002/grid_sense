@@ -27,49 +27,64 @@ const ENDPOINTS: Endpoint[] = [
     "fips": "48441",
     "name": "Taylor",
     "state": "TX",
-    "landingProbability": 88.0,
+    "landingProbability": 86.0,
     "scoreTier": "hot",
-    "queuedLoadMw": 4800,
+    "queuedLoadMw": 3422,
     "iso": "ERCOT"
   }
 ]`,
   },
   {
     method: "GET", path: "/api/counties/:fips", category: "counties",
-    summary: "Detailed factor breakdown, sub-scores, and metadata for one county.",
+    summary: "Full record for one county: score, tier, and the underlying metadata.",
     example: `curl https://gridsense.app/api/counties/48441`,
     responseExample: `{
   "fips": "48441",
   "name": "Taylor",
-  "landingProbability": 88.0,
+  "state": "TX",
+  "iso": "ERCOT",
+  "baseScore": 70.98,
+  "signalBoost": 15,
+  "landingProbability": 86.0,
   "scoreTier": "hot",
-  "factorBreakdown": {
-    "power": 92,
-    "land": 84,
-    "water": 71,
-    "policy": 89
-  }
+  "queuedLoadMw": 3422,
+  "timeToPowerMonths": 24
 }`,
+  },
+  {
+    method: "GET", path: "/api/counties/:fips/factors", category: "counties",
+    summary: "The 13 scored factors for one county — value, weight, contribution, and the data quality behind each.",
+    example: `curl https://gridsense.app/api/counties/48441/factors`,
+    responseExample: `[
+  {
+    "key": "gridDemandIntent",
+    "value": 78.4,
+    "weight": 0.105,
+    "contribution": 8.23,
+    "quality": "real"
+  }
+]`,
   },
   {
     method: "GET", path: "/api/counties/:fips/history", category: "counties",
     summary: "Daily score snapshots for the last 90 days (score_history_daily).",
     example: `curl https://gridsense.app/api/counties/48441/history`,
     responseExample: `[
-  { "snapshot_date": "2026-07-05", "score": 88.0 },
-  { "snapshot_date": "2026-07-04", "score": 87.5 }
+  { "snapshot_date": "2026-07-05", "score": 86.0 },
+  { "snapshot_date": "2026-07-04", "score": 85.5 }
 ]`,
   },
   {
     method: "GET", path: "/api/counties/:fips/provenance", category: "counties",
-    summary: "Source-of-truth records for every scoring factor on this county.",
+    summary: "Source-of-truth records for every scoring factor on this county. Quality is real, partial, or synthetic.",
     example: `curl https://gridsense.app/api/counties/48441/provenance`,
     responseExample: `[
   {
-    "factor_key": "queued_load_mw",
-    "quality": "verified",
-    "source_name": "ERCOT GIS Report",
-    "source_url": "https://www.ercot.com/gridinfo/resource"
+    "factor_key": "gridDemandIntent",
+    "quality": "real",
+    "source_name": "ERCOT interconnection queue",
+    "source_url": "https://www.ercot.com/gridinfo/resource",
+    "note": "ISO queue: 3422 MW"
   }
 ]`,
   },
@@ -78,7 +93,7 @@ const ENDPOINTS: Endpoint[] = [
     summary: "Lightweight payload for map rendering: fips, lat/lng, tier, score.",
     example: `curl https://gridsense.app/api/counties/map`,
     responseExample: `[
-  { "fips": "48441", "lat": 32.3, "lng": -99.7, "landing_probability": 88.0, "score_tier": "hot" }
+  { "fips": "48441", "lat": 32.3, "lng": -99.7, "landing_probability": 86.0, "score_tier": "hot" }
 ]`,
   },
   {
@@ -97,7 +112,7 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     method: "GET", path: "/api/operators", category: "operators",
-    summary: "45+ tracked operators with shell LLC names, codenames, and capex.",
+    summary: "45 tracked operators with shell LLC names, codenames, and capex.",
     example: `curl https://gridsense.app/api/operators`,
     responseExample: `[
   {
@@ -149,7 +164,7 @@ const ENDPOINTS: Endpoint[] = [
     summary: "Authenticated user's watchlist. Cookie-based session required.",
     example: `curl -b cookies.txt https://gridsense.app/api/user/watchlist`,
     responseExample: `[
-  { "fips": "48441", "note": "Priority 1", "score_today_snap": 88.0 }
+  { "fips": "48441", "note": "Priority 1", "score_today_snap": 86.0 }
 ]`,
   },
   {
@@ -163,8 +178,8 @@ const ENDPOINTS: Endpoint[] = [
     summary: "Bulk export scored counties as CSV or JSON. Filter by tier, state, iso, or minimum score. Streaming, up to 5,000 rows.",
     example: `curl 'https://gridsense.app/api/exports/counties?tier=hot&format=csv' -o hot-counties.csv`,
     responseExample: `fips,name,state,iso,landing_probability,score_tier,queued_load_mw,...
-48441,Taylor,TX,ERCOT,88.0,hot,1420,...
-51107,Loudoun,VA,PJM,86.4,hot,2185,...`,
+48441,Taylor,TX,ERCOT,86.0,hot,3422,...
+51107,Loudoun,VA,PJM,81.0,hot,1515,...`,
   },
   {
     method: "POST", path: "/api/webhooks", category: "user",

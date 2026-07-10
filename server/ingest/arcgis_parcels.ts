@@ -10,13 +10,12 @@
 import { sqlite } from "../storage.js";
 import { beginRun, fetchJson } from "./util.js";
 import { attributeFiling, type OperatorDict } from "../edgar-attribution.js";
+import { AREA_DIV, toAcres, isPlausibleParcelPrice } from "./units.js";
 
 const DAY = 24 * 3600 * 1000;
 const MIN_ACRES = 20;
 const MAX_ACRES = 5000; // above this = parks / public / water, not a DC site
 const CAP = 1200;
-// Divisor to convert an area field to acres.
-const AREA_DIV: Record<string, number> = { sqft: 43560, sqm: 4046.86 };
 
 interface ParcelSource {
   key: string;
@@ -165,26 +164,16 @@ async function fetchParcels(src: ParcelSource): Promise<Row[]> {
     const feats = j?.features ?? [];
     for (const f of feats) {
       const a = f.attributes ?? {};
-      // Convert the raw area field to acres. For sqft/sqm layers this divides by
-      // AREA_DIV; for acre-native layers div is 1. Without this the post-filter
-      // compared raw square footage (hundreds of thousands) against the 20–5000
-      // acre band and rejected every parcel — why all sqft/sqm counties came back empty.
-      let acres = Number(a[src.acresField]) / div;
+      const acres = toAcres(a[src.acresField], src.areaUnit);
       const apn = a[src.idField];
       if (!apn || !Number.isFinite(acres) || acres < MIN_ACRES || acres > MAX_ACRES) continue;
       const rawPrice = priceField ? Number(a[priceField]) : NaN;
-      // Keep only plausible amounts. Reject $0/nominal transfers and, via a
-      // per-acre band, the artifacts common in raw assessor price fields —
-      // bulk/portfolio sale totals smeared across parcels, or data errors.
-      // Ceiling $5M/acre is ~3x the priciest US data-center dirt (Loudoun).
-      const perAcre = Number.isFinite(rawPrice) && acres > 0 ? rawPrice / acres : NaN;
-      const priceOk = Number.isFinite(rawPrice) && rawPrice > 1000 && perAcre >= 500 && perAcre <= 5_000_000;
       out.push({
         apn: String(apn),
         acres: Math.round(acres * 100) / 100,
         zoning: src.zoningField ? (a[src.zoningField] ?? null) : null,
         owner: src.ownerField ? (a[src.ownerField] ?? null) : null,
-        price: priceOk ? Math.round(rawPrice) : null,
+        price: isPlausibleParcelPrice(rawPrice, acres) ? Math.round(rawPrice) : null,
       });
     }
     if (feats.length < src.pageSize) break;

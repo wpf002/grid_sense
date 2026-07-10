@@ -3,7 +3,7 @@
 // so this is fast enough to call per-county during rescoring.
 
 import { sqlite } from "../storage.js";
-import { regionForCounty } from "./wholesale_price.js";
+import { regionForCounty } from "./units.js";
 import type { RealDataOverlay } from "../scoring.js";
 
 // Cache-per-run maps built lazily.

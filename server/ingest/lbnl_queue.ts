@@ -23,6 +23,7 @@ import * as XLSX from "xlsx";
 import { sqlite } from "../storage.js";
 import { beginRun, fetchBuffer } from "./util.js";
 import { lookupFips } from "./counties_ref.js";
+import { excelSerialToIso, normalizeFips } from "./units.js";
 
 const DEFAULT_FILE = path.resolve(process.cwd(), "data", "lbnl_queue.xlsx");
 
@@ -78,13 +79,6 @@ type Detected = {
   cQDate: number;
   cOnDate: number;
 };
-
-// LBNL dates are Excel serial numbers (days since 1899-12-30). Convert to ISO.
-function excelToIso(v: unknown): string | null {
-  const n = Number(v);
-  if (!Number.isFinite(n) || n < 10000 || n > 80000) return null;
-  return new Date(Date.UTC(1899, 11, 30) + n * 86400000).toISOString().slice(0, 10);
-}
 
 // Scan a sheet for the header row (LBNL sheets can have title rows first) and
 // map the columns we need. Returns null if the sheet isn't the project dataset.
@@ -194,11 +188,7 @@ export async function ingestLbnlQueue(): Promise<number> {
         const county = countyRaw.replace(/\s+county$/i, "").trim();
         // Prefer the dataset's own fips_code (zero-pad to 5 digits — LBNL drops
         // the leading zero, e.g. AZ "4005" -> "04005"); fall back to a name lookup.
-        let fips: string | null = null;
-        if (best!.cFips >= 0) {
-          const digits = String(row[best!.cFips] ?? "").replace(/\D/g, "");
-          if (digits.length === 4 || digits.length === 5) fips = digits.padStart(5, "0");
-        }
+        let fips: string | null = best!.cFips >= 0 ? normalizeFips(row[best!.cFips]) : null;
         if (!fips && stateAbbr && county) fips = lookupFips(stateAbbr, county);
         if (!fips || !validFips.has(fips)) { unresolved++; continue; }
         if (covered.has(fips)) { skippedCovered++; continue; }
@@ -212,8 +202,8 @@ export async function ingestLbnlQueue(): Promise<number> {
         if (seen.has(dedupeKey)) continue;
         seen.add(dedupeKey);
 
-        const submitted = best!.cQDate >= 0 ? excelToIso(row[best!.cQDate]) : null;
-        const inService = best!.cOnDate >= 0 ? excelToIso(row[best!.cOnDate]) : null;
+        const submitted = best!.cQDate >= 0 ? excelSerialToIso(row[best!.cQDate]) : null;
+        const inService = best!.cOnDate >= 0 ? excelSerialToIso(row[best!.cOnDate]) : null;
         stmt.run(
           qno || null,
           best!.cName >= 0 ? String(row[best!.cName] ?? "").trim() || null : null,

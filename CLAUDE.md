@@ -35,6 +35,9 @@ Users: hyperscaler siting teams, data-center REITs, industrial land brokers, and
 6. **API calls must use `apiRequest` from `@/lib/queryClient`.** It centralizes error handling (`throwIfResNotOk`) and keeps query keys consistent. Query keys are arrays (e.g. `['/api/counties', id]`), never template strings. Frontend and API are same-origin (one Express process), so URLs are plain relative paths — no base-path rewriting needed.
 7. **Forms use shadcn `<Form>` + react-hook-form + zod resolvers** against insert schemas from `@shared/schema.ts`. `<SelectItem value="...">` must always have a non-empty `value`.
 8. **All interactive elements have `data-testid`** for future Playwright coverage. Follow `{action}-{target}` for actions and `{type}-{content}` for displays, with a unique suffix for dynamic rows.
+9. **Never trust an external feed's units.** County assessor layers publish acreage in acres, square feet, OR square metres under indistinguishable field names. A parcel ingest once compared raw square footage against a 20–5,000 *acre* filter and silently rejected every row in six counties — it looked like six dead endpoints for weeks. All such conversions now live in `server/ingest/units.ts` with regression tests. Put new ones there, not inline.
+10. **Title Case for every heading, title, and nav label** (acronyms stay uppercase). Machine-cased enum values get run through `humanize()` from `@/lib/utils` before display. Copy should read like a person wrote it — no buzzwords, no "leverage", no "powered by AI".
+11. **Don't suggest deploy, hosting, or billing.** This project is in active development. Do not raise Stripe, Fly, Vercel, or go-live infra unless explicitly asked.
 
 ## Layout
 
@@ -50,10 +53,10 @@ gridsense/
 │       ├── components/       # USMap, CommandPalette, KeyboardShortcuts, layout, Radix wrappers
 │       ├── lib/queryClient.ts # apiRequest wrapper (relative-URL fetch + error handling)
 │       ├── hooks/            # useToast, useAuth, custom data hooks
-│       └── pages/            # 30 route pages (see routes list below)
+│       └── pages/            # 34 page components (some are tab hosts, not routes)
 ├── server/
 │   ├── index.ts              # Express + rawBody capture + registerRoutes + serveStatic
-│   ├── routes.ts             # 67 API routes (single file today — split when it exceeds 2k lines)
+│   ├── routes.ts             # 75 API routes (single file today — split when it exceeds 2k lines)
 │   ├── storage.ts            # IStorage + Drizzle implementation
 │   ├── scoring.ts            # computeCountyFactorsV5 + landing probability + tier assignment
 │   ├── auth.ts               # bcrypt + session cookie + admin middleware
@@ -61,11 +64,17 @@ gridsense/
 │   ├── mailer.ts             # nodemailer SMTP for alert emails
 │   ├── static.ts             # SPA static serve in prod
 │   ├── vite.ts               # Vite dev middleware
+│   ├── apikeys.ts            # API-key auth; plan-based rate limits live in index.ts
 │   ├── seed-data.ts          # Deterministic seeder for counties, signals, operators
-│   └── ingest/               # One module per data source
+│   ├── scoring.test.ts, routes.test.ts, headroom.test.ts, edgar-attribution.test.ts
+│   └── ingest/               # One module per data source (30+)
 │       ├── run_all.ts        # Orchestrator: pass source names as CLI args
 │       ├── overlay.ts        # Warms real-data overlays used by scoring
+│       ├── units.ts          # Pure, DB-free conversions — unit-tested (units.test.ts)
 │       ├── score_history.ts  # Nightly snapshot into score_history_daily
+│       ├── lbnl_queue.ts     # Non-RTO interconnection queue (manual XLSX, see below)
+│       ├── wholesale_price.ts # Real hub prices (EIA/ICE + ERCOT DAM)
+│       ├── refresh_news_signals.ts # Live RSS -> signals, runs on boot + every 6h
 │       └── {edgar,eia860,eia861,eia_power_price,ercot_queue,pjm_queue,...}.ts
 ├── shared/
 │   └── schema.ts             # ALL Drizzle table definitions + Zod insert schemas + types
@@ -73,6 +82,8 @@ gridsense/
 │   ├── expand_full_us.ts     # Backfill all 3,109 counties from Census
 │   ├── seed_users_and_runs.ts # 10 demo users + 356 ingestion_runs across 30 days
 │   ├── seed_operators.ts, seed_parcels.ts, seed_permits_bids.ts, seed_site_intel.ts
+│   ├── eval_backtest.ts      # Percentile rank + precision/recall/F1 at score cutoffs
+│   ├── purge_synthetic_parcels.ts, purge_synthetic_permits.ts, dedupe_signals.ts
 │   └── backfill_empty_counties.ts
 ├── script/
 │   └── build.ts              # esbuild config for dist/index.cjs + Vite build for dist/public
@@ -105,17 +116,24 @@ Add any new field to the schema first, generate a migration in your head (Drizzl
 
 `server/scoring.ts` exports the model. Order of operations:
 
-1. `computeCountyFactorsV5(county, overlay)` → 12 factor scores 0–100 with data-quality tag (`real` | `partial` | `synthetic`)
+1. `computeCountyFactorsV5(county, overlay)` → 13 factor scores 0–100 with data-quality tag (`real` | `partial` | `synthetic`)
 2. Weighted sum via `FACTOR_WEIGHTS` → base score
 3. `computeSignalBoost(signals)` → 0–15 pt boost from recent filings/news
 4. `computeLandingProbability(county, overlay, signals)` → sigmoid over base + boost
-5. `scoreTierFor(p)` → `hot` | `warm` | `emerging` | `cold`
+5. `scoreTierFor(p)` → `hot` (≥75) | `warm` (≥60) | `emerging` (≥45) | `cold`
 
 Overlays are warmed by `warmOverlayCaches()` on server start (see `server/ingest/overlay.ts`).
 
+There is a 14th factor, `powerPrice`, defined but **weighted 0 by default**. A backtest
+sweep showed it costs precision: announced counties average $48.64/MWh against $55.00
+overall (only 12% cheaper), and PJM is simultaneously the priciest hub and the busiest
+data-center market. `GRIDSENSE_POWER_WEIGHT` (0–0.3) turns it on and rescales the other
+13 proportionally, preserving their calibrated ratios. Zero-weight factors are filtered
+out of `computeCountyFactorsV5`'s output, so the API returns 13 factors.
+
 ## API surface
 
-67 routes, all under `/api/*`. Full catalog is `server/routes.ts`. Notable groups:
+75 routes, all under `/api/*`. Full catalog is `server/routes.ts`. Notable groups:
 
 - **Core reads**: `/api/counties`, `/api/counties/:id`, `/api/counties/:id/history`, `/api/counties/:id/factors`, `/api/counties/:id/signals`
 - **Search & aggregation**: `/api/search`, `/api/tiers`, `/api/movers`, `/api/comps/:id`
@@ -126,42 +144,67 @@ Overlays are warmed by `warmOverlayCaches()` on server start (see `server/ingest
 
 Everything hits real SQLite. There are zero mocks in the codebase and zero TODO/STUB/FIXME markers.
 
-## Pages (30)
+**Every row in the database is real.** Synthetic parcels and permits were purged; if a
+county has no assessor feed it shows "no parcel data" rather than an invented row. Hold
+this line — do not seed placeholder rows to make a page look populated.
 
-Dashboard, Counties, CountyDetail, MapView, Watchlists, Alerts, Signals, Movers, Digest, Backtest, LeadGen, Portfolio, Parcels, Permits, CompetitiveBids, Operators, ShellLLCs, DataQuality, Methodology, ApiDocs, Webhooks, Admin, Auth (Login/Signup), Settings, Pricing, About, Landing, Changelog, NotFound.
+## Pages
 
-`App.tsx` registers all of them under a single `<Router>` (real browser routing) wrapping the whole app tree.
+34 page components in `client/src/pages/`, registered under a single `<Router>` (real
+browser routing) wrapping the whole app tree. Several are tab hosts rather than
+standalone routes — SignalsHub, SiteIntel, and DataHealth each embed sibling pages as
+tabs, so the page count exceeds the route count.
 
-## Cron / scheduled ingestion
+## Scheduled ingestion
 
-The original prototype ran these via a cron system:
+Two independent schedulers, because they cover different needs:
 
-- **Daily 03:00 CT** — `npx tsx server/ingest/score_history.ts` — nightly score snapshot
-- **Daily 06:00 CT** — SEC EDGAR full-text search + Data Center Dynamics RSS, auto-tag against shell-LLC and metro dictionaries
-- **Monthly 1st** — ISO queue refresh reminder (7 ISOs)
-- **Quarterly** — EIA-860 vintage + FEMA NRI update check
+**In-process (`server/index.ts`)** — keeps a running instance fresh without any external
+infra. On boot (~4s delay) and every 6h it runs the news RSS refresh, EDGAR, and the
+score snapshot. This is what actually keeps Latest Signals current.
 
-**For Claude Code, replace these with a real scheduler:**
+**GitHub Actions (`.github/workflows/ingest.yml`)** — daily `dc_news,edgar,wholesale_price,enrich,score_history`;
+monthly ISO queues; quarterly `eia860,fema_nri,lbnl_queue`. Note the honest caveat in
+that file's comments: a cloud runner cannot write to a local `data.db`, so today it
+verifies the pipelines still parse their sources rather than updating the served DB.
 
-- Option A: **GitHub Actions** — cheapest, `.github/workflows/nightly.yml` running `npx tsx server/ingest/run_all.ts <sources>` on a `schedule:` trigger, with a `DATABASE_URL` secret. Runners have 6-hour timeouts, plenty for full ingest.
-- Option B: **A dedicated cron server** — Fly.io machine or Railway cron job.
-- Option C: **Temporal** if you outgrow single-shot crons.
+Add a source by writing `server/ingest/<name>.ts`, wrapping the body in
+`beginRun(pipeline, note)` → `run.complete(rows, note)` / `run.fail(err)`, then
+registering it in the `PipeName` union in `run_all.ts`.
 
-Full endpoint list and the exact SEC EDGAR / DCD URLs + shell-LLC dictionary are preserved in the original cron descriptions — reproduce them in the new scheduler config.
+Two sources need manual input:
+
+- **LBNL "Queued Up"** (non-RTO queue, `lbnl_queue.ts`) — LBNL's download link is
+  JS-gated, so it reads `data/lbnl_queue.xlsx` (gitignored) or `LBNL_QUEUE_FILE`. Set
+  `LBNL_QUEUE_URL` to that year's XLSX link and the annual refresh is one line.
+- **ISO-NE queue** — the export is session-gated and refuses bots. The ingest degrades
+  to a 0-row run with a note and keeps prior data rather than failing the whole run.
+
+## Data reality check
+
+Provenance runs about **84% real / 8% partial / 8% synthetic** across all scored factors.
+`data_provenance` is rewritten wholesale by `enrich` (it deletes every row first), so it
+is the single source of truth for what's real. Two things are known-honest limitations,
+already disclosed in the UI:
+
+- **No project-level large-load queue exists publicly.** ERCOT's figure lives only in
+  image-based PDFs. FERC docket RM26-4 is forcing disclosure; revisit when it lands.
+  Until then `queuedLoadMw` is the **generation** queue, not load — don't relabel it.
+- **The backtest has partial label leakage.** Mean percentile is 81.2% with the signal
+  boost vs **79.3% factors-only**; the boost is 2.20 pts in announced counties against
+  0.06 elsewhere (34×). Only 10 of 36 positives carry a signal. `Backtest.tsx` shows
+  both numbers and says so.
 
 ## What's still missing for "professional-grade v2"
 
-The v1 surface is complete. These are the deep-codebase tasks best done in Claude Code:
+The v1 surface is complete, tests and CI are in place. Remaining deep-codebase tasks:
 
-1. **Postgres migration.** SQLite is fine for single-node demo; a real customer deployment needs Postgres. Steps: swap `better-sqlite3` for `pg` + `drizzle-orm/node-postgres`, convert every `.get()`/`.all()`/`.run()` (they become async), rewrite JSON-text columns to real `jsonb`, add proper indexes on `counties.state`, `signals.county_id`, `score_history_daily.county_id + snapshot_date`, and set up `drizzle-kit migrate` for versioned migrations.
-2. **Real auth.** Today: bcrypt + httpOnly cookies + a single admin. Add: Stripe billing (`/api/webhooks/stripe`), tiered plans (free/pro/enterprise), SSO via `@auth/express` or Clerk, per-plan rate limiting on `/api/exports/*`.
-3. **Test coverage.** No tests today — biggest gap. Suggested: Vitest for `server/scoring.ts` (deterministic, high-value), Supertest for route contracts, Playwright for the 5 most-visited pages. Aim for scoring at 90%+, routes at 70%+.
-4. **Observability.** Sentry for errors, structured logging via `pino`, `/api/metrics` in Prometheus format.
-5. **CI/CD.** GitHub Actions running `npm run check` (tsc), tests, then build + deploy to Fly/Vercel/Railway on main.
-6. **Split `server/routes.ts`.** It's 1,529 lines. Break into `routes/{counties,signals,auth,webhooks,exports,admin,alerts}.ts`, each calling `registerX(app)` from `server/routes/index.ts`.
-7. **Rate limiting + API keys.** Public API needs per-key quotas and a keys table. Signed webhook payloads already exist; add signed API-key auth headers.
-8. **Real data provider contracts.** Public SEC/EIA feeds are fine to start; production customers will want paid CoreLogic parcels, Regrid, or county-assessor feeds.
-9. **SOC 2 prep** if selling to enterprise: audit logging on every mutation, IP-restricted admin, encrypted-at-rest DB, backup rotation.
+1. **Postgres migration.** SQLite is fine for single-node; a real customer deployment needs Postgres. Steps: swap `better-sqlite3` for `pg` + `drizzle-orm/node-postgres`, convert every `.get()`/`.all()`/`.run()` (they become async), rewrite JSON-text columns to real `jsonb`, add indexes on `counties.state`, `signals.county_id`, `score_history_daily.county_id + snapshot_date`, and set up `drizzle-kit migrate`. **Deferred on purpose** — SQLite is not the bottleneck yet.
+2. **Broader test coverage.** Vitest covers scoring, headroom, EDGAR attribution, ingest unit conversion, and route contracts (74 tests). Still missing: Playwright on the 5 most-visited pages.
+3. **Split `server/routes.ts`.** It's ~1,715 lines, past the 2k threshold soon. Break into `routes/{counties,signals,auth,webhooks,exports,admin,alerts}.ts`, each calling `registerX(app)` from `server/routes/index.ts`.
+4. **Observability.** `pino` and `/api/metrics` (Prometheus) exist. Sentry for errors is not wired.
+5. **More free county assessor feeds.** `arcgis_parcels.ts` is config-driven — adding a county is one entry. Prefer free county/public feeds; paid providers (Regrid, ATTOM, CoreLogic) are out of budget for a project in development.
+6. **SOC 2 prep** if selling to enterprise: audit logging on every mutation, IP-restricted admin, encrypted-at-rest DB, backup rotation.
 
 ## How to run locally
 
@@ -208,6 +251,8 @@ All are read via `process.env` and documented in `.env.example`. Summary:
 | `GRIDSENSE_SMTP_HOST` / `PORT` / `USER` / `PASS` / `FROM` | optional | Enables email alert dispatch |
 | `PORT` | optional | Defaults to 5000 |
 | `NODE_ENV` | yes for prod | `development` or `production` |
+| `GRIDSENSE_POWER_WEIGHT` | optional | 0–0.3. Weight for the `powerPrice` factor. Defaults to 0 (off) — see Scoring. |
+| `LBNL_QUEUE_URL` / `LBNL_QUEUE_FILE` | optional | Source for the LBNL non-RTO queue workbook |
 
 ## Things NOT to do
 
@@ -216,15 +261,26 @@ All are read via `process.env` and documented in `.env.example`. Summary:
 - Do not render `Link`/navigation-using components (sidebar, command palette) outside the top-level `<Router>` — they'll silently use a different location context and clicks won't navigate.
 - Do not remove `--legacy-peer-deps` from install commands.
 - Do not commit `data.db*`, `.env`, or `node_modules`.
+- Do not seed synthetic/placeholder rows to make a page look populated. Empty state is honest; fabricated data is not.
+- Do not put unit conversions inline in an ingest — they belong in `server/ingest/units.ts` with a test.
 - Do not exceed `text-xl` for any heading.
 
-## Recommended first PRs in Claude Code
+## Where to start
 
-1. **Add Vitest + write tests for `server/scoring.ts`.** Highest ROI. Deterministic input/output.
-2. **Split `server/routes.ts` into route modules.** No behavior change, just organization.
-3. **Add Sentry + `pino` + a `/api/metrics` endpoint.**
-4. **Wire GitHub Actions** for `check` + tests + build on every PR.
-5. Then start on Postgres.
+Done already: Vitest (74 tests), `pino` + `/api/metrics`, GitHub Actions for check + test + build, API keys + rate limiting.
+
+Good next PRs:
+
+1. **Split `server/routes.ts` into route modules.** No behavior change, just organization.
+2. **Playwright** on Dashboard, Counties, CountyDetail, MapView, DataHealth.
+3. **Add county assessor feeds** to `arcgis_parcels.ts` — one config entry each, biggest data win per line.
+4. **Sentry** for error tracking.
+5. Postgres, only once SQLite actually hurts.
+
+Run `npm test` before and after any scoring change. `scripts/eval_backtest.ts` prints
+mean/median percentile rank and precision/recall/F1 at cutoffs 50/60/70/80 against the
+37 FIPS-verified announcements in `dc_announcements` — that is how scoring changes get
+accepted or rejected. Weight changes must be justified against it, not asserted.
 
 ## References inside the repo
 

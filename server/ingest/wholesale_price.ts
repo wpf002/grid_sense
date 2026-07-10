@@ -16,6 +16,7 @@
 
 import * as XLSX from "xlsx";
 import { sqlite } from "../storage.js";
+import { regionForCounty } from "./units.js";
 import { beginRun, fetchText, fetchBuffer } from "./util.js";
 
 const EIA_WHOLESALE_PAGE = "https://www.eia.gov/electricity/wholesale/";
@@ -46,20 +47,7 @@ function ensureTable() {
   `);
 }
 
-/** Map a county to the wholesale hub region that actually prices its power. */
-export function regionForCounty(iso: string | null, state: string, lat: number | null): string | null {
-  const i = (iso ?? "").toUpperCase();
-  if (i.includes("ERCOT")) return "ERCOT";
-  if (i.includes("PJM")) return "PJM";
-  if (i.includes("MISO")) return "MISO";
-  if (i.includes("ISO-NE") || i.includes("ISONE")) return "ISONE";
-  if (i.includes("CAISO")) return (lat ?? 0) >= 36.5 ? "CAISO_NP15" : "CAISO_SP15";
-  if (i.includes("BPA")) return "MIDC";
-  // Non-RTO West: the Palo Verde and Mid-C hubs are the real trading points.
-  if (["AZ", "NM", "NV"].includes(state)) return "PALOVERDE";
-  if (["WA", "OR", "ID", "MT"].includes(state)) return "MIDC";
-  return null; // SPP / NYISO / TVA / FRCC / Southeast: no published hub -> no price
-}
+export { regionForCounty };
 
 export function lookupWholesalePrice(iso: string | null, state: string, lat: number | null) {
   const region = regionForCounty(iso, state, lat);
