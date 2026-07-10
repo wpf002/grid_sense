@@ -1,32 +1,34 @@
-name: Scheduled data ingest
+name: Data feed canary
 
-# Keeps the real public-data feeds current on a cron. Heavy ingests (ISO queues,
-# EIA-860, FEMA NRI) run here rather than in-process so they never block the API
-# server with synchronous SQLite writes.
+# WHAT THIS DOES — and, importantly, what it does NOT do.
 #
-# PERSISTENCE CAVEAT: a cloud runner cannot update a developer's LOCAL data.db.
-# This workflow is meaningful once the app is deployed against a persistent
-# database. Until then it validates that the pipelines run end-to-end and
-# produces a refreshed data.db as a downloadable artifact. When you deploy:
-#   - point storage at your hosted DB (Postgres, or SQLite on a mounted volume), and
-#   - replace the artifact upload with a step that writes back to that DB.
-# For LOCAL dev the server already refreshes news/EDGAR/score-snapshot on boot
-# and every 6h; run the heavy ones on demand with:
-#   npx tsx server/ingest/run_all.ts
+# A GitHub runner has no access to the data.db that a running GridSense instance
+# serves from, so this workflow CANNOT refresh anyone's data. Refreshing is the
+# job of the in-process scheduler (server/ingest/scheduler.ts), which runs the
+# heavy pipelines on their own cadences inside the server that owns the DB file.
+#
+# What a cloud runner IS good for is catching upstream breakage early. Public
+# feeds rot quietly: a county renames a field, an ISO moves an export behind a
+# session cookie, an agency reshuffles a workbook. The ingest still "succeeds",
+# with zero rows, and a scoring factor silently goes synthetic.
+#
+# So: run the pipelines against a scratch database, then assert each one cleared
+# a row floor (scripts/check_feeds.ts). A failure here means a source changed
+# shape, not that anyone's data is stale.
 
 on:
   workflow_dispatch: {}          # manual "Run workflow" button
   schedule:
-    - cron: "0 7 * * *"          # daily 07:00 UTC — news, EDGAR, score snapshot
+    - cron: "0 7 * * *"          # daily — fast feeds
     - cron: "0 8 1 * *"          # monthly 1st — ISO interconnection queues
-    - cron: "0 9 1 1,4,7,10 *"   # quarterly — EIA-860 + FEMA NRI
+    - cron: "0 9 1 1,4,7,10 *"   # quarterly — federal datasets
 
 concurrency:
   group: ingest
   cancel-in-progress: false
 
 jobs:
-  ingest:
+  canary:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -36,40 +38,32 @@ jobs:
           node-version-file: .nvmrc
       - run: npm ci --legacy-peer-deps
 
-      # Persist data.db across scheduled runs via cache (a lightweight stand-in
-      # for a real database until deploy).
-      - name: Restore database
-        uses: actions/cache@v4
-        with:
-          path: data.db
-          key: gridsense-db-${{ github.run_id }}
-          restore-keys: gridsense-db-
+      # A scratch DB, built fresh. Nothing here is served to anyone; it exists
+      # so the pipelines have somewhere to write while we watch what they return.
+      - name: Build scratch database
+        run: npx tsx scripts/expand_full_us.ts
 
-      # Build the county base if this is a cold start (no cached DB yet).
-      - name: Seed base data if missing
+      - name: Select pipelines for this schedule
+        id: pick
         run: |
-          if [ ! -f data.db ]; then
-            npx tsx scripts/expand_full_us.ts
-          fi
+          case "${{ github.event.schedule }}" in
+            "0 8 1 * *")        SRC="miso_queue,pjm_queue,ercot_queue,spp_queue,caiso_queue,nyiso_queue,isone_queue" ;;
+            "0 9 1 1,4,7,10 *") SRC="eia860,fema_nri,lbnl_queue" ;;
+            "0 7 * * *")        SRC="dc_news,edgar,wholesale_price" ;;
+            *)                  SRC="dc_news,edgar,wholesale_price,pjm_queue,isone_queue" ;;
+          esac
+          echo "src=$SRC" >> "$GITHUB_OUTPUT"
 
-      # Choose the pipeline set from which cron fired (defaults to the full run
-      # on manual dispatch).
       - name: Run ingest
         env:
           GRIDSENSE_SESSION_SECRET: ci
           GRIDSENSE_ADMIN_PASSWORD: ci
-        run: |
-          case "${{ github.event.schedule }}" in
-            "0 8 1 * *")        SRC="miso_queue,pjm_queue,ercot_queue,spp_queue,caiso_queue,nyiso_queue,isone_queue,enrich,score_history" ;;
-            "0 9 1 1,4,7,10 *") SRC="eia860,fema_nri,lbnl_queue,enrich,score_history" ;;
-            "0 7 * * *")        SRC="dc_news,edgar,wholesale_price,enrich,score_history" ;;
-            *)                  SRC="" ;;   # manual dispatch -> full run_all
-          esac
-          if [ -n "$SRC" ]; then npx tsx server/ingest/run_all.ts "$SRC"; else npx tsx server/ingest/run_all.ts; fi
+        run: npx tsx server/ingest/run_all.ts "${{ steps.pick.outputs.src }}"
 
-      - name: Upload refreshed database
-        uses: actions/upload-artifact@v4
-        with:
-          name: data-db
-          path: data.db
-          retention-days: 14
+      # The actual assertion. Exits non-zero if a feed returned no data, so the
+      # workflow goes red instead of quietly passing on an empty result.
+      - name: Check feeds returned data
+        env:
+          GRIDSENSE_SESSION_SECRET: ci
+          GRIDSENSE_ADMIN_PASSWORD: ci
+        run: npx tsx scripts/check_feeds.ts "${{ steps.pick.outputs.src }}"

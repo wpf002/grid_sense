@@ -124,24 +124,39 @@ function isActive(status: string): boolean {
 export async function ingestLbnlQueue(): Promise<number> {
   const run = beginRun("lbnl_queue", "LBNL Queued Up — non-RTO interconnection queue");
   try {
-    // Source order: LBNL_QUEUE_URL (annual auto-pull) -> local file. LBNL's own
-    // site JS-renders the download link so we can't discover it, but if you set
-    // LBNL_QUEUE_URL to that year's "Data File XLSX" link the ingest fetches +
-    // caches it, and the scheduler can re-run it annually.
+    // Source order: LBNL_QUEUE_URL (annual auto-pull) -> local file.
+    //
+    // emp.lbl.gov sits behind Cloudflare bot management and returns 403 to any
+    // automated client, including a plain browser User-Agent. There is no
+    // fetchable URL to discover, so the workbook has to be downloaded by hand
+    // once a year. If LBNL ever fronts it with an open URL, set LBNL_QUEUE_URL
+    // and the annual refresh becomes automatic.
     const url = process.env.LBNL_QUEUE_URL;
     const file = process.env.LBNL_QUEUE_FILE || DEFAULT_FILE;
     let buf: Buffer | null = null;
+    let sourceNote = "";
     if (url) {
       try {
         buf = await fetchBuffer(url, { cacheKey: "lbnl_queue_url.xlsx", maxAgeMs: 300 * 24 * 3600 * 1000 });
+        sourceNote = "from LBNL_QUEUE_URL";
         console.log(`[lbnl_queue] fetched from LBNL_QUEUE_URL (${buf.length} bytes)`);
       } catch (e: any) {
         console.warn(`[lbnl_queue] LBNL_QUEUE_URL fetch failed (${e?.message ?? e}); falling back to local file.`);
       }
     }
-    if (!buf && fs.existsSync(file)) buf = fs.readFileSync(file);
+    if (!buf && fs.existsSync(file)) {
+      buf = fs.readFileSync(file);
+      // Surface the workbook's age. LBNL publishes annually; a file older than
+      // ~14 months means a newer edition is out and this run is serving stale
+      // queue data. The note lands in ingestion_runs, which Data Health renders.
+      const ageDays = Math.floor((Date.now() - fs.statSync(file).mtimeMs) / 86400000);
+      sourceNote =
+        ageDays > 425
+          ? `ACTION NEEDED: workbook is ${ageDays} days old — download this year's "Data File XLSX" from https://emp.lbl.gov/queues to ${file}`
+          : `local workbook, ${ageDays}d old`;
+    }
     if (!buf) {
-      const msg = `No LBNL workbook. Set LBNL_QUEUE_URL to this year's "Data File XLSX" link from https://emp.lbl.gov/queues, or download it to ${file}.`;
+      const msg = `ACTION NEEDED: no LBNL workbook. Download the "Data File XLSX" from https://emp.lbl.gov/queues to ${file} (the site is Cloudflare-gated, so it can't be fetched automatically).`;
       console.warn(`[lbnl_queue] ${msg}`);
       run.complete(0, msg);
       return 0;
@@ -223,7 +238,9 @@ export async function ingestLbnlQueue(): Promise<number> {
     });
     insertMany();
 
-    const note = `${inserted} non-RTO queue rows added (skipped ${skippedCovered} already-RTO-covered, ${unresolved} without a resolvable county)`;
+    const note =
+      `${inserted} non-RTO queue rows added (skipped ${skippedCovered} already-RTO-covered, ` +
+      `${unresolved} without a resolvable county)` + (sourceNote ? ` — ${sourceNote}` : "");
     console.log(`[lbnl_queue] ${note}`);
     run.complete(inserted, note);
     return inserted;

@@ -41,7 +41,7 @@ import { expandTrackedCounties } from "./expand_counties.js";
 import { enrichCounties } from "./enrich.js";
 import { clearOverlayCaches } from "./overlay.js";
 
-type PipeName =
+export type PipeName =
   | "eia860"
   | "edgar"
   | "dc_news"

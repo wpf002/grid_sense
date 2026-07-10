@@ -71,6 +71,8 @@ gridsense/
 │       ├── run_all.ts        # Orchestrator: pass source names as CLI args
 │       ├── overlay.ts        # Warms real-data overlays used by scoring
 │       ├── units.ts          # Pure, DB-free conversions — unit-tested (units.test.ts)
+│       ├── scheduler.ts      # Cadence-driven refresh; the real ingest scheduler
+│       ├── util.ts           # fetch helpers incl. fetchWithSession (cookie jar)
 │       ├── score_history.ts  # Nightly snapshot into score_history_daily
 │       ├── lbnl_queue.ts     # Non-RTO interconnection queue (manual XLSX, see below)
 │       ├── wholesale_price.ts # Real hub prices (EIA/ICE + ERCOT DAM)
@@ -83,6 +85,7 @@ gridsense/
 │   ├── seed_users_and_runs.ts # 10 demo users + 356 ingestion_runs across 30 days
 │   ├── seed_operators.ts, seed_parcels.ts, seed_permits_bids.ts, seed_site_intel.ts
 │   ├── eval_backtest.ts      # Percentile rank + precision/recall/F1 at score cutoffs
+│   ├── check_feeds.ts        # Feed canary: asserts each pipeline cleared a row floor
 │   ├── purge_synthetic_parcels.ts, purge_synthetic_permits.ts, dedupe_signals.ts
 │   └── backfill_empty_counties.ts
 ├── script/
@@ -159,26 +162,44 @@ tabs, so the page count exceeds the route count.
 
 Two independent schedulers, because they cover different needs:
 
-**In-process (`server/index.ts`)** — keeps a running instance fresh without any external
-infra. On boot (~4s delay) and every 6h it runs the news RSS refresh, EDGAR, and the
-score snapshot. This is what actually keeps Latest Signals current.
+Everything that refreshes the served database runs **in-process**, because a cloud
+runner has no access to this machine's `data.db`.
 
-**GitHub Actions (`.github/workflows/ingest.yml`)** — daily `dc_news,edgar,wholesale_price,enrich,score_history`;
-monthly ISO queues; quarterly `eia860,fema_nri,lbnl_queue`. Note the honest caveat in
-that file's comments: a cloud runner cannot write to a local `data.db`, so today it
-verifies the pipelines still parse their sources rather than updating the served DB.
+**Fast feeds (`server/index.ts`)** — on boot (~4s) and every 6h: news RSS refresh,
+EDGAR, score snapshot. This is what keeps Latest Signals current.
+
+**Everything else (`server/ingest/scheduler.ts`)** — a cadence table declares how stale
+each pipeline's data may get (wholesale prices daily, permits weekly, ISO queues
+monthly, federal datasets quarterly, LBNL annually). Each hourly tick asks
+`ingestion_runs` when the pipeline last succeeded and runs only what's due, then
+re-runs `enrich` + `score_history`. Restarting the server does **not** re-pull a
+quarterly workbook. At most `MAX_PER_TICK` (4) run per tick, so a cold database drains
+its backlog over a few hours instead of hammering every upstream source at once. A
+0-row success still counts as "ran", so a source that legitimately returns nothing
+doesn't retry every tick. Opt out with `GRIDSENSE_DISABLE_SCHEDULER=1`.
+
+**GitHub Actions (`.github/workflows/ingest.yml`)** is a **feed canary, not a refresh.**
+It ingests into a scratch DB and then asserts each pipeline cleared a row floor
+(`scripts/check_feeds.ts`), so an upstream source that changes shape or goes behind a
+gate turns the build red. It cannot and does not update anyone's data.
 
 Add a source by writing `server/ingest/<name>.ts`, wrapping the body in
-`beginRun(pipeline, note)` → `run.complete(rows, note)` / `run.fail(err)`, then
-registering it in the `PipeName` union in `run_all.ts`.
+`beginRun(pipeline, note)` → `run.complete(rows, note)` / `run.fail(err)`, registering
+it in the `PipeName` union in `run_all.ts`, and giving it a cadence in `scheduler.ts`.
 
-Two sources need manual input:
+One source needs manual input:
 
-- **LBNL "Queued Up"** (non-RTO queue, `lbnl_queue.ts`) — LBNL's download link is
-  JS-gated, so it reads `data/lbnl_queue.xlsx` (gitignored) or `LBNL_QUEUE_FILE`. Set
-  `LBNL_QUEUE_URL` to that year's XLSX link and the annual refresh is one line.
-- **ISO-NE queue** — the export is session-gated and refuses bots. The ingest degrades
-  to a 0-row run with a note and keeps prior data rather than failing the whole run.
+- **LBNL "Queued Up"** (non-RTO queue, `lbnl_queue.ts`) — `emp.lbl.gov` sits behind
+  Cloudflare bot management and 403s every automated client, so the workbook must be
+  downloaded by hand once a year to `data/lbnl_queue.xlsx` (gitignored) or
+  `LBNL_QUEUE_FILE`. The ingest reports the file's age and flags "ACTION NEEDED" in
+  `ingestion_runs` (surfaced on Data Health) once it passes ~14 months. If LBNL ever
+  publishes an open URL, set `LBNL_QUEUE_URL` and it becomes automatic.
+
+**Do not "gracefully degrade" a broken source into a silent 0-row success.** ISO-NE
+looked session-gated and un-scrapeable for months; the real cause was that Node's fetch
+drops cookies across redirects, and the catch-all turned that into a clean-looking
+no-op. It now ingests 1,576 rows across 67 counties. If a source fails, let it fail.
 
 ## Data reality check
 
@@ -253,6 +274,8 @@ All are read via `process.env` and documented in `.env.example`. Summary:
 | `NODE_ENV` | yes for prod | `development` or `production` |
 | `GRIDSENSE_POWER_WEIGHT` | optional | 0–0.3. Weight for the `powerPrice` factor. Defaults to 0 (off) — see Scoring. |
 | `LBNL_QUEUE_URL` / `LBNL_QUEUE_FILE` | optional | Source for the LBNL non-RTO queue workbook |
+| `GRIDSENSE_DISABLE_SCHEDULER` | dev only | Set to `1` to stop the cadence-driven ingest scheduler |
+| `GRIDSENSE_DISABLE_NEWS_REFRESH` | dev only | Set to `1` to stop the 6h news/EDGAR refresh (offline dev) |
 
 ## Things NOT to do
 
@@ -263,6 +286,8 @@ All are read via `process.env` and documented in `.env.example`. Summary:
 - Do not commit `data.db*`, `.env`, or `node_modules`.
 - Do not seed synthetic/placeholder rows to make a page look populated. Empty state is honest; fabricated data is not.
 - Do not put unit conversions inline in an ingest — they belong in `server/ingest/units.ts` with a test.
+- Do not wrap a failing ingest in a catch that reports 0 rows as success. A dead feed must look dead.
+- Do not add a pipeline to `run_all.ts` without giving it a cadence in `scheduler.ts` — otherwise it only ever runs by hand.
 - Do not exceed `text-xl` for any heading.
 
 ## Where to start

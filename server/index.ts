@@ -213,4 +213,14 @@ app.use((req, res, next) => {
     setTimeout(refreshLiveData, 4000).unref?.();
     setInterval(refreshLiveData, 6 * 60 * 60_000).unref?.();
   }
+
+  // Heavier sources (ISO queues, wholesale prices, parcels, permits, the federal
+  // datasets) refresh on their own cadences, driven by when each last succeeded.
+  // A cloud runner can't write to this machine's data.db, so this — not the
+  // GitHub Actions workflow — is what actually keeps the served data current.
+  // Opt out with GRIDSENSE_DISABLE_SCHEDULER=1.
+  if (process.env.GRIDSENSE_DISABLE_SCHEDULER !== "1" && process.env.NODE_ENV !== "test") {
+    const { startScheduler } = await import("./ingest/scheduler");
+    startScheduler();
+  }
 })();

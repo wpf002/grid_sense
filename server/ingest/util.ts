@@ -67,6 +67,73 @@ export async function fetchText(url: string, opts: Parameters<typeof fetchBuffer
   return buf.toString("utf-8");
 }
 
+/** Accumulates cookies across a redirect chain, newest value per name wins. */
+export type CookieJar = Map<string, string>;
+
+/**
+ * Fold raw Set-Cookie header values into the jar, keeping only name=value and
+ * dropping the attributes (Path, HttpOnly, Expires...). Exported for testing.
+ */
+export function absorbSetCookies(jar: CookieJar, setCookieValues: string[]): void {
+  for (const c of setCookieValues) {
+    if (!c) continue;
+    const [pair] = c.split(";");
+    const i = pair.indexOf("=");
+    if (i > 0) jar.set(pair.slice(0, i).trim(), pair.slice(i + 1).trim());
+  }
+}
+
+/** Serialize the jar into a Cookie request header. Exported for testing. */
+export const cookieHeader = (jar: CookieJar): string =>
+  [...jar].map(([k, v]) => `${k}=${v}`).join("; ");
+
+function absorbCookies(jar: CookieJar, res: Response): void {
+  const raw: string[] =
+    typeof (res.headers as any).getSetCookie === "function"
+      ? (res.headers as any).getSetCookie()
+      : ([res.headers.get("set-cookie")].filter(Boolean) as string[]);
+  absorbSetCookies(jar, raw);
+}
+
+/**
+ * Fetch following redirects MANUALLY, carrying a cookie jar across every hop.
+ *
+ * Node's fetch (undici) drops cookies when it follows a redirect. ASP.NET sites
+ * like ISO-NE's IRTT set a session cookie and immediately redirect; without the
+ * cookie the target redirects again, forever, and undici gives up with the
+ * opaque "fetch failed / redirect count exceeded". curl -L -c works because it
+ * keeps a jar. This does the same.
+ */
+async function fetchWithJar(
+  url: string,
+  jar: CookieJar,
+  init: { referer?: string; accept?: string; signal?: AbortSignal },
+  maxHops = 10,
+): Promise<Response> {
+  let current = url;
+  for (let hop = 0; hop < maxHops; hop++) {
+    const res: Response = await fetch(current, {
+      headers: {
+        "User-Agent": BROWSER_UA,
+        Accept: init.accept ?? "*/*",
+        ...(init.referer ? { Referer: init.referer } : {}),
+        ...(jar.size ? { Cookie: cookieHeader(jar) } : {}),
+      },
+      redirect: "manual",
+      signal: init.signal,
+    });
+    absorbCookies(jar, res);
+    if (res.status >= 300 && res.status < 400) {
+      const loc = res.headers.get("location");
+      if (!loc) return res;
+      current = new URL(loc, current).toString();
+      continue;
+    }
+    return res;
+  }
+  throw new Error(`Too many redirects (${maxHops}) starting at ${url}`);
+}
+
 /**
  * Two-step fetch for ASP.NET / cookie-gated endpoints (ISO-NE IRTT etc.):
  *   1. Prime by fetching seedUrl (sets ASP.NET_SessionId cookie)
@@ -87,34 +154,13 @@ export async function fetchWithSession(
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), opts.timeoutMs ?? 90_000);
   try {
-    // Step 1: prime the session
-    const seed = await fetch(seedUrl, {
-      headers: { "User-Agent": BROWSER_UA, Accept: "text/html" },
-      redirect: "follow",
-      signal: controller.signal,
-    });
-    // Collect Set-Cookie headers into a Cookie header string
-    const setCookies: string[] = [];
-    // @ts-ignore Node18 fetch exposes headers.raw() via getSetCookie
-    if (typeof (seed.headers as any).getSetCookie === "function") {
-      for (const c of (seed.headers as any).getSetCookie()) setCookies.push(c);
-    } else {
-      const raw = seed.headers.get("set-cookie");
-      if (raw) setCookies.push(raw);
-    }
-    const cookieHeader = setCookies
-      .map((c) => c.split(";")[0])
-      .filter(Boolean)
-      .join("; ");
+    const jar: CookieJar = new Map();
+    // Step 1: prime the session (the jar picks up ASP.NET_SessionId here).
+    await fetchWithJar(seedUrl, jar, { accept: "text/html", signal: controller.signal });
 
-    // Step 2: fetch target with cookies + referer
-    const res = await fetch(targetUrl, {
-      headers: {
-        "User-Agent": BROWSER_UA,
-        Accept: "*/*",
-        Referer: seedUrl,
-        ...(cookieHeader ? { Cookie: cookieHeader } : {}),
-      },
+    // Step 2: fetch the target with those cookies + a referer.
+    const res = await fetchWithJar(targetUrl, jar, {
+      referer: seedUrl,
       signal: controller.signal,
     });
     if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${targetUrl}`);
