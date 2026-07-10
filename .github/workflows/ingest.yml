@@ -62,7 +62,7 @@ jobs:
           case "${{ github.event.schedule }}" in
             "0 8 1 * *")        SRC="miso_queue,pjm_queue,ercot_queue,spp_queue,caiso_queue,nyiso_queue,isone_queue,enrich,score_history" ;;
             "0 9 1 1,4,7,10 *") SRC="eia860,fema_nri,lbnl_queue,enrich,score_history" ;;
-            "0 7 * * *")        SRC="dc_news,edgar,enrich,score_history" ;;
+            "0 7 * * *")        SRC="dc_news,edgar,wholesale_price,enrich,score_history" ;;
             *)                  SRC="" ;;   # manual dispatch -> full run_all
           esac
           if [ -n "$SRC" ]; then npx tsx server/ingest/run_all.ts "$SRC"; else npx tsx server/ingest/run_all.ts; fi

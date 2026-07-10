@@ -218,25 +218,31 @@ export async function registerRoutes(
     }
   });
 
-  // ---- EIA state industrial electricity price (LMP proxy) ----
+  // ---- Power price: real wholesale hub price + EIA state retail rate ----
   app.get("/api/counties/:fips/power-price", async (req, res) => {
     try {
-      const county = sqlite.prepare("SELECT state FROM counties WHERE fips = ?").get(req.params.fips) as any;
+      const county = sqlite.prepare("SELECT state, iso, lat FROM counties WHERE fips = ?").get(req.params.fips) as any;
       if (!county) return res.json({ fips: req.params.fips, price: null });
+
+      // Real traded wholesale price for the hub that actually prices this county.
+      // Null where no hub is published (SPP / NYISO / TVA / FRCC / Southeast).
+      const { lookupWholesalePrice } = await import("./ingest/wholesale_price.js");
+      const wholesale = lookupWholesalePrice(county.iso ?? null, county.state, county.lat ?? null);
+
       const row = sqlite.prepare(
         "SELECT industrial_cents_per_kwh, commercial_cents_per_kwh, period, industrial_yoy_pct FROM state_power_price WHERE state = ?"
       ).get(county.state) as any;
-      if (!row) return res.json({ fips: req.params.fips, state: county.state, price: null });
-      const industrial = row.industrial_cents_per_kwh;
+      const industrial = row?.industrial_cents_per_kwh ?? null;
       // convert ¢/kWh to $/MWh (¢ * 10)
       res.json({
         fips: req.params.fips,
         state: county.state,
-        period: row.period,
+        wholesale, // { region, hub, usdPerMwh, period, sourceUrl } | null
+        period: row?.period ?? null,
         industrialCentsPerKwh: industrial,
-        industrialDollarsPerMwh: industrial * 10,
-        commercialCentsPerKwh: row.commercial_cents_per_kwh,
-        yoyPct: row.industrial_yoy_pct,
+        industrialDollarsPerMwh: industrial != null ? industrial * 10 : null,
+        commercialCentsPerKwh: row?.commercial_cents_per_kwh ?? null,
+        yoyPct: row?.industrial_yoy_pct ?? null,
       });
     } catch {
       res.json({ fips: req.params.fips, price: null });

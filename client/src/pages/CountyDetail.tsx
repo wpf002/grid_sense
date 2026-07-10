@@ -103,6 +103,7 @@ export default function CountyDetail() {
     fips: string;
     state?: string;
     period?: string;
+    wholesale?: { region: string; hub: string; usdPerMwh: number; period: string; sourceUrl: string } | null;
     industrialCentsPerKwh?: number;
     industrialDollarsPerMwh?: number;
     commercialCentsPerKwh?: number;
@@ -557,21 +558,33 @@ export default function CountyDetail() {
       )}
 
       {/* Power price (EIA state industrial retail) */}
-      {powerPrice && powerPrice.industrialCentsPerKwh != null && (
+      {powerPrice && (powerPrice.wholesale || powerPrice.industrialCentsPerKwh != null) && (
         <Card data-testid="card-power-price">
           <CardHeader className="pb-3">
             <CardTitle className="text-base inline-flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-primary" />
-              Wholesale Power Price (Proxy)
+              Power Price
             </CardTitle>
             <p className="text-xs text-muted-foreground">
-              State industrial retail electricity price from EIA Electric Power Monthly Table 5.6.A. Best free proxy for nodal LMP without a paid ISO market data license.
+              {powerPrice.wholesale
+                ? `Real traded wholesale price at ${powerPrice.wholesale.hub}, the hub that prices this county. Regional hub price, not a nodal LMP.`
+                : "No wholesale hub is published for this region, so only the state retail rate is shown."}
             </p>
           </CardHeader>
           <CardContent>
+            {powerPrice.wholesale && (
+              <div className="mb-4 rounded-md border border-primary/30 bg-primary/[0.04] px-3 py-2.5">
+                <div className="text-xs text-muted-foreground">Wholesale ({powerPrice.wholesale.hub})</div>
+                <div className="text-xl font-semibold tabular-nums" data-testid="text-power-wholesale">
+                  ${powerPrice.wholesale.usdPerMwh.toFixed(2)}/MWh
+                </div>
+                <div className="text-xs text-muted-foreground">{powerPrice.wholesale.period}</div>
+              </div>
+            )}
+            {powerPrice.industrialCentsPerKwh != null && (
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <div className="text-xs text-muted-foreground">Industrial rate</div>
+                <div className="text-xs text-muted-foreground">Retail industrial rate</div>
                 <div className="text-lg font-semibold" data-testid="text-power-industrial">
                   {powerPrice.industrialCentsPerKwh.toFixed(2)} ¢/kWh
                 </div>
@@ -595,6 +608,7 @@ export default function CountyDetail() {
                 <div className="text-xs text-muted-foreground">state {powerPrice.state}</div>
               </div>
             </div>
+            )}
           </CardContent>
         </Card>
       )}

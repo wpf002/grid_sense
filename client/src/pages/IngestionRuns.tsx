@@ -28,9 +28,15 @@ const PIPELINE_META: Record<string, { name: string; source: string; url: string;
     url: "https://arcgis.netl.doe.gov/server/rest/services/Hosted/Energy_Transition_Atlas_493d6/FeatureServer/18/",
     cadence: "Annual (90-day cache)",
   },
+  wholesale_price: {
+    name: "Wholesale hub power prices",
+    source: "EIA/ICE wholesale hub prices (7 national hubs, 90-day volume-weighted avg) + ERCOT Day-Ahead settlement point prices",
+    url: "https://www.eia.gov/electricity/wholesale/",
+    cadence: "Weekly",
+  },
   eia_power_price: {
     name: "EIA electric power price (state industrial retail)",
-    source: "EIA Electric Power Monthly Table 5.6.A — industrial retail ¢/kWh by state, used as an LMP proxy until nodal pricing is wired",
+    source: "EIA Electric Power Monthly Table 5.6.A — industrial retail ¢/kWh by state. Retail context only; traded wholesale prices now come from the wholesale hub pipeline.",
     url: "https://www.eia.gov/electricity/monthly/xls/table_5_06_a.xlsx",
     cadence: "Monthly",
   },
