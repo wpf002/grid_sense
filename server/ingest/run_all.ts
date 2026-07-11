@@ -27,6 +27,7 @@ import { ingestEiaPowerPrice } from "./eia_power_price.js";
 import { ingestIsoQueueHistory } from "./iso_queue_history.js";
 import { ingestWaterStress } from "./water_stress.js";
 import { ingestNoaaClimate } from "./noaa_climate.js";
+import { ingestEpaAirQuality } from "./epa_air_quality.js";
 import { ingestStateEnergyFactors } from "./state_energy_factors.js";
 import { ingestSocrataPermits } from "./socrata_permits.js";
 import { ingestArcgisParcels } from "./arcgis_parcels.js";
@@ -68,6 +69,7 @@ export type PipeName =
   | "iso_queue_history"
   | "water_stress"
   | "noaa_climate"
+  | "epa_air_quality"
   | "socrata_permits"
   | "arcgis_parcels"
   | "dc_backtest"
@@ -118,6 +120,7 @@ export async function runAll(pipes?: PipeName[]): Promise<Record<string, any>> {
   if (shouldRun("water_stress")) results.water_stress = await safe("State water stress overlay", () => ingestWaterStress());
   if (shouldRun("noaa_climate")) results.noaa_climate = await safe("NOAA climate normals (cooling)", () => ingestNoaaClimate());
   if (shouldRun("noaa_climate")) results.state_energy = await safe("Carbon + gas factors (eGRID/EIA)", () => ingestStateEnergyFactors());
+  if (shouldRun("epa_air_quality")) results.epa_air_quality = await safe("EPA air quality (AQI by county)", () => ingestEpaAirQuality());
   if (shouldRun("socrata_permits")) results.socrata_permits = await safe("Real permits (Austin + Chicago)", () => ingestSocrataPermits());
   if (shouldRun("socrata_permits")) results.arcgis_permits = await safe("Real permits (ArcGIS + Fairfax DC layer)", () => ingestArcgisPermits());
   if (shouldRun("arcgis_parcels")) results.arcgis_parcels = await safe("Real parcels (Loudoun + Maricopa)", () => ingestArcgisParcels());

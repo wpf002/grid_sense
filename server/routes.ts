@@ -281,6 +281,23 @@ export async function registerRoutes(
     res.json({ fips, ...headroom });
   });
 
+  // EPA AirData annual AQI for one county. Null when the county has no monitor.
+  app.get("/api/counties/:fips/air-quality", async (req, res) => {
+    try {
+      const row = sqlite.prepare(
+        `SELECT fips, year, days_with_aqi AS daysWithAqi, good_days AS goodDays,
+                moderate_days AS moderateDays, unhealthy_sensitive_days AS unhealthySensitiveDays,
+                unhealthy_days AS unhealthyDays, very_unhealthy_days AS veryUnhealthyDays,
+                hazardous_days AS hazardousDays, max_aqi AS maxAqi, median_aqi AS medianAqi,
+                days_ozone AS daysOzone, days_pm25 AS daysPm25, source_url AS sourceUrl
+         FROM county_air_quality WHERE fips = ?`
+      ).get(req.params.fips) as any;
+      res.json(row ?? null);
+    } catch (e: any) {
+      res.status(500).json({ error: e?.message ?? "air-quality failed" });
+    }
+  });
+
   app.get("/api/counties/:fips/transmission", async (req, res) => {
     try {
       const row = sqlite.prepare(

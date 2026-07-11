@@ -22,7 +22,7 @@ Users: hyperscaler siting teams, data-center REITs, industrial land brokers, and
 
 - **Frontend**: React 18.3.1 + Vite + Tailwind v3 + shadcn/ui + wouter (real browser routing) + TanStack Query v5 + Recharts + Leaflet + us-atlas/topojson-client
 - **Backend**: Express + Drizzle ORM + better-sqlite3 (synchronous)
-- **Auth**: bcryptjs + httpOnly session cookies (single admin user by default, seeded demo users for the Admin panel)
+- **Auth**: bcryptjs + httpOnly session cookies (single admin user, created on first login from `GRIDSENSE_ADMIN_PASSWORD` — no seeded demo users)
 - **Deploy**: single Node process, `dist/index.cjs` serves both API and the built SPA on port 5000
 
 ## Critical gotchas — read before touching code
@@ -82,8 +82,8 @@ gridsense/
 │   └── schema.ts             # ALL Drizzle table definitions + Zod insert schemas + types
 ├── scripts/
 │   ├── expand_full_us.ts     # Backfill all 3,109 counties from Census
-│   ├── seed_users_and_runs.ts # 10 demo users + 356 ingestion_runs across 30 days
-│   ├── seed_operators.ts, seed_parcels.ts, seed_permits_bids.ts, seed_site_intel.ts
+│   ├── seed_operators.ts     # Curated REAL operator/shell-LLC reference (public reporting)
+│   ├── purge_demo_data.ts    # Removes any fabricated ingestion_runs / demo users
 │   ├── eval_backtest.ts      # Percentile rank + precision/recall/F1 at score cutoffs
 │   ├── check_feeds.ts        # Feed canary: asserts each pipeline cleared a row floor
 │   ├── purge_synthetic_parcels.ts, purge_synthetic_permits.ts, dedupe_signals.ts
@@ -237,18 +237,19 @@ npm install --legacy-peer-deps
 cp .env.example .env
 # Set at minimum: GRIDSENSE_ADMIN_PASSWORD, GRIDSENSE_SESSION_SECRET
 
-# 3) Bring up the database — the seed script writes to data.db in the repo root
-# For a fresh install, run the expander then seeders in order:
-npx tsx scripts/expand_full_us.ts
-npx tsx scripts/seed_operators.ts
-npx tsx scripts/seed_parcels.ts
-npx tsx scripts/seed_permits_bids.ts
-npx tsx scripts/seed_site_intel.ts
-npx tsx scripts/seed_users_and_runs.ts
+# 3) Bring up the database with REAL data. Every row must come from a real
+# source — no synthetic seeders. (The old seed_parcels/seed_permits_bids/
+# seed_site_intel/seed_users_and_runs scripts fabricated rows and were deleted.)
+npx tsx scripts/expand_full_us.ts        # 3,109 counties from Census
+npx tsx scripts/seed_operators.ts        # curated real operator/shell-LLC reference (public reporting)
+# Real ingests — parcels, permits, competitive activity, then rescore:
+npx tsx server/ingest/run_all.ts arcgis_parcels,socrata_permits,arcgis_permits,dc_announcements_real,competitive_from_announcements,comps
 # Or, if data.db from the handoff is included, skip this — it's ready.
 
-# 4) Optional: run real ingest against public sources (network required)
-npx tsx server/ingest/run_all.ts edgar,dc_news,eia860,fema_nri,enrich
+# 4) Real ingest against public sources (network required)
+npx tsx server/ingest/run_all.ts edgar,dc_news,eia860,fema_nri,epa_air_quality,enrich
+# The admin user is created on first login from GRIDSENSE_ADMIN_PASSWORD; no user seeding.
+# Ingestion-run history fills in as the in-process scheduler ticks — not seeded.
 
 # 5) Dev
 npm run dev

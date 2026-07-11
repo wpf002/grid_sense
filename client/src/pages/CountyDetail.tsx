@@ -123,6 +123,15 @@ export default function CountyDetail() {
     enabled: !!fips,
   });
 
+  const { data: airQuality } = useQuery<{
+    fips: string; year: number; daysWithAqi: number; goodDays: number; moderateDays: number;
+    unhealthySensitiveDays: number; unhealthyDays: number; veryUnhealthyDays: number; hazardousDays: number;
+    maxAqi: number; medianAqi: number; daysOzone: number; daysPm25: number; sourceUrl: string;
+  } | null>({
+    queryKey: ["/api/counties", fips, "air-quality"],
+    enabled: !!fips,
+  });
+
   const { data: waterStress } = useQuery<{
     fips: string;
     state?: string;
@@ -797,6 +806,60 @@ export default function CountyDetail() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">{w.notes} <a href={w.sourceUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">source <ExternalLink className="h-3 w-3" /></a></p>
+            </CardContent>
+          </Card>
+        );
+      })()}
+
+      {airQuality && (() => {
+        const a = airQuality;
+        // AQI bands: <=50 good, 51-100 moderate, >100 unhealthy for some group.
+        const rating = a.medianAqi <= 50 ? "Good" : a.medianAqi <= 100 ? "Moderate" : "Unhealthy";
+        const ratingColor = a.medianAqi <= 50 ? "text-primary" : a.medianAqi <= 100 ? "text-yellow-600 dark:text-yellow-500" : "text-orange-500";
+        const badDays = a.unhealthySensitiveDays + a.unhealthyDays + a.veryUnhealthyDays + a.hazardousDays;
+        return (
+          <Card data-testid="card-air-quality">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base inline-flex items-center gap-2">
+                <Droplet className="h-4 w-4 text-primary" />
+                Air Quality — EPA {a.year}
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                County air quality from EPA AirData ({a.daysWithAqi} monitored days). Counties with frequent
+                unhealthy days or ozone/PM2.5 exceedances face stricter New Source Review air permitting for the
+                diesel or gas backup generators a data center installs — a real permitting-timeline factor.
+                Informational context, not yet a scored factor.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="p-3 rounded-md bg-muted/40">
+                  <div className="text-xs text-muted-foreground mb-1">Median AQI</div>
+                  <div className={`text-lg font-semibold ${ratingColor}`} data-testid="text-aqi-median">{a.medianAqi}</div>
+                  <div className={`text-xs ${ratingColor}`}>{rating}</div>
+                </div>
+                <div className="p-3 rounded-md bg-muted/40">
+                  <div className="text-xs text-muted-foreground mb-1">Peak AQI</div>
+                  <div className="text-lg font-semibold" data-testid="text-aqi-max">{a.maxAqi}</div>
+                  <div className="text-xs text-muted-foreground">Worst day this year</div>
+                </div>
+                <div className="p-3 rounded-md bg-muted/40">
+                  <div className="text-xs text-muted-foreground mb-1">Unhealthy Days</div>
+                  <div className={`text-lg font-semibold ${badDays > 0 ? "text-orange-500" : "text-primary"}`} data-testid="text-aqi-unhealthy">{badDays}</div>
+                  <div className="text-xs text-muted-foreground">Sensitive-group or worse</div>
+                </div>
+                <div className="p-3 rounded-md bg-muted/40">
+                  <div className="text-xs text-muted-foreground mb-1">Primary Pollutant</div>
+                  <div className="text-lg font-semibold" data-testid="text-aqi-pollutant">{a.daysOzone >= a.daysPm25 ? "Ozone" : "PM2.5"}</div>
+                  <div className="text-xs text-muted-foreground">{a.daysOzone} O₃ · {a.daysPm25} PM2.5 days</div>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Source: EPA AirData annual AQI by county.{" "}
+                <a href={a.sourceUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+                  source <ExternalLink className="h-3 w-3" />
+                </a>
+              </p>
             </CardContent>
           </Card>
         );

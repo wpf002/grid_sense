@@ -50,6 +50,7 @@ const CADENCE_MS: Partial<Record<PipeName, number>> = {
   usda_land: 90 * DAY,
   usda_rucc: 90 * DAY,
   noaa_climate: 90 * DAY,
+  epa_air_quality: 90 * DAY, // EPA posts the annual AQI file through the year
   water_stress: 90 * DAY,
   state_incentives: 90 * DAY,
   // LBNL publishes once a year. Needs a manual download (Cloudflare-gated);
