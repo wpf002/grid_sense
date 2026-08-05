@@ -56,7 +56,8 @@ gridsense/
 │       └── pages/            # 34 page components (some are tab hosts, not routes)
 ├── server/
 │   ├── index.ts              # Express + rawBody capture + registerRoutes + serveStatic
-│   ├── routes.ts             # 75 API routes (single file today — split when it exceeds 2k lines)
+│   ├── routes/              # 78 API routes split by domain: counties, backtest,
+│   │                         #   signals, alerts, siteintel, ops (+ index.ts, _helpers.ts)
 │   ├── storage.ts            # IStorage + Drizzle implementation
 │   ├── scoring.ts            # computeCountyFactorsV5 + landing probability + tier assignment
 │   ├── auth.ts               # bcrypt + session cookie + admin middleware
@@ -136,7 +137,7 @@ out of `computeCountyFactorsV5`'s output, so the API returns 13 factors.
 
 ## API surface
 
-75 routes, all under `/api/*`. Full catalog is `server/routes.ts`. Notable groups:
+78 routes, all under `/api/*`. Registered from `server/routes/index.ts`, which calls one `registerX(app)` per domain module (`counties`, `backtest`, `signals`, `alerts`, `siteintel`, `ops`) plus `registerAuth` and `registerExportRoutes`. Notable groups:
 
 - **Core reads**: `/api/counties`, `/api/counties/:id`, `/api/counties/:id/history`, `/api/counties/:id/factors`, `/api/counties/:id/signals`
 - **Search & aggregation**: `/api/search`, `/api/tiers`, `/api/movers`, `/api/comps/:id`
@@ -222,7 +223,7 @@ The v1 surface is complete, tests and CI are in place. Remaining deep-codebase t
 
 1. **Postgres migration.** SQLite is fine for single-node; a real customer deployment needs Postgres. Steps: swap `better-sqlite3` for `pg` + `drizzle-orm/node-postgres`, convert every `.get()`/`.all()`/`.run()` (they become async), rewrite JSON-text columns to real `jsonb`, add indexes on `counties.state`, `signals.county_id`, `score_history_daily.county_id + snapshot_date`, and set up `drizzle-kit migrate`. **Deferred on purpose** — SQLite is not the bottleneck yet.
 2. **Broader test coverage.** Vitest covers scoring, headroom, EDGAR attribution, ingest unit conversion, and route contracts (74 tests). Still missing: Playwright on the 5 most-visited pages.
-3. **Split `server/routes.ts`.** It's ~1,715 lines, past the 2k threshold soon. Break into `routes/{counties,signals,auth,webhooks,exports,admin,alerts}.ts`, each calling `registerX(app)` from `server/routes/index.ts`.
+3. **Broader test coverage / Playwright.** Route contracts and pure logic are covered (149 tests); the 5 most-visited pages still lack end-to-end coverage.
 4. **Observability.** `pino` and `/api/metrics` (Prometheus) exist. Sentry for errors is not wired.
 5. **More free county assessor feeds.** `arcgis_parcels.ts` is config-driven — adding a county is one entry. Prefer free county/public feeds; paid providers (Regrid, ATTOM, CoreLogic) are out of budget for a project in development.
 6. **SOC 2 prep** if selling to enterprise: audit logging on every mutation, IP-restricted admin, encrypted-at-rest DB, backup rotation.
@@ -297,7 +298,7 @@ Done already: Vitest (74 tests), `pino` + `/api/metrics`, GitHub Actions for che
 
 Good next PRs:
 
-1. **Split `server/routes.ts` into route modules.** No behavior change, just organization.
+1. **Playwright** on Dashboard, Counties, CountyDetail, MapView, DataHealth.
 2. **Playwright** on Dashboard, Counties, CountyDetail, MapView, DataHealth.
 3. **Add county assessor feeds** to `arcgis_parcels.ts` — one config entry each, biggest data win per line.
 4. **Sentry** for error tracking.
@@ -310,7 +311,7 @@ accepted or rejected. Weight changes must be justified against it, not asserted.
 
 ## References inside the repo
 
-- `server/routes.ts` — full endpoint catalog
+- `server/routes/` — endpoint catalog, split by domain (`index.ts` wires them up)
 - `shared/schema.ts` — canonical data model
 - `server/scoring.ts` — scoring model V5
 - `server/ingest/run_all.ts` — how to add a new data source
