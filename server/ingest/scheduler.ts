@@ -78,6 +78,27 @@ export function isRetriable(pipeline: string): boolean {
   return KNOWN_PIPELINES.has(pipeline);
 }
 
+// News, filings, and the score snapshot refresh every 6h via the boot loop in
+// server/index.ts, so a couple of days without one means something's wrong.
+const FAST_FEEDS = new Set(["dc_news", "edgar", "sec_edgar", "score_history", "score_history_daily"]);
+const FAST_FEED_DAYS = 2;
+
+/**
+ * How many days old a feed may get before it's genuinely "behind schedule" —
+ * i.e. past its own refresh cadence, not some flat threshold. This is the single
+ * source of truth the freshness banner and Data Health both read, so "behind"
+ * means the same thing everywhere and matches when the scheduler actually re-runs
+ * it. A quarterly feed at 27 days is on schedule, not behind. Derived/curated
+ * pipelines that aren't independently fetched return Infinity — they never age
+ * out on their own because they run as part of other flows.
+ */
+export function staleAfterDays(pipeline: string): number {
+  const ms = CADENCE_MS[pipeline as PipeName];
+  if (ms != null) return ms / DAY;
+  if (FAST_FEEDS.has(pipeline)) return FAST_FEED_DAYS;
+  return Infinity;
+}
+
 /** Last time this pipeline finished without erroring, in epoch ms. */
 function lastSuccessAt(pipeline: string): number | null {
   const row = sqlite

@@ -910,11 +910,13 @@ export async function registerRoutes(
          ORDER BY last_started DESC
       `).all() as any[];
       const now = Date.now();
-      const { isRetriable } = await import("./ingest/scheduler.js");
+      const { isRetriable, staleAfterDays } = await import("./ingest/scheduler.js");
       const withFresh = rows.map(r => {
         const ageMs = now - Number(r.last_started ?? 0);
         const ageDays = ageMs / (86400 * 1000);
-        const stale = ageDays > 8;
+        // Behind only if past its own cadence — matches the freshness banner and
+        // the scheduler, rather than a flat 8-day rule.
+        const stale = ageDays > staleAfterDays(r.pipeline);
         return {
           pipeline: r.pipeline,
           last_started: new Date(Number(r.last_started)).toISOString(),
@@ -1293,17 +1295,16 @@ export async function registerRoutes(
         ORDER BY last_started DESC
       `).all() as any[];
       const now = Date.now();
+      const { staleAfterDays } = await import("./ingest/scheduler.js");
       const enriched = rows.map((r) => {
         const ts = Number(r.last_started ?? 0);
         const ageMs = now - ts;
         const ageHours = ageMs / 3_600_000;
-        // pipeline-specific staleness thresholds
         const p = String(r.pipeline);
-        let staleAfterHours = 24 * 8; // default weekly-ish
-        if (/queue/i.test(p)) staleAfterHours = 24 * 35; // monthly ISO queues
-        else if (/dc_news|sec|edgar/i.test(p)) staleAfterHours = 30; // daily news
-        else if (/score_history|score_history_daily/i.test(p)) staleAfterHours = 30; // nightly
-        else if (/eia860|fema_nri/i.test(p)) staleAfterHours = 24 * 100; // quarterly
+        // "Behind schedule" means past the feed's OWN refresh cadence — the same
+        // table the scheduler uses to decide what to re-run — not a flat cutoff.
+        // A quarterly feed at 27 days is on schedule, so it isn't flagged.
+        const staleAfterHours = staleAfterDays(p) * 24;
         return {
           pipeline: p,
           last_started_iso: ts ? new Date(ts).toISOString() : null,
