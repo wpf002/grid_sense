@@ -17,7 +17,9 @@ const DCD_RSS_URL = "https://www.datacenterdynamics.com/en/rss/";
 // All are public feeds; we store headline + link + summary only.
 const RSS_SOURCES: Array<{ url: string; source: string }> = [
   { url: "https://www.datacenterdynamics.com/en/rss/", source: "Data Center Dynamics" },
-  { url: "https://www.bisnow.com/rss/data-center", source: "Bisnow Data Center" },
+  // Bisnow retired its per-topic feeds; the site-wide feed still works, so we
+  // pull it and let the general-feed keyword filter below keep only DC items.
+  { url: "https://www.bisnow.com/rss", source: "Bisnow" },
   { url: "https://www.datacenterknowledge.com/rss.xml", source: "Data Center Knowledge" },
   { url: "https://www.utilitydive.com/feeds/news/", source: "Utility Dive" },
 ];
@@ -106,8 +108,9 @@ async function ingestOneFeed(url: string, source: string): Promise<{ inserted: n
     if (!title || !link) continue;
 
     const fullText = `${title} ${desc}`;
-    // For general-purpose feeds (utility/reuters), only keep items that mention DC keywords
-    const isGeneral = source === "Utility Dive" || source === "Reuters Energy";
+    // For general-purpose feeds (utility, Bisnow site-wide), keep only items that
+    // mention DC keywords — the rest of those feeds is off-topic.
+    const isGeneral = source === "Utility Dive" || source === "Reuters Energy" || source === "Bisnow";
     if (isGeneral && !/data center|hyperscale|gigawatt|megawatt|interconnect|substation|electricity load/i.test(fullText)) {
       continue;
     }
