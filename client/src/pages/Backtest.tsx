@@ -517,7 +517,7 @@ export default function Backtest() {
           <strong>How to read this:</strong> Every "miss" or "off-radar" row is a lesson. If a hyperscaler is buying land in a county we scored below 55, either the county belongs on our watchlist (and we need to tune the scoring weights) or the operator paid a premium for reasons outside our model (tax incentive, land-owner relationship, existing footprint). Both are worth investigating.
         </p>
         <p>
-          <strong>Caveat:</strong> Scores here reflect the current data snapshot, not the historical snapshot on the announcement date. Once we accumulate 90+ days of daily score history (via the daily cron), we'll swap to point-in-time scores.
+          <strong>Caveat:</strong> These scores are from today's data, not from the day each site was announced — so recent news can flatter them. The honest version, which scores each county using only the snapshot taken before its announcement, is already wired up (see the Point-in-Time Backtest above). It stays quiet until enough score history piles up to grade an announcement fairly.
         </p>
       </div>
     </div>

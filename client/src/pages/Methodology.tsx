@@ -76,7 +76,7 @@ export default function Methodology() {
               <span>clamp(countyBase + signalBoost, 0, 100)</span>
             </div>
             <div className="pl-6 space-y-1.5 text-[11px] text-muted-foreground">
-              <div><span className="text-primary">countyBase</span> = Σ (factor.weight × factor.value) — see the 10-factor table below</div>
+              <div><span className="text-primary">countyBase</span> = Σ (factor.weight × factor.value) — see the 13-factor table below</div>
               <div><span className="text-primary">signalBoost</span> = 15 × (1 − exp(−totalSignalScore / 2.0))</div>
               <div className="pl-4 text-[10px]"><span className="text-primary">totalSignalScore</span> = Σ (weight × confidence × recency)</div>
               <div className="pl-4 text-[10px]"><span className="text-primary">recency</span> = max(0, 1 − ageMonths / 36) — decays to zero at 3 years</div>
@@ -100,7 +100,7 @@ export default function Methodology() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base">County-Layer Factor Weights</CardTitle>
           <p className="text-xs text-muted-foreground">
-            10 factors, weights sum to 1.00. Weight × normalized value = contribution to countyBase.
+            13 factors, weights sum to 1.00. Weight × normalized value = contribution to countyBase.
           </p>
         </CardHeader>
         <CardContent>
@@ -269,7 +269,7 @@ export default function Methodology() {
               </ul>
               <p className="text-muted-foreground pt-1">
                 Every paid source is optional. The free-data build already backs
-                all ten scoring factors with real public data; paid feeds
+                all 13 scoring factors with real public data; paid feeds
                 sharpen accuracy from county-level to parcel-level.
               </p>
             </div>
@@ -355,8 +355,7 @@ export default function Methodology() {
             primary statutes and Tax Foundation’s 2024 state DC survey — sales-tax exemption on IT/electricity,
             property abatement/MRO, capex/jobs thresholds — mapped to all 3,109 tracked counties. Plus PeeringDB
             /api/fac (1,357 geolocated US carrier hotels + IX facilities) blended into the fiber factor at
-            70% FCC BDC / 30% peering density within a 40-mile radius. Together these lift the real-data
-            factor count from 9 to 10 of 10.
+            70% FCC BDC / 30% peering density within a 40-mile radius. Together these took the model to 10 real-data factors at the time (it's 13 today).
           </p>
           <p>
             <strong className="text-foreground">v0.8 additions:</strong> USGS Estimated Water Use 2015 (v2.0)

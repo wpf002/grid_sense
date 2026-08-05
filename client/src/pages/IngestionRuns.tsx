@@ -350,10 +350,10 @@ export default function IngestionRuns({ embedded = false }: { embedded?: boolean
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
           <p>
-            GridSense pulls from six government / grid-operator endpoints. Each fetch is
+            GridSense pulls from 30-plus government, grid-operator, and county endpoints. Each fetch is
             timestamped and cached to disk so a source revision can be reproduced later. When a
-            pipeline finishes, the county score is automatically recomputed and any deltas are
-            written to the score history table on the county detail page.
+            pipeline finishes, the county score is recomputed and any deltas are
+            written to the score history you'll see on the county detail page.
           </p>
           <p>
             Cadence is set per source: news/EDGAR daily, ISO queues monthly, EIA/HIFLD annually.

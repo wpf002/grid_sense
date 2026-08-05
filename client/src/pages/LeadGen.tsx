@@ -200,9 +200,9 @@ export default function LeadGen() {
                 </a>
               </div>
               <p className="text-xs text-muted-foreground">
-                Add promising counties to your watchlist; the daily cron
-                (GridSense — daily DC news + SEC watch) will notify you the
-                moment a shell LLC or SEC filing lands there.
+                Add promising counties to your watchlist. The news and SEC feeds
+                refresh through the day, so you'll hear about a shell LLC or an
+                SEC filing there without having to go looking.
               </p>
             </CardContent>
           </Card>
