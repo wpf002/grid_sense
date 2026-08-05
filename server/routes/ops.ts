@@ -213,10 +213,9 @@ export function registerOps(app: Express) {
   // Webhook subscriptions — in-memory demo (production would persist to DB)
   // ============================================================================
   type Webhook = { id: string; url: string; events: string[]; created_at: string; last_ping_at: string | null; last_status: number | null };
-  const WEBHOOKS: Webhook[] = [
-    { id: "wh_demo_1", url: "https://hooks.slack.com/services/T00/B00/xxx", events: ["tier_upgrade","score_cross"], created_at: "2026-06-15T14:22:00Z", last_ping_at: "2026-07-05T04:12:00Z", last_status: 200 },
-    { id: "wh_demo_2", url: "https://api.example.com/gridsense-hook", events: ["new_permit","new_bid"], created_at: "2026-06-28T09:15:00Z", last_ping_at: "2026-07-05T11:03:00Z", last_status: 200 },
-  ];
+  // In-memory webhook registry, starts empty. Users register their own; we don't
+  // seed fake demo entries. (Persist to a table when webhooks graduate past MVP.)
+  const WEBHOOKS: Webhook[] = [];
 
   // ---- API key management (admin only; admin = session userId 0) ----
   const requireAdmin = (req: any, res: any, next: any) => {

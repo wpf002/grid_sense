@@ -66,7 +66,6 @@ gridsense/
 │   ├── static.ts             # SPA static serve in prod
 │   ├── vite.ts               # Vite dev middleware
 │   ├── apikeys.ts            # API-key auth; plan-based rate limits live in index.ts
-│   ├── seed-data.ts          # Deterministic seeder for counties, signals, operators
 │   ├── scoring.test.ts, routes.test.ts, headroom.test.ts, edgar-attribution.test.ts
 │   └── ingest/               # One module per data source (30+)
 │       ├── run_all.ts        # Orchestrator: pass source names as CLI args

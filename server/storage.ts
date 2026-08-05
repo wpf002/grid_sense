@@ -12,7 +12,6 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
 import { eq, desc, sql, and, gte, asc } from "drizzle-orm";
 import { computeCountyFactors, computeLandingProbability, scoreTierFor } from "./scoring";
-import { SEED_COUNTIES, SEED_SIGNALS, SEED_PARCELS, SEED_OPERATORS } from "./seed-data";
 
 export const sqlite = new Database("data.db");
 sqlite.pragma("journal_mode = WAL");
@@ -255,71 +254,15 @@ try { sqlite.exec("ALTER TABLE counties ADD COLUMN cooling_score REAL;"); } catc
 try { sqlite.exec("ALTER TABLE counties ADD COLUMN carbon_intensity_score REAL;"); } catch {}
 try { sqlite.exec("ALTER TABLE counties ADD COLUMN gas_access_score REAL;"); } catch {}
 
-// ---- Seed on empty DB ----
-function seedIfEmpty() {
-  const countyCount = sqlite.prepare("SELECT COUNT(*) as c FROM counties").get() as { c: number };
-  if (countyCount.c > 0) return;
-
-  db.insert(operators).values(SEED_OPERATORS).run();
-  db.insert(counties).values(SEED_COUNTIES).run();
-  db.insert(signals).values(SEED_SIGNALS).run();
-  db.insert(parcels).values(SEED_PARCELS).run();
-
-  // Compute and persist landing probability + tier for each county
-  const allCounties = db.select().from(counties).all();
-  const allSignals = db.select().from(signals).all();
-  for (const c of allCounties) {
-    const s = allSignals.filter(x => x.countyFips === c.fips);
-    const p = computeLandingProbability(c, s);
-    const tier = scoreTierFor(p);
-    db.update(counties).set({ landingProbability: p, scoreTier: tier }).where(eq(counties.id, c.id)).run();
-  }
-  // Seed synthetic 12-month score history: interpolate a plausible trajectory
-  // ending at the current landing probability, with tier-based volatility.
-  seedScoreHistory();
-}
-
-function seedScoreHistory() {
-  const existing = sqlite.prepare("SELECT COUNT(*) as c FROM score_history").get() as { c: number };
-  if (existing.c > 0) return;
-
-  const all = db.select().from(counties).all();
-  // Anchor month: 2026-07 = current, go back 11 months to 2025-08
-  const months: string[] = [];
-  const endYear = 2026, endMonth = 7;
-  for (let i = 11; i >= 0; i--) {
-    const totalMonths = endYear * 12 + (endMonth - 1) - i;
-    const y = Math.floor(totalMonths / 12);
-    const m = (totalMonths % 12) + 1;
-    months.push(`${y}-${String(m).padStart(2, "0")}`);
-  }
-
-  const rows: { countyFips: string; month: string; score: number }[] = [];
-  for (const c of all) {
-    const final = c.landingProbability ?? 0;
-    // Tier-based trajectory: hot counties rose, cold stayed flat, warm/emerging trended up
-    let deltaTotal: number;
-    switch (c.scoreTier) {
-      case "hot":      deltaTotal = -14 - Math.random() * 8; break;  // started 14-22 pts lower
-      case "warm":     deltaTotal = -9 - Math.random() * 6; break;
-      case "emerging": deltaTotal = -6 - Math.random() * 5; break;
-      default:         deltaTotal = -2 - Math.random() * 4; break;
-    }
-    const start = Math.max(15, final + deltaTotal);
-    for (let idx = 0; idx < months.length; idx++) {
-      const t = idx / (months.length - 1); // 0..1
-      // Slightly S-curve interpolation with jitter
-      const smooth = t * t * (3 - 2 * t);
-      const jitter = (Math.random() - 0.5) * 3.2;
-      const s = start + (final - start) * smooth + jitter;
-      rows.push({ countyFips: c.fips, month: months[idx], score: Math.max(0, Math.min(100, s)) });
-    }
-    // Ensure the final month is exactly current probability
-    rows[rows.length - 1].score = final;
-  }
-  // Batch insert
-  db.insert(scoreHistory).values(rows).run();
-}
+// ---- Fresh-DB bootstrap ----
+// Deliberately a no-op. A fresh database is populated ENTIRELY from real
+// sources — scripts/expand_full_us.ts for the 3,109 counties, scripts/
+// seed_operators.ts for the curated operator reference, then the real ingests
+// in server/ingest. We used to seed fabricated counties, signals, parcels, and
+// a synthetic 12-month score history here; that's gone, because every row in
+// this app must trace to a real source. Score history now accrues only from the
+// nightly snapshot (server/ingest/score_history.ts).
+function seedIfEmpty() { /* intentionally empty — see comment above */ }
 seedIfEmpty();
 
 export interface IStorage {
